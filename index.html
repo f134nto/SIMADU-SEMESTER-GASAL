@@ -371,6 +371,38 @@
           { id: 40, name: "Laili Latifah, S. Pd", subject: "Matematika" }
         ];
 
+        const WALI_KELAS_DATA = [
+          { id: 1, name: "Ipung Purwanti, ST", class: "IX A", nip: "NIP. 197909052007102006" },
+          { id: 2, name: "Retno Susilowati, S.H", class: "IX B", nip: "NIP. 197603282007102002" },
+          { id: 3, name: "Siti Mukromah, S.Ag.", class: "IX C", nip: "NIP. 197711262007012021" },
+          { id: 4, name: "Rita Rosdiana, S.Pd", class: "IX D", nip: "NIP. 197812092007102002" },
+          { id: 5, name: "Waniti, S.Ag", class: "IX E", nip: "-" },
+          { id: 6, name: "Winarsih, S.Ag", class: "IX F", nip: "-" },
+          { id: 7, name: "Srie Kuntari, S.Pd", class: "IX G", nip: "-" },
+          { id: 8, name: "Siti Lestari, S.Pd.", class: "IX H", nip: "-" },
+          { id: 9, name: "Slamet, S.Pd", class: "IX I", nip: "-" },
+          { id: 10, name: "Wahyu Ushulludin, S.Th.I", class: "IX J", nip: "-" },
+          { id: 11, name: "Karsono, S.Pt", class: "IX K", nip: "-" },
+          { id: 12, name: "Umi Habibah, S.Pd.I.", class: "VIII A", nip: "-" },
+          { id: 13, name: "Laela Nur Latifah, S.Pd", class: "VIII B", nip: "NIP. 198202112007012005" },
+          { id: 14, name: "Safriah, S.Pd", class: "VIII C", nip: "-" },
+          { id: 15, name: "S.Enny Musrifa M, S.Pd", class: "VIII D", nip: "NIP. 197512162005012002" },
+          { id: 16, name: "Endah Lesatari, S.Pd.I.", class: "VIII E", nip: "-" },
+          { id: 17, name: "Istikowati, S.Pd", class: "VIII F", nip: "-" },
+          { id: 18, name: "Farid Wujdi, S.Si", class: "VIII G", nip: "-" },
+          { id: 19, name: "Aziz Kuntoro, S.Pd.", class: "VIII H", nip: "-" },
+          { id: 20, name: "Asep Sugianto S.Pd", class: "VIII I", nip: "-" },
+          { id: 21, name: "Arif Puji Santoso, S.Pd.", class: "VIII J", nip: "-" },
+          { id: 22, name: "Lia Soviani, S.Pd", class: "VII A", nip: "-" },
+          { id: 23, name: "Emi Astuti, SE", class: "VII B", nip: "-" },
+          { id: 24, name: "Yogi Bayun Wiasih, S.Pd. I", class: "VII C", nip: "-" },
+          { id: 25, name: "Fatma Hidayatutsani, S.Pd", class: "VII D", nip: "-" },
+          { id: 26, name: "Ramadhenthy Ahlan, S.Pd", class: "VII E", nip: "-" },
+          { id: 27, name: "Leonita Pramuda Wardani, S.Pd.", class: "VII F", nip: "-" },
+          { id: 28, name: "Hanifah, S.Pd", class: "VII G", nip: "-" },
+          { id: 29, name: "Putri Hasna Nida Nandini, S.Pd.", class: "VII H", nip: "-" }
+        ];
+
         const MONTHS = ['Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
         const REKAP_MONTHS = ['Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
@@ -562,7 +594,7 @@
                 { jam: '1', waktu: '08.00 - 08.35', kelas: 'IX C', mapel: 'Bahasa Arab' },
                 { jam: '2', waktu: '08.35 - 09.10', kelas: '', mapel: '' },
                 { jam: '3', waktu: '09.10 - 09.45', kelas: '', mapel: '' },
-                { jam: 'Break', waktu: '09.45 - 10.00', kelas: '', mapel: '' },
+                { jam: 'Break', 'waktu': '09.45 - 10.00', kelas: '', mapel: '' },
                 { jam: '4', waktu: '10.00 - 10.35', kelas: 'IX A', mapel: 'Bahasa Arab' },
                 { jam: '5', waktu: '10.35 - 11.10', kelas: 'IX A', mapel: 'Bahasa Arab' }
               ]
@@ -783,6 +815,7 @@
           
           const [searchQuery, setSearchQuery] = useState('');
           const [searchGuruQuery, setSearchGuruQuery] = useState(''); 
+          const [searchWaliQuery, setSearchWaliQuery] = useState(''); 
           const [searchResults, setSearchResults] = useState([]);
 
           const [studentsData, setStudentsData] = useState(() => {
@@ -818,15 +851,12 @@
           const [dialog, setDialog] = useState(null); 
           const [currentSchedule, setCurrentSchedule] = useState(SCHEDULE_DATA);
 
-          // Efek untuk menyesuaikan jadwal berdasarkan guru yang login
           useEffect(() => {
               if (loggedInUser) {
                   const normalizedUser = loggedInUser.toLowerCase().trim();
                   let matchedSchedule = null;
 
-                  // Cari kecocokan nama guru yang login dengan kunci di TEACHER_SCHEDULES
                   for (const [teacherName, schedule] of Object.entries(TEACHER_SCHEDULES)) {
-                      // Mencocokkan sebagian nama (misal login "fitrianto" cocok dengan "Fitrianto Puji Pangarso, S.Kom.")
                       if (teacherName.toLowerCase().includes(normalizedUser)) {
                           matchedSchedule = schedule;
                           break;
@@ -836,7 +866,6 @@
                   if (matchedSchedule) {
                       setCurrentSchedule(matchedSchedule);
                   } else {
-                      // Fallback ke jadwal default jika tidak ada kecocokan
                       setCurrentSchedule(SCHEDULE_DATA);
                   }
               } else {
@@ -882,6 +911,42 @@
           const currentDateStr = today.toLocaleDateString('id-ID', options);
 
           const currentStudents = studentsData[activeClass] || [];
+
+          // Helper: Konversi kelas wali (IX A -> 9A)
+          const convertRomanClassToStandard = (roman) => {
+              if (!roman) return '';
+              const p = roman.split(' ');
+              if (p.length !== 2) return roman;
+              const g = p[0] === 'VII' ? '7' : p[0] === 'VIII' ? '8' : p[0] === 'IX' ? '9' : p[0];
+              return g + p[1];
+          };
+
+          // Mendapatkan info Wali Kelas berdasarkan user yang login
+          const waliKelasInfo = (() => {
+              if (!loggedInUser) return null;
+              
+              // Fungsi pembersih nama untuk pencocokan yang akurat (menghapus gelar, spasi, dll)
+              const cleanName = (name) => {
+                  if (!name) return '';
+                  return name.split(',')[0].toLowerCase().replace(/[^a-z]/g, '');
+              };
+
+              const loginClean = cleanName(loggedInUser);
+
+              const wali = WALI_KELAS_DATA.find(w => {
+                  const waliClean = cleanName(w.name);
+                  // Cocokkan string dasar nama. Mendukung jika login menggunakan nama yang sedikit berbeda
+                  return waliClean === loginClean || (loginClean.length > 3 && waliClean.includes(loginClean)) || (waliClean.length > 3 && loginClean.includes(waliClean));
+              });
+
+              if (wali) {
+                  return { name: wali.name, managedClass: convertRomanClassToStandard(wali.class) };
+              }
+              return null;
+          })();
+
+          // Cek apakah user aktif adalah wali kelas dari kelas yang sedang dibuka
+          const isWaliKelasOfActiveClass = waliKelasInfo && waliKelasInfo.managedClass === activeClass;
 
           useEffect(() => {
               if (!searchQuery.trim()) {
@@ -1664,15 +1729,21 @@
                       return;
                   }
 
-                  // Mendukung password lama & baru
+                  const foundTeacher = TEACHERS_DATA.find(t => t.name.toLowerCase() === uname.toLowerCase());
+
+                  if (!foundTeacher) {
+                      setLoginError('Akses Ditolak: Nama Anda tidak terdaftar di sistem!');
+                      return;
+                  }
+
                   if (pwd === 'F134anto' || pwd === 'F134nto') { 
                       setIsAuthenticated(true);
-                      setLoggedInUser(uname);
+                      setLoggedInUser(foundTeacher.name); // Selalu pakai nama baku dari database
                       sessionStorage.setItem('simadu_auth', 'true');
-                      sessionStorage.setItem('simadu_user', uname);
+                      sessionStorage.setItem('simadu_user', foundTeacher.name);
                       setLoginError('');
                   } else {
-                      setLoginError('Nama Guru atau Password salah!');
+                      setLoginError('PIN / Password yang Anda masukkan salah!');
                   }
               };
 
@@ -1702,12 +1773,16 @@
                               <div>
                                   <input 
                                       type="text" 
+                                      list="guru-list"
                                       placeholder="Nama Guru (contoh: FITRIANTO...)" 
                                       value={loginUsername}
                                       onChange={(e) => setLoginUsername(e.target.value)}
                                       className="w-full px-5 py-3.5 rounded-xl bg-black/30 border border-emerald-500/30 text-white placeholder-white/40 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/50 transition-all text-center font-bold text-sm"
                                       autoFocus
                                   />
+                                  <datalist id="guru-list">
+                                      {TEACHERS_DATA.map(g => <option key={g.id} value={g.name} />)}
+                                  </datalist>
                               </div>
                               <div>
                                   <input 
@@ -1800,6 +1875,7 @@
                 </div>
               )}
 
+              {}
               {/* PENCARIAN SISWA & PILIH KELAS */}
               <div className="w-full bg-[#98DBC6] rounded-2xl shadow-sm border border-emerald-300 overflow-visible flex flex-col">
                 
@@ -1913,18 +1989,51 @@
                         >
                           {daysInMonth.map(d => <option key={d} value={d}>{d}</option>)}
                         </select>
-                        <button type="button" onClick={handleHadirSemua} className="px-3 py-1.5 bg-emerald-700 text-white hover:bg-emerald-800 font-bold rounded-md text-xs transition-colors shadow-xs">Hadir Semua</button>
-                        <button type="button" onClick={handleReset} className="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 font-bold rounded-md text-xs transition-colors shadow-xs">Reset</button>
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                              if (activeTab === 'absensi' && !isWaliKelasOfActiveClass) {
+                                  showAlert(`Akses Ditolak! Hanya Wali Kelas ${activeClass} yang dapat mengisi absen kelas ini.`);
+                                  return;
+                              }
+                              handleHadirSemua();
+                          }} 
+                          className={`px-3 py-1.5 font-bold rounded-md text-xs transition-colors shadow-xs ${activeTab === 'absensi' && !isWaliKelasOfActiveClass ? 'bg-slate-400 text-slate-100 cursor-not-allowed' : 'bg-emerald-700 text-white hover:bg-emerald-800'}`}
+                        >
+                          Hadir Semua
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                              if (activeTab === 'absensi' && !isWaliKelasOfActiveClass) {
+                                  showAlert(`Akses Ditolak! Hanya Wali Kelas ${activeClass} yang dapat mereset absen kelas ini.`);
+                                  return;
+                              }
+                              handleReset();
+                          }} 
+                          className={`px-3 py-1.5 font-bold rounded-md text-xs transition-colors shadow-xs ${activeTab === 'absensi' && !isWaliKelasOfActiveClass ? 'bg-slate-300 text-slate-500 cursor-not-allowed' : 'bg-red-100 text-red-700 hover:bg-red-200'}`}
+                        >
+                          Reset
+                        </button>
                      </div>
                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        {activeTab === 'absensi' && !isWaliKelasOfActiveClass && (
+                            <span className="text-[10px] text-red-600 font-bold bg-red-100 px-2 py-1.5 rounded-md shadow-xs border border-red-200 hidden sm:inline-block">
+                                Akses: Khusus Wali Kelas {activeClass}
+                            </span>
+                        )}
                         <button type="button" onClick={handleExportCSV} className="flex-1 sm:flex-none px-4 py-1.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold rounded-md text-xs shadow-xs transition-colors">
                           Unduh CSV
                         </button>
                         <button 
                           type="button" 
-                          disabled={isSyncing} 
+                          disabled={isSyncing || (activeTab === 'absensi' && !isWaliKelasOfActiveClass)} 
                           onClick={handleSyncToSpreadsheet} 
-                          className={`flex-1 sm:flex-none px-4 py-1.5 font-bold rounded-md text-xs shadow-xs transition-colors ${isSyncing ? 'bg-emerald-400 text-white cursor-not-allowed' : 'bg-emerald-700 text-white hover:bg-emerald-800'}`}
+                          className={`flex-1 sm:flex-none px-4 py-1.5 font-bold rounded-md text-xs shadow-xs transition-colors ${
+                              isSyncing || (activeTab === 'absensi' && !isWaliKelasOfActiveClass) 
+                              ? 'bg-slate-400 text-white cursor-not-allowed' 
+                              : 'bg-emerald-700 text-white hover:bg-emerald-800'
+                          }`}
                         >
                           {isSyncing ? 'Mengirim...' : 'Kirim Data'}
                         </button>
@@ -1978,15 +2087,37 @@
                     >
                       👩‍🏫 Data Guru
                     </button>
+                    <button 
+                      onClick={() => setActiveTab('walikelas')}
+                      className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'walikelas' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
+                    >
+                      👔 Wali Kelas
+                    </button>
                   </div>
               </div>
 
+              {}
               {/* AREA KONTEN */}
               <div className="w-full">
                 
                 {/* 0. TAB: ABSENSI SISWA */}
                 {activeTab === 'absensi' && (
                   <div className="space-y-6">
+                    {!isWaliKelasOfActiveClass && (
+                        <div className="bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-xl shadow-sm flex items-start gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                            <div className="text-xs font-medium">
+                                <strong className="block text-sm font-black mb-1">Akses Dibatasi (Bukan Wali Kelas {activeClass})</strong>
+                                Anda login sebagai <span className="font-bold text-red-800">{loggedInUser}</span>. Halaman Absensi Siswa merupakan <span className="font-bold underline">wewenang khusus Wali Kelas</span>.
+                                {waliKelasInfo 
+                                    ? <span> Kelas perwalian Anda adalah <span className="font-black text-red-800 bg-red-200/50 px-1 rounded">{waliKelasInfo.managedClass}</span>. Silakan pilih kelas {waliKelasInfo.managedClass} untuk mengisi dan mengirim data absensi.</span> 
+                                    : <span> Akun Anda tidak terdaftar sebagai Wali Kelas. Anda hanya dapat melihat data.</span>
+                                }
+                            </div>
+                        </div>
+                    )}
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
                       <div className="p-4 border-b border-slate-200 text-center flex flex-col items-center justify-center bg-white">
                         <h2 className="text-base sm:text-lg font-black text-slate-800 uppercase">DAFTAR ABSENSI KELAS {activeClass}</h2>
@@ -2034,7 +2165,13 @@
                                       <td key={day} className="p-0 border-r border-slate-100 z-0 relative">
                                         <button
                                           type="button"
-                                          onClick={() => toggleAttendance(student, day, false)}
+                                          onClick={() => {
+                                              if (!isWaliKelasOfActiveClass) {
+                                                  showAlert(`Akses Ditolak! Hanya Wali Kelas ${activeClass} yang dapat mengubah absensi kelas ini.`);
+                                                  return;
+                                              }
+                                              toggleAttendance(student, day, false);
+                                          }}
                                           className={`w-full h-10 sm:h-8 flex items-center justify-center text-xs transition-colors cursor-pointer select-none touch-manipulation ${bgClass} ${textClass}`}
                                         >
                                           {status || '·'}
@@ -2621,6 +2758,80 @@
                       </div>
                       <div className="bg-slate-50 p-3 border-t border-slate-200 text-xs text-slate-500 font-semibold text-center">
                           Total: {TEACHERS_DATA.length} Guru Mata Pelajaran
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {}
+                {/* TAB: DATA WALI KELAS */}
+                {activeTab === 'walikelas' && (
+                  <div className="space-y-4">
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
+                      <div className="bg-slate-800 p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-slate-700">
+                        <div className="text-center sm:text-left">
+                            <h2 className="text-lg font-black text-white tracking-wide uppercase flex items-center justify-center sm:justify-start gap-2">
+                                👔 Daftar Wali Kelas
+                            </h2>
+                            <p className="text-slate-400 text-xs font-medium mt-1">Tahun Pelajaran 2026/2027 MTs Ma'arif NU 1 Wangon</p>
+                        </div>
+                        <div className="relative w-full sm:w-64">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg className="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Cari nama, kelas, atau NIP..."
+                                value={searchWaliQuery}
+                                onChange={(e) => setSearchWaliQuery(e.target.value)}
+                                className="w-full pl-9 pr-4 py-2 text-sm rounded-xl border border-slate-600 bg-slate-700 text-white placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
+                            />
+                        </div>
+                      </div>
+                      
+                      <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '65vh' }}>
+                        <table className="w-full text-sm text-left border-collapse">
+                            <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 border-b border-slate-200 shadow-sm">
+                                <tr>
+                                    <th className="py-3 px-4 font-bold text-center w-16">No</th>
+                                    <th className="py-3 px-4 font-bold">Nama Guru</th>
+                                    <th className="py-3 px-4 font-bold text-center">Kelas</th>
+                                    <th className="py-3 px-4 font-bold">NIP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {WALI_KELAS_DATA.filter(w => 
+                                    w.name.toLowerCase().includes(searchWaliQuery.toLowerCase()) || 
+                                    w.class.toLowerCase().includes(searchWaliQuery.toLowerCase()) ||
+                                    w.nip.toLowerCase().includes(searchWaliQuery.toLowerCase())
+                                ).map((wali, idx) => (
+                                    <tr key={wali.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                        <td className="py-3 px-4 text-center font-semibold text-slate-500">{wali.id}</td>
+                                        <td className="py-3 px-4 font-bold text-slate-800">{wali.name}</td>
+                                        <td className="py-3 px-4 text-center">
+                                            <span className="inline-block px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold shadow-sm">
+                                                {wali.class}
+                                            </span>
+                                        </td>
+                                        <td className="py-3 px-4 text-slate-600 font-mono text-xs">
+                                            {wali.nip}
+                                        </td>
+                                    </tr>
+                                ))}
+                                {WALI_KELAS_DATA.filter(w => 
+                                    w.name.toLowerCase().includes(searchWaliQuery.toLowerCase()) || 
+                                    w.class.toLowerCase().includes(searchWaliQuery.toLowerCase()) ||
+                                    w.nip.toLowerCase().includes(searchWaliQuery.toLowerCase())
+                                ).length === 0 && (
+                                    <tr>
+                                        <td colSpan="4" className="py-8 text-center text-slate-500 font-medium">Data Wali Kelas tidak ditemukan.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                      </div>
+                      <div className="bg-slate-50 p-3 border-t border-slate-200 text-xs text-slate-500 font-semibold text-center">
+                          Total: {WALI_KELAS_DATA.length} Wali Kelas
                       </div>
                     </div>
                   </div>

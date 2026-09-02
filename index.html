@@ -2130,6 +2130,9 @@
           
           const [viewJadwalMode, setViewJadwalMode] = useState('kelas');
           const [selectedJadwalClass, setSelectedJadwalClass] = useState('7A');
+          const [selectedJadwalTeacher, setSelectedJadwalTeacher] = useState(() => {
+              return sessionStorage.getItem('simadu_user') || '';
+          });
           const [currentClassSchedule, setCurrentClassSchedule] = useState([]);
           const [currentTeacherSchedule, setCurrentTeacherSchedule] = useState([]);
 
@@ -2158,6 +2161,10 @@
             try { return JSON.parse(localStorage.getItem('jurnal_savingsData')) || {}; } catch (e) { return {}; }
           });
           
+          const [agendaKelasData, setAgendaKelasData] = useState(() => {
+            try { return JSON.parse(localStorage.getItem('jurnal_agendaKelasData')) || {}; } catch (e) { return {}; }
+          });
+          
           const [gradesData, setGradesData] = useState(() => {
             try { return JSON.parse(localStorage.getItem('jurnal_gradesData')) || {}; } catch (e) { return {}; }
           });
@@ -2171,8 +2178,8 @@
           const [dialog, setDialog] = useState(null); 
 
           useEffect(() => {
-              if (loggedInUser) {
-                  const matchedSchedule = getScheduleForTeacher(loggedInUser);
+              if (selectedJadwalTeacher) {
+                  const matchedSchedule = getScheduleForTeacher(selectedJadwalTeacher);
                   setCurrentTeacherSchedule(matchedSchedule);
               } else {
                   const emptySchedule = Object.keys(TIME_SLOTS).map(day => ({
@@ -2181,7 +2188,7 @@
                   }));
                   setCurrentTeacherSchedule(emptySchedule);
               }
-          }, [loggedInUser]);
+          }, [selectedJadwalTeacher]);
 
           useEffect(() => {
               const schedule = getScheduleForClass(selectedJadwalClass);
@@ -2214,6 +2221,7 @@
           useEffect(() => { localStorage.setItem('jurnal_attendance_mengajar', JSON.stringify(attendanceJurnal)); }, [attendanceJurnal]);
           useEffect(() => { localStorage.setItem('jurnal_classNotes', JSON.stringify(classNotes)); }, [classNotes]);
           useEffect(() => { localStorage.setItem('jurnal_savingsData', JSON.stringify(savingsData)); }, [savingsData]);
+          useEffect(() => { localStorage.setItem('jurnal_agendaKelasData', JSON.stringify(agendaKelasData)); }, [agendaKelasData]);
           useEffect(() => { localStorage.setItem('jurnal_gradesData', JSON.stringify(gradesData)); }, [gradesData]);
 
           const getDaysInMonth = (month) => {
@@ -2937,6 +2945,39 @@
               document.body.removeChild(link);
           };
 
+          const handleExportAgendaKelasCSV = () => {
+              let csvContent = "\uFEFFREKAPITULASI AGENDA KELAS " + activeClass + "\n\n";
+              csvContent += "No;Tanggal;Jam;Mata Pelajaran;Guru Pengampu;Materi Pokok;Siswa Tidak Hadir;Tugas / Catatan\n";
+
+              const entries = [];
+              Object.keys(agendaKelasData).forEach(key => {
+                  const val = agendaKelasData[key];
+                  if (val.kelas === activeClass && (val.materi || val.absen || val.tugas)) {
+                      entries.push(val);
+                  }
+              });
+              entries.sort((a, b) => {
+                  if (a.tanggal !== b.tanggal) return a.tanggal.localeCompare(b.tanggal);
+                  return a.jam.localeCompare(b.jam);
+              });
+
+              entries.forEach((e, idx) => {
+                  const safeMateri = `"${(e.materi || '').replace(/"/g, '""')}"`; 
+                  const safeAbsen = `"${(e.absen || '').replace(/"/g, '""')}"`;
+                  const safeTugas = `"${(e.tugas || '').replace(/"/g, '""')}"`;
+                  csvContent += `${idx + 1};${e.tanggal};${e.jam};${e.mapel};${e.guru};${safeMateri};${safeAbsen};${safeTugas}\n`;
+              });
+
+              const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+              const url = URL.createObjectURL(blob);
+              const link = document.createElement('a');
+              link.setAttribute('href', url);
+              link.setAttribute('download', `Rekap_Agenda_Kelas_${activeClass}.csv`);
+              document.body.appendChild(link);
+              link.click();
+              document.body.removeChild(link);
+          };
+
           const renderDialog = () => {
               if (!dialog) return null;
               
@@ -3377,6 +3418,12 @@
                       📝 Jurnal Mengajar
                     </button>
                     <button 
+                      onClick={() => setActiveTab('agenda_kelas')}
+                      className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'agenda_kelas' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
+                    >
+                      📚 Jadwal Pelajaran (Agenda)
+                    </button>
+                    <button 
                       onClick={() => setActiveTab('laporan')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'laporan' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
                     >
@@ -3625,6 +3672,12 @@
                               className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 ${activeReportTab === 'nilai' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
                             >
                               💯 Daftar Nilai
+                            </button>
+                            <button 
+                              onClick={() => setActiveReportTab('agenda_kelas')}
+                              className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 ${activeReportTab === 'agenda_kelas' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
+                            >
+                              📚 Agenda Kelas
                             </button>
                         </div>
                     </div>
@@ -3994,6 +4047,73 @@
                         </div>
                     )}
 
+                    {/* 6. Rekap Agenda Kelas */}
+                    {activeReportTab === 'agenda_kelas' && (
+                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
+                          <div className="bg-emerald-50 border-b border-emerald-100 p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+                            <div className="text-center sm:text-left">
+                              <h2 className="text-lg font-black text-emerald-900 tracking-wide uppercase">REKAPITULASI AGENDA KELAS {activeClass}</h2>
+                              <p className="text-sm font-semibold text-emerald-800">DATA JADWAL PELAJARAN (AGENDA) • SEMESTER GANJIL TAHUN AJARAN 2026/2027</p>
+                            </div>
+                            <button type="button" onClick={handleExportAgendaKelasCSV} className="px-4 py-2 bg-white/90 hover:bg-white text-emerald-900 font-bold rounded-lg text-xs shadow-sm transition-all border border-emerald-300">
+                                Unduh CSV
+                            </button>
+                          </div>
+                          <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '60vh' }}>
+                            <table className="w-full text-xs text-left border-collapse min-w-max">
+                              <thead className="sticky top-0 z-20 shadow-sm">
+                                <tr>
+                                  <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-10 text-center">No</th>
+                                  <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-32">Tanggal</th>
+                                  <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-20 text-center">Jam</th>
+                                  <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-48">Mata Pelajaran</th>
+                                  <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-48">Guru Pengampu</th>
+                                  <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 min-w-[200px]">Materi Pokok</th>
+                                  <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-48">Siswa Tidak Hadir</th>
+                                  <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 min-w-[150px]">Tugas / Catatan</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {(() => {
+                                    const entries = [];
+                                    Object.keys(agendaKelasData).forEach(key => {
+                                        const val = agendaKelasData[key];
+                                        if (val.kelas === activeClass && (val.materi || val.absen || val.tugas)) {
+                                            entries.push(val);
+                                        }
+                                    });
+                                    
+                                    // Sort by Date then Jam
+                                    entries.sort((a, b) => {
+                                        if (a.tanggal !== b.tanggal) return a.tanggal.localeCompare(b.tanggal);
+                                        return a.jam.localeCompare(b.jam);
+                                    });
+
+                                    if (entries.length === 0) {
+                                        return (
+                                            <tr><td colSpan="8" className="py-8 text-center text-slate-400">Belum ada agenda kelas yang tercatat.</td></tr>
+                                        );
+                                    }
+                                    
+                                    return entries.map((e, idx) => (
+                                        <tr key={idx} className="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                                            <td className="py-2 px-3 border border-slate-100 text-center font-semibold">{idx + 1}</td>
+                                            <td className="py-2 px-3 border border-slate-100 font-bold text-emerald-800">{e.tanggal}</td>
+                                            <td className="py-2 px-3 border border-slate-100 text-center font-bold">{e.jam}</td>
+                                            <td className="py-2 px-3 border border-slate-100 font-semibold">{e.mapel}</td>
+                                            <td className="py-2 px-3 border border-slate-100 text-slate-700">{e.guru}</td>
+                                            <td className="py-2 px-3 border border-slate-100 whitespace-pre-wrap">{e.materi || '-'}</td>
+                                            <td className="py-2 px-3 border border-slate-100 text-red-600 font-medium">{e.absen || '-'}</td>
+                                            <td className="py-2 px-3 border border-slate-100 whitespace-pre-wrap text-blue-700">{e.tugas || '-'}</td>
+                                        </tr>
+                                    ));
+                                })()}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                    )}
+
                   </div>
                 )}
 
@@ -4141,6 +4261,125 @@
                           Total: {WALI_KELAS_DATA.length} Wali Kelas
                       </div>
                     </div>
+                  </div>
+                )}
+
+                {/* TAB: JADWAL PELAJARAN (AGENDA KELAS) */}
+                {activeTab === 'agenda_kelas' && (
+                  <div className="space-y-4">
+                      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+                          <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                              📚 Jadwal Pelajaran (Agenda Kelas)
+                          </h2>
+                          <p className="text-sm text-slate-600 mt-1">Hari ini: <strong className="uppercase">{currentDateStr}</strong></p>
+                      </div>
+                      
+                      {(() => {
+                          if (!loggedInUser) {
+                              return (
+                                  <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center">
+                                      <p className="text-slate-500 font-medium">Silakan login untuk melihat agenda mengajar Anda.</p>
+                                  </div>
+                              );
+                          }
+                          
+                          const currentDayName = today.toLocaleDateString('id-ID', { weekday: 'long' });
+                          const scheduleAllDays = getScheduleForTeacher(loggedInUser);
+                          const todaySchedule = scheduleAllDays.find(d => d.day === currentDayName);
+                          
+                          if (!todaySchedule || currentDayName === 'Minggu') {
+                              return (
+                                  <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center">
+                                      <p className="text-slate-500 font-medium">Tidak ada jadwal mengajar pada hari {currentDayName}.</p>
+                                  </div>
+                              );
+                          }
+                          
+                          const validRows = todaySchedule.rows.filter(r => r.kelas && r.kelas !== '-' && r.kelas !== '');
+                          if (validRows.length === 0) {
+                              return (
+                                  <div className="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center">
+                                      <p className="text-slate-500 font-medium">Anda tidak memiliki jadwal mengajar pada hari ini ({currentDayName}).</p>
+                                  </div>
+                              );
+                          }
+
+                          const grouped = [];
+                          validRows.forEach(row => {
+                              if (grouped.length === 0) {
+                                  grouped.push({ ...row, jamAwal: row.jam, jamAkhir: row.jam });
+                              } else {
+                                  const last = grouped[grouped.length - 1];
+                                  if (last.kelas === row.kelas && last.mapel === row.mapel) {
+                                      last.jamAkhir = row.jam;
+                                      last.waktu = last.waktu.split(' - ')[0] + ' - ' + row.waktu.split(' - ')[1];
+                                  } else {
+                                      grouped.push({ ...row, jamAwal: row.jam, jamAkhir: row.jam });
+                                  }
+                              }
+                          });
+
+                          return grouped.map((g, i) => {
+                              const jamLabel = g.jamAwal === g.jamAkhir ? g.jamAwal : `${g.jamAwal}-${g.jamAkhir}`;
+                              const dateKey = today.toLocaleDateString('en-CA'); 
+                              const recordKey = `${dateKey}-${loggedInUser}-${g.kelas}-${g.mapel}-${jamLabel}`;
+                              const record = agendaKelasData[recordKey] || { materi: '', absen: '', tugas: '', tanggal: currentDateStr, guru: loggedInUser, kelas: g.kelas, mapel: g.mapel, jam: jamLabel };
+
+                              const handleChange = (field, val) => {
+                                  setAgendaKelasData(prev => ({
+                                      ...prev,
+                                      [recordKey]: { ...record, [field]: val, tanggal: currentDateStr, guru: loggedInUser, kelas: g.kelas, mapel: g.mapel, jam: jamLabel }
+                                  }));
+                              };
+
+                              return (
+                                  <div key={i} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                      <div className="bg-emerald-50 border-b border-emerald-100 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                          <div>
+                                              <span className="inline-block bg-emerald-600 text-white text-[10px] font-black px-2 py-0.5 rounded uppercase tracking-widest mb-1">Jam {jamLabel}</span>
+                                              <h3 className="text-base font-black text-emerald-900">{g.mapel} - Kelas {g.kelas}</h3>
+                                          </div>
+                                          <div className="text-xs font-bold text-slate-500 flex items-center gap-1 bg-white px-2 py-1 rounded shadow-sm border border-slate-200">
+                                              🕒 {g.waktu}
+                                          </div>
+                                      </div>
+                                      <div className="p-4 flex flex-col gap-4">
+                                          <div>
+                                              <label className="block text-xs font-bold text-slate-700 mb-1">Materi Pokok / Bahasan</label>
+                                              <textarea 
+                                                  value={record.materi}
+                                                  onChange={(e) => handleChange('materi', e.target.value)}
+                                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 min-h-[80px]"
+                                                  placeholder="Ketik materi yang diajarkan..."
+                                              />
+                                          </div>
+                                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                              <div>
+                                                  <label className="block text-xs font-bold text-slate-700 mb-1">Siswa Tidak Hadir</label>
+                                                  <input 
+                                                      type="text"
+                                                      value={record.absen}
+                                                      onChange={(e) => handleChange('absen', e.target.value)}
+                                                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                                                      placeholder="Contoh: Budi (S), Andi (I)..."
+                                                  />
+                                              </div>
+                                              <div>
+                                                  <label className="block text-xs font-bold text-slate-700 mb-1">Tugas / Catatan Tambahan</label>
+                                                  <input 
+                                                      type="text"
+                                                      value={record.tugas}
+                                                      onChange={(e) => handleChange('tugas', e.target.value)}
+                                                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                                                      placeholder="Ketik tugas jika ada..."
+                                                  />
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
+                              );
+                          });
+                      })()}
                   </div>
                 )}
 
@@ -4301,9 +4540,24 @@
                         )}
                         
                         {viewJadwalMode === 'guru' && (
-                            <div className="w-full pt-3 border-t border-slate-100 flex flex-wrap items-center gap-3">
-                                <span className="text-xs font-bold text-slate-700">Jadwal Untuk:</span>
-                                <span className="text-sm font-black text-emerald-700 bg-emerald-50 px-3 py-1 rounded border border-emerald-200">{loggedInUser || 'Belum Login'}</span>
+                            <div className="w-full pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                                <span className="text-xs font-bold text-slate-700 whitespace-nowrap">Cari Jadwal Guru:</span>
+                                <div className="relative w-full sm:w-80">
+                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                        <svg className="h-4 w-4 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    </div>
+                                    <input
+                                        type="text"
+                                        list="jadwal-guru-list"
+                                        placeholder="Ketik atau pilih nama guru..."
+                                        value={selectedJadwalTeacher}
+                                        onChange={(e) => setSelectedJadwalTeacher(e.target.value)}
+                                        className="w-full pl-9 pr-4 py-2 text-sm font-semibold rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
+                                    />
+                                    <datalist id="jadwal-guru-list">
+                                        {TEACHERS_DATA.map(g => <option key={g.id} value={g.name} />)}
+                                    </datalist>
+                                </div>
                             </div>
                         )}
                     </div>

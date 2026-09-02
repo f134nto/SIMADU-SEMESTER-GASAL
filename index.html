@@ -4319,11 +4319,31 @@
                               }
                           });
 
+                          const checkIsActiveHour = (waktuStr) => {
+                              try {
+                                  const parts = waktuStr.split(' - ');
+                                  if(parts.length !== 2) return true;
+                                  const parseTime = (timeStr) => {
+                                      const [h, m] = timeStr.replace(':', '.').split('.').map(Number);
+                                      return (h * 60) + m;
+                                  };
+                                  const startMins = parseTime(parts[0]);
+                                  const endMins = parseTime(parts[1]);
+                                  const now = new Date();
+                                  const currentMins = (now.getHours() * 60) + now.getMinutes();
+                                  // Can only fill if current time is >= start time, and <= end time + 45 mins
+                                  return currentMins >= startMins && currentMins <= (endMins + 45);
+                              } catch(e) {
+                                  return true;
+                              }
+                          };
+
                           return grouped.map((g, i) => {
                               const jamLabel = g.jamAwal === g.jamAkhir ? g.jamAwal : `${g.jamAwal}-${g.jamAkhir}`;
                               const dateKey = today.toLocaleDateString('en-CA'); 
                               const recordKey = `${dateKey}-${loggedInUser}-${g.kelas}-${g.mapel}-${jamLabel}`;
                               const record = agendaKelasData[recordKey] || { materi: '', absen: '', tugas: '', tanggal: currentDateStr, guru: loggedInUser, kelas: g.kelas, mapel: g.mapel, jam: jamLabel };
+                              const isEditable = checkIsActiveHour(g.waktu);
 
                               const handleChange = (field, val) => {
                                   setAgendaKelasData(prev => ({
@@ -4344,12 +4364,18 @@
                                           </div>
                                       </div>
                                       <div className="p-4 flex flex-col gap-4">
+                                          {!isEditable && (
+                                              <div className="bg-amber-50 text-amber-800 text-xs font-bold p-3 rounded-lg border border-amber-200">
+                                                  🔒 Belum / Bukan Waktunya Mengisi. Formulir agenda hanya bisa diisi dari saat jam pelajaran dimulai hingga 45 menit setelah jam selesai.
+                                              </div>
+                                          )}
                                           <div>
                                               <label className="block text-xs font-bold text-slate-700 mb-1">Materi Pokok / Bahasan</label>
                                               <textarea 
                                                   value={record.materi}
+                                                  disabled={!isEditable}
                                                   onChange={(e) => handleChange('materi', e.target.value)}
-                                                  className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 min-h-[80px]"
+                                                  className={`w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 min-h-[80px] ${!isEditable ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''}`}
                                                   placeholder="Ketik materi yang diajarkan..."
                                               />
                                           </div>
@@ -4359,8 +4385,9 @@
                                                   <input 
                                                       type="text"
                                                       value={record.absen}
+                                                      disabled={!isEditable}
                                                       onChange={(e) => handleChange('absen', e.target.value)}
-                                                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                                                      className={`w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 ${!isEditable ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''}`}
                                                       placeholder="Contoh: Budi (S), Andi (I)..."
                                                   />
                                               </div>
@@ -4369,8 +4396,9 @@
                                                   <input 
                                                       type="text"
                                                       value={record.tugas}
+                                                      disabled={!isEditable}
                                                       onChange={(e) => handleChange('tugas', e.target.value)}
-                                                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500"
+                                                      className={`w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 ${!isEditable ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''}`}
                                                       placeholder="Ketik tugas jika ada..."
                                                   />
                                               </div>

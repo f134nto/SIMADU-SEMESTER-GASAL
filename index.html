@@ -4,10 +4,28 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SIMADU - MTs Ma'arif NU 1 Wangon</title>
+    <script>
+        var oldError = console.error;
+        console.error = function() {
+            var args = Array.prototype.slice.call(arguments);
+            var msg = args.join(' ');
+            document.body.innerHTML += '<div style="color:red; padding:20px; font-family:monospace; background:white; position:fixed; top:0; left:0; right:0; bottom:0; z-index:999999;">' +
+                '<h3>TERJADI ERROR (Mohon fotokan ini):</h3><pre style="white-space:pre-wrap;">' + msg + '</pre></div>';
+            oldError.apply(console, args);
+        };
+        window.addEventListener('error', function(event) {
+            document.body.innerHTML += '<div style="color:red; padding:20px; font-family:monospace; background:white; position:fixed; top:0; left:0; right:0; bottom:0; z-index:999999;">' +
+                '<h3>TERJADI RUNTIME ERROR:</h3>' +
+                '<p>' + event.message + '</p>' +
+                '<p>Line: ' + event.lineno + '</p>' +
+                '<pre>' + (event.error ? event.error.stack : '') + '</pre>' +
+                '</div>';
+        });
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin="anonymous"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <style>
@@ -51,6 +69,8 @@
     <div id="root"></div>
 
     <script type="text/babel">
+    try {
+
         const { useState, useEffect, useRef } = React;
 
         const INITIAL_STUDENTS = {
@@ -2204,6 +2224,55 @@
           const [activeReportTab, setActiveReportTab] = useState('absensi'); 
           const [activeClass, setActiveClass] = useState('7A');
           const [activeMonth, setActiveMonth] = useState('Juli');
+          const [selectedNilaiMapel, setSelectedNilaiMapel] = useState('');
+          const [selectedReportNilaiMapelGuru, setSelectedReportNilaiMapelGuru] = useState('');
+
+          const getMapelsAndGurusForClass = (className) => {
+              const mapels = new Map();
+              const raw = RAW_CLASS_SCHEDULES[className];
+              if (!raw) return [];
+              Object.keys(raw).forEach(day => {
+                  raw[day].forEach(cellData => {
+                      if (cellData && cellData.includes('|')) {
+                          const [mapel, guru] = cellData.split('|');
+                          if (mapel && mapel !== '-' && guru && guru !== '-') {
+                              mapels.set(mapel, guru);
+                          }
+                      }
+                  });
+              });
+              return Array.from(mapels.entries()).map(([mapel, guru]) => ({ mapel, guru })).sort((a,b) => a.mapel.localeCompare(b.mapel));
+          };
+
+          const getTeacherMapelsForClass = (teacherName, className) => {
+              const list = getMapelsAndGurusForClass(className);
+              const cleanName = (name) => name ? name.split(',')[0].toLowerCase().replace(/[^a-z]/g, '') : '';
+              const targetClean = cleanName(teacherName);
+              return list.filter(x => {
+                  const guruClean = cleanName(x.guru);
+                  return guruClean !== '' && (guruClean === targetClean || guruClean.includes(targetClean) || targetClean.includes(guruClean));
+              }).map(x => x.mapel);
+          };
+
+          useEffect(() => {
+              const mapels = getTeacherMapelsForClass(loggedInUser, activeClass);
+              if (mapels.length > 0) {
+                  if (!mapels.includes(selectedNilaiMapel)) setSelectedNilaiMapel(mapels[0]);
+              } else {
+                  setSelectedNilaiMapel('');
+              }
+          }, [loggedInUser, activeClass, selectedNilaiMapel]);
+
+          useEffect(() => {
+              const list = getMapelsAndGurusForClass(activeClass);
+              if (list.length > 0) {
+                  if (!list.find(x => `${x.mapel}|${x.guru}` === selectedReportNilaiMapelGuru)) {
+                      setSelectedReportNilaiMapelGuru(`${list[0].mapel}|${list[0].guru}`);
+                  }
+              } else {
+                  setSelectedReportNilaiMapelGuru('');
+              }
+          }, [activeClass, selectedReportNilaiMapelGuru]);
           
           const [viewJadwalMode, setViewJadwalMode] = useState('kelas');
           const [selectedJadwalClass, setSelectedJadwalClass] = useState('7A');
@@ -2591,7 +2660,8 @@
           };
           
           const handleGradeChange = (student, field, value) => {
-              const key = `${activeClass}-${student}`;
+              if (!selectedNilaiMapel) return;
+              const key = `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
               setGradesData(prev => {
                   const studentGrades = { ...(prev[key] || {}) };
                   studentGrades[field] = value;
@@ -2599,8 +2669,8 @@
               });
           };
 
-          const calculateGrades = (student) => {
-              const key = `${activeClass}-${student}`;
+          const calculateGrades = (student, customKey = null) => {
+              const key = customKey || `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
               const data = gradesData[key] || {};
               
               const parseG = (v) => (v !== undefined && v !== '' ? parseFloat(v) : null);
@@ -2765,9 +2835,9 @@
             let rows = [];
 
             currentStudents.forEach((student, idx) => {
-                const key = `${activeClass}-${student}`;
+                const key = typeof reportGuru !== "undefined" ? `${activeClass}-${reportGuru}-${reportMapel}-${student}` : `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
                 const data = gradesData[key] || {};
-                const calc = calculateGrades(student);
+                const calc = calculateGrades(student, key);
                 let row = [
                     idx + 1,
                     student,
@@ -2945,13 +3015,14 @@
           };
 
           const handleExportGradesCSV = () => {
-            let csvContent = "\uFEFFDAFTAR NILAI KELAS " + activeClass + " (SEMESTER GANJIL)\n\n";
+            const [reportMapel, reportGuru] = selectedReportNilaiMapelGuru ? selectedReportNilaiMapelGuru.split('|') : ['', ''];
+            let csvContent = "\uFEFFDAFTAR NILAI KELAS " + activeClass + " - " + reportMapel + " (" + reportGuru + ")\n\n";
             csvContent += "No;Nama Siswa;S1;S2;S3;S4;S5;ASTS;Jml;Rata2;80%;ASAS;20%;Nilai Akhir\n";
             
             currentStudents.forEach((student, idx) => {
-                const key = `${activeClass}-${student}`;
+                const key = typeof reportGuru !== "undefined" ? `${activeClass}-${reportGuru}-${reportMapel}-${student}` : `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
                 const data = gradesData[key] || {};
-                const calc = calculateGrades(student);
+                const calc = calculateGrades(student, key);
                 let row = [
                     idx + 1, 
                     `"${student}"`, 
@@ -3036,7 +3107,11 @@
               });
               const entries = [];
               uniqueDates.forEach(tanggal => {
-                  const dayOfWeek = tanggal.split(',')[0].trim();
+                  const dayNamesStr = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+                  let dayOfWeek = tanggal.split(',')[0].trim();
+                  dayNamesStr.forEach(d => {
+                      if (tanggal.toLowerCase().includes(d.toLowerCase())) dayOfWeek = d;
+                  });
                   const raw = getScheduleForClass(activeClass);
                   const daySch = raw ? raw.find(d => d.day === dayOfWeek) : null;
                   if (daySch) {
@@ -3677,11 +3752,26 @@
                               <p className="text-xs text-slate-700 mt-1">Gunakan tabel ini untuk memasukkan nilai Sumatif (S1-S5), ASTS, dan ASAS.</p>
                           </div>
                           <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto relative z-10">
+                              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-emerald-300 shadow-xs flex-1 sm:flex-none justify-center">
+                                  <span className="text-xs font-bold text-emerald-800">Mapel:</span>
+                                  <select
+                                      value={selectedNilaiMapel}
+                                      onChange={(e) => setSelectedNilaiMapel(e.target.value)}
+                                      className="bg-transparent text-sm font-bold text-emerald-900 focus:outline-none cursor-pointer"
+                                  >
+                                      {getTeacherMapelsForClass(loggedInUser, activeClass).map(m => (
+                                          <option key={m} value={m}>{m}</option>
+                                      ))}
+                                      {getTeacherMapelsForClass(loggedInUser, activeClass).length === 0 && (
+                                          <option value="">- Tidak Mengajar -</option>
+                                      )}
+                                  </select>
+                              </div>
                               <button
                                   type="button"
-                                  disabled={isSyncing}
+                                  disabled={isSyncing || !selectedNilaiMapel}
                                   onClick={handleSyncGrades}
-                                  className={`px-4 py-2 font-bold rounded-lg text-xs shadow-xs transition-all touch-manipulation whitespace-nowrap flex-1 sm:flex-none ${isSyncing ? 'bg-emerald-400 text-white cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
+                                  className={`px-4 py-2 font-bold rounded-lg text-xs shadow-xs transition-all touch-manipulation whitespace-nowrap flex-1 sm:flex-none ${isSyncing || !selectedNilaiMapel ? 'bg-emerald-400 text-white cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
                               >
                                   {isSyncing ? 'Mengirim...' : 'Kirim Data Nilai'}
                               </button>
@@ -4098,9 +4188,28 @@
                               <h2 className="text-lg font-black text-slate-900 tracking-wide uppercase">REKAPITULASI DAFTAR NILAI KELAS {activeClass}</h2>
                               <p className="text-sm font-semibold text-slate-800">SEMESTER GANJIL TAHUN AJARAN 2026/2027</p>
                             </div>
-                            <button type="button" onClick={handleExportGradesCSV} className="px-4 py-2 bg-white/90 hover:bg-white text-slate-800 font-bold rounded-lg text-xs shadow-sm transition-all border border-[#a9c996]">
-                                Unduh CSV
-                            </button>
+                            <div className="flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-2 bg-white/80 px-3 py-1.5 rounded-lg border border-[#a9c996] shadow-sm">
+                                    <span className="text-xs font-bold text-slate-800">Pelajaran:</span>
+                                    <select
+                                        value={selectedReportNilaiMapelGuru}
+                                        onChange={(e) => setSelectedReportNilaiMapelGuru(e.target.value)}
+                                        className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-[200px]"
+                                    >
+                                        {getMapelsAndGurusForClass(activeClass).map(x => (
+                                            <option key={`${x.mapel}|${x.guru}`} value={`${x.mapel}|${x.guru}`}>
+                                                {x.mapel} - {x.guru}
+                                            </option>
+                                        ))}
+                                        {getMapelsAndGurusForClass(activeClass).length === 0 && (
+                                            <option value="">- Kosong -</option>
+                                        )}
+                                    </select>
+                                </div>
+                                <button type="button" onClick={handleExportGradesCSV} className="px-4 py-2 bg-white/90 hover:bg-white text-slate-800 font-bold rounded-lg text-xs shadow-sm transition-all border border-[#a9c996]">
+                                    Unduh CSV
+                                </button>
+                            </div>
                           </div>
                           
                           <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '65vh' }}>
@@ -4128,9 +4237,9 @@
                               </thead>
                               <tbody>
                                 {currentStudents.map((student, idx) => {
-                                    const key = `${activeClass}-${student}`;
+                                    const key = typeof reportGuru !== "undefined" ? `${activeClass}-${reportGuru}-${reportMapel}-${student}` : `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
                                     const data = gradesData[key] || {};
-                                    const calc = calculateGrades(student);
+                                    const calc = calculateGrades(student, key);
 
                                     return (
                                       <tr key={idx} className="hover:bg-slate-50 transition-colors border-b border-slate-300">
@@ -4877,6 +4986,8 @@
 
         const root = window.ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
-    </script>
+    
+    } catch(e) { document.body.innerHTML = '<div style="color:red; padding: 20px; font-family:monospace; background:white; position:fixed; top:0; left:0; right:0; bottom:0; z-index:999999;"><h3>TERJADI ERROR (Mohon fotokan ini):</h3><p>' + e.message + '</p><pre>' + e.stack + '</pre></div>'; }
+</script>
 </body>
 </html>

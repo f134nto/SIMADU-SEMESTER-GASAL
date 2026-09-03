@@ -359,9 +359,9 @@
           { id: 28, name: "Arif Irfanudin, S.Pd", subject: "IPS" },
           { id: 29, name: "Emi Astuti, S.E", subject: "Ilmu Pengetahuan Sosial" },
           { id: 30, name: "Fatma Hidayatutsani, S.Pd", subject: "IPA" },
-          { id: 31, name: "Endah Lesatari, S.Pd.I.", subject: "Bahasa Arab" },
+          { id: 31, name: "Endah Lestari, S.Pd.I.", subject: "Bahasa Arab" },
           { id: 32, name: "Asep Sugianto S.Pd", subject: "Akhidah Akhlak" },
-          { id: 33, name: "Yogi Bayun Wiasih, S.Pd. I", subject: "Bahasa Arab" },
+          { id: 33, name: "Yogi Bayun Wiasih, S.Pd.I", subject: "Bahasa Arab" },
           { id: 34, name: "Farid Wujdi, S.Si", subject: "IPA" },
           { id: 35, name: "Ramadhenthy Ahlan, S.Pd", subject: "Bahasa Inggris" },
           { id: 36, name: "Leonita Pramuda Wardani, S.Pd", subject: "PJOK" },
@@ -387,7 +387,7 @@
           { id: 13, name: "Laela Nur Latifah, S.Pd.", class: "VIII B", nip: "NIP. 198202112007012005" },
           { id: 14, name: "Safriah, S.Pd", class: "VIII C", nip: "-" },
           { id: 15, name: "S.Enny Musrifa M, S.Pd.", class: "VIII D", nip: "NIP. 197512162005012002" },
-          { id: 16, name: "Endah Lesatari, S.Pd.I.", class: "VIII E", nip: "-" },
+          { id: 16, name: "Endah Lestari, S.Pd.I.", class: "VIII E", nip: "-" },
           { id: 17, name: "Istikowati, S.Pd", class: "VIII F", nip: "-" },
           { id: 18, name: "Farid Wujdi, S.Si", class: "VIII G", nip: "-" },
           { id: 19, name: "Aziz Kuntoro, S.Pd.", class: "VIII H", nip: "-" },
@@ -395,7 +395,7 @@
           { id: 21, name: "Arif Puji Santoso, S.Pd", class: "VIII J", nip: "-" },
           { id: 22, name: "Lia Soviani, S.Pd", class: "VII A", nip: "-" },
           { id: 23, name: "Emi Astuti, S.E", class: "VII B", nip: "-" },
-          { id: 24, name: "Yogi Bayun Wiasih, S.Pd. I", class: "VII C", nip: "-" },
+          { id: 24, name: "Yogi Bayun Wiasih, S.Pd.I", class: "VII C", nip: "-" },
           { id: 25, name: "Fatma Hidayatutsani, S.Pd", class: "VII D", nip: "-" },
           { id: 26, name: "Ramadhenthy Ahlan, S.Pd", class: "VII E", nip: "-" },
           { id: 27, name: "Leonita Pramuda Wardani, S.Pd", class: "VII F", nip: "-" },
@@ -488,1545 +488,1622 @@
         };
 
         const RAW_CLASS_SCHEDULES = {
-          "7A": {
-                    "Senin": [
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd"
-                    ],
-                    "Selasa": [
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Pendidikan Pancasila|Retno Susilowati, S.H",
-                              "Pendidikan Pancasila|Retno Susilowati, S.H"
-                    ],
-                    "Rabu": [
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "BK|Purbayu Budi Santosa, S.Pd",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd"
-                    ],
-                    "Kamis": [
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd",
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd",
-                              "Fiqih|Umi Habibah, S.Pd.I",
-                              "Fiqih|Umi Habibah, S.Pd.I",
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Ke-NU-an|Agus Rahmat, S.H.I"
-                    ],
-                    "Jumat": [
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I"
-                    ],
-                    "Sabtu": [
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I"
-                    ]
-          },
-          "7B": {
-                    "Senin": [
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Fiqih|Umi Habibah, S.Pd.I",
-                              "Fiqih|Umi Habibah, S.Pd.I",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E"
-                    ],
-                    "Selasa": [
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "BK|Purbayu Budi Santosa, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd"
-                    ],
-                    "Rabu": [
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd",
-                              "Bahasa Jawa|Purbayu Budi Santosa, S.Pd",
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "Pendidikan Pancasila|Retno Susilowati, S.H",
-                              "Pendidikan Pancasila|Retno Susilowati, S.H"
-                    ],
-                    "Kamis": [
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd"
-                    ],
-                    "Jumat": [
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd",
-                              "Ke-NU-an|Agus Rahmat, S.H.I",
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd"
-                    ],
-                    "Sabtu": [
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd"
-                    ]
-          },
-          "7C": {
-                    "Senin": [
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Prakarya|S.Enny Musrifa M, S.Pd."
-                    ],
-                    "Selasa": [
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "Bahasa Jawa|Purbayu Budi Santosa, S.Pd",
-                              "BK|Purbayu Budi Santosa, S.Pd"
-                    ],
-                    "Rabu": [
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
-                              "Fiqih|Umi Habibah, S.Pd.I",
-                              "Fiqih|Umi Habibah, S.Pd.I",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I"
-                    ],
-                    "Kamis": [
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Pendidikan Pancasila|Retno Susilowati, S.H",
-                              "Pendidikan Pancasila|Retno Susilowati, S.H",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd"
-                    ],
-                    "Jumat": [
-                              "Ke-NU-an|Agus Rahmat, S.H.I",
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd",
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I"
-                    ],
-                    "Sabtu": [
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E"
-                    ]
-          },
-          "7D": {
-                    "Senin": [
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd"
-                    ],
-                    "Selasa": [
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "BK|Purbayu Budi Santosa, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd"
-                    ],
-                    "Rabu": [
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd"
-                    ],
-                    "Kamis": [
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Ke-NU-an|Agus Rahmat, S.H.I",
-                              "Fiqih|Umi Habibah, S.Pd.I",
-                              "Fiqih|Umi Habibah, S.Pd.I",
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd"
-                    ],
-                    "Jumat": [
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd"
-                    ],
-                    "Sabtu": [
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Bahasa Jawa|Arif Puji Santoso, S.Pd"
-                    ]
-          },
-          "7E": {
-                    "Senin": [
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "BK|Purbayu Budi Santosa, S.Pd",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I"
-                    ],
-                    "Selasa": [
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd"
-                    ],
-                    "Rabu": [
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Matematika|Laili Latifah, S.Pd.",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd"
-                    ],
-                    "Kamis": [
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Matematika|Laili Latifah, S.Pd.",
-                              "Matematika|Laili Latifah, S.Pd.",
-                              "Bahasa Jawa|Arif Puji Santoso, S.Pd",
-                              "Fiqih|Umi Habibah, S.Pd.I"
-                    ],
-                    "Jumat": [
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Matematika|Laili Latifah, S.Pd.",
-                              "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd",
-                              "Fiqih|Umi Habibah, S.Pd.I"
-                    ],
-                    "Sabtu": [
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Ke-NU-an|Agus Rahmat, S.H.I"
-                    ]
-          },
-          "7F": {
-                    "Senin": [
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "BK|Purbayu Budi Santosa, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I"
-                    ],
-                    "Selasa": [
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd."
-                    ],
-                    "Rabu": [
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd"
-                    ],
-                    "Kamis": [
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Ke-NU-an|Hanifah, S.Pd",
-                              "Bahasa Indonesia|Safriah, S.Pd",
-                              "Bahasa Indonesia|Safriah, S.Pd",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I"
-                    ],
-                    "Jumat": [
-                              "Bahasa Indonesia|Safriah, S.Pd",
-                              "Bahasa Indonesia|Safriah, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Bahasa Jawa|Arif Puji Santoso, S.Pd"
-                    ],
-                    "Sabtu": [
-                              "Bahasa Indonesia|Safriah, S.Pd",
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Akhidah Akhlak|Asep Sugianto, S.Pd"
-                    ]
-          },
-          "7G": {
-                    "Senin": [
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
-                              "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd"
-                    ],
-                    "Selasa": [
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "BK|Purbayu Budi Santosa, S.Pd",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd"
-                    ],
-                    "Rabu": [
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Indonesia|Safriah, S.Pd"
-                    ],
-                    "Kamis": [
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Indonesia|Safriah, S.Pd",
-                              "Bahasa Indonesia|Safriah, S.Pd"
-                    ],
-                    "Jumat": [
-                              "Bahasa Jawa|Arif Puji Santoso, S.Pd",
-                              "Ke-NU-an|Hanifah, S.Pd",
-                              "Bahasa Indonesia|Safriah, S.Pd",
-                              "Bahasa Indonesia|Safriah, S.Pd"
-                    ],
-                    "Sabtu": [
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Prakarya|S.Enny Musrifa M, S.Pd."
-                    ]
-          },
-          "7H": {
-                    "Senin": [
-                              "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
-                              "BK|Purbayu Budi Santosa, S.Pd",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Jawa|Arif Puji Santoso, S.Pd"
-                    ],
-                    "Selasa": [
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Matematika|Ipung Purwanti, S.T",
-                              "Ke-NU-an|Hanifah, S.Pd"
-                    ],
-                    "Rabu": [
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd.",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Bahasa Indonesia|Leonita Pramuda Wardani, S.Pd",
-                              "Bahasa Indonesia|Leonita Pramuda Wardani, S.Pd",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd."
-                    ],
-                    "Kamis": [
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Bahasa Indonesia|Leonita Pramuda Wardani, S.Pd",
-                              "Bahasa Indonesia|Leonita Pramuda Wardani, S.Pd",
-                              "Bahasa Indonesia|Leonita Pramuda Wardani, S.Pd"
-                    ],
-                    "Jumat": [
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I"
-                    ],
-                    "Sabtu": [
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "Bahasa Inggris|Rita Rosdiana, S.Pd."
-                    ]
-          },
-          "8A": {
-                    "Senin": [
-                              "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
-                              "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
-                              "Bahasa Indonesia|Istikowati, S.Pd",
-                              "Bahasa Indonesia|Istikowati, S.Pd",
-                              "Ke-NU-an|Hanifah, S.Pd",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Pendidikan Pancasila|Slamet, S.Pd."
-                    ],
-                    "Selasa": [
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
-                              "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
-                              "Bahasa Indonesia|Istikowati, S.Pd",
-                              "Fiqih|Umi Habibah, S.Pd.I",
-                              "Fiqih|Umi Habibah, S.Pd.I",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag"
-                    ],
-                    "Rabu": [
-                              "BK|Purbayu Budi Santosa, S.Pd",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Al Qur'an Hadis|Agus Rahmat, S.H.I",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd"
-                    ],
-                    "Kamis": [
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd"
-                    ],
-                    "Jumat": [
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Bahasa Jawa|Aziz Kuntoro, S.Pd"
-                    ],
-                    "Sabtu": [
-                              "Bahasa Indonesia|Istikowati, S.Pd",
-                              "Bahasa Indonesia|Istikowati, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd"
-                    ]
-          },
-          "8B": {
-                    "Senin": [
-                              "Matematika|Karsono, S.Pt",
-                              "Matematika|Karsono, S.Pt",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "BK|Purbayu Budi Santosa, S.Pd",
-                              "Bahasa Indonesia|Istikowati, S.Pd",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag"
-                    ],
-                    "Selasa": [
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Prakarya|S. Enny Musrifa M, S.Pd.",
-                              "Bahasa Indonesia|Istikowati, S.Pd",
-                              "Al Qur'an Hadis|Hanifah, S.Pd",
-                              "Al Qur'an Hadis|Hanifah, S.Pd",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd"
-                    ],
-                    "Rabu": [
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Fiqih|Samsudin, S.H.I",
-                              "Fiqih|Samsudin, S.H.I",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Bahasa Jawa|Aziz Kuntoro, S.Pd"
-                    ],
-                    "Kamis": [
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ke-NU-an|Sugiro, S.Pd.I",
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Bahasa Indonesia|Istikowati, S.Pd"
-                    ],
-                    "Jumat": [
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Matematika|Karsono, S.Pt",
-                              "Matematika|Karsono, S.Pt"
-                    ],
-                    "Sabtu": [
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Indonesia|Istikowati, S.Pd",
-                              "Bahasa Indonesia|Istikowati, S.Pd"
-                    ]
-          },
-          "8C": {
-                    "Senin": [
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Matematika|Karsono, S.Pt",
-                              "Matematika|Karsono, S.Pt",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag",
-                              "Ke-NU-an|Sugiro, S.Pd.I",
-                              "BK|Imam Zaenudin, S.Pd.I"
-                    ],
-                    "Selasa": [
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Matematika|Karsono, S.Pt",
-                              "Prakarya|S. Enny Musrifa M, S.Pd.",
-                              "Bahasa Jawa|Aziz Kuntoro, S.Pd",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Indonesia|Fatma Hidayatutsani, S.Pd",
-                              "Fiqih|Samsudin, S.H.I",
-                              "Fiqih|Samsudin, S.H.I"
-                    ],
-                    "Rabu": [
-                              "Matematika|Karsono, S.Pt",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Akhidah Akhlak|Winarsih, S.Ag"
-                    ],
-                    "Kamis": [
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd"
-                    ],
-                    "Jumat": [
-                              "Bahasa Indonesia|Fatma Hidayatutsani, S.Pd",
-                              "Bahasa Indonesia|Fatma Hidayatutsani, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd.",
-                              "Akhidah Akhlak|Winarsih, S.Ag"
-                    ],
-                    "Sabtu": [
-                              "Bahasa Indonesia|Fatma Hidayatutsani, S.Pd",
-                              "Bahasa Indonesia|Fatma Hidayatutsani, S.Pd",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag",
-                              "Al Qur'an Hadis|Hanifah, S.Pd",
-                              "Al Qur'an Hadis|Hanifah, S.Pd"
-                    ]
-          },
-          "8D": {
-                    "Senin": [
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "BK|Imam Zaenudin, S.Pd.I",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Matematika|Karsono, S.Pt",
-                              "Matematika|Karsono, S.Pt",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si"
-                    ],
-                    "Selasa": [
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Matematika|Karsono, S.Pt",
-                              "Matematika|Karsono, S.Pt",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si"
-                    ],
-                    "Rabu": [
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Ke-NU-an|Sugiro, S.Pd.I",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "PJOK|Aziz Kuntoro, S.Pd",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I"
-                    ],
-                    "Kamis": [
-                              "Al Qur'an Hadis|Hanifah, S.Pd",
-                              "Al Qur'an Hadis|Hanifah, S.Pd",
-                              "Fiqih|Samsudin, S.H.I",
-                              "Fiqih|Samsudin, S.H.I",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Bahasa Jawa|Aziz Kuntoro, S.Pd"
-                    ],
-                    "Jumat": [
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I"
-                    ],
-                    "Sabtu": [
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Inggris|Safriah, S.Pd"
-                    ]
-          },
-          "8E": {
-                    "Senin": [
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "BK|Imam Zaenudin, S.Pd.I",
-                              "Al Qur'an Hadis|Hanifah, S.Pd",
-                              "Matematika|Karsono, S.Pt"
-                    ],
-                    "Selasa": [
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Bahasa Jawa|Aziz Kuntoro, S.Pd",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Matematika|Karsono, S.Pt",
-                              "Matematika|Karsono, S.Pt"
-                    ],
-                    "Rabu": [
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Matematika|Karsono, S.Pt",
-                              "Ke-NU-an|Sugiro, S.Pd.I",
-                              "Al Qur'an Hadis|Hanifah, S.Pd",
-                              "Sejarah Kebudayaan  Islam|Waniti, S.Ag",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Pendidikan Pancasila|Slamet, S.Pd."
-                    ],
-                    "Kamis": [
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Informatika|Fitrianto Puji P, S.Kom"
-                    ],
-                    "Jumat": [
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd."
-                    ],
-                    "Sabtu": [
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Fiqih|Samsudin, S.H.I",
-                              "Fiqih|Samsudin, S.H.I"
-                    ]
-          },
-          "8F": {
-                    "Senin": [
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd"
-                    ],
-                    "Selasa": [
-                              "BK|Imam Zaenudin, S.Pd.I",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I"
-                    ],
-                    "Rabu": [
-                              "Fiqih|Wahyu Ushulludin, S.Th.l",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Matematika|Karsono, S.Pt",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Ke-NU-an|Sugiro, S.Pd.I"
-                    ],
-                    "Kamis": [
-                              "Matematika|Karsono, S.Pt",
-                              "Matematika|Karsono, S.Pt",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Matematika|Karsono, S.Pt",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I"
-                    ],
-                    "Jumat": [
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Al Qur'an Hadis|Hanifah, S.Pd",
-                              "Al Qur'an Hadis|Hanifah, S.Pd"
-                    ],
-                    "Sabtu": [
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "Bahasa Jawa|Aziz Kuntoro, S.Pd",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si"
-                    ]
-          },
-          "8G": {
-                    "Senin": [
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Sejarah Kebudayaan Islam|Asep Sugianto, S.Pd",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Fiqih|Wahyu Ushulludin, S.Th.l",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "Bahasa Inggris|Safriah, S.Pd"
-                    ],
-                    "Selasa": [
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd."
-                    ],
-                    "Rabu": [
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Al Qur'an Hadis|Hanifah, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Imam Zaenudin, S.Pd.I",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Matematika|Karsono, S.Pt",
-                              "Matematika|Karsono, S.Pt",
-                              "Akhidah Akhlak|Wahyu Ushulludin, S.Th.l"
-                    ],
-                    "Kamis": [
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "Matematika|Karsono, S.Pt",
-                              "Matematika|Karsono, S.Pt",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Ke-NU-an|Sugiro, S.Pd.I",
-                              "Akhidah Akhlak|Wahyu Ushulludin, S.Th.1"
-                    ],
-                    "Jumat": [
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd"
-                    ],
-                    "Sabtu": [
-                              "Al Qur'an Hadis|Hanifah, S.Pd",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Jawa|Arif Puji Santoso, S.Pd",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Pendidikan Pancasila|Slamet, S.Pd."
-                    ]
-          },
-          "8H": {
-                    "Senin": [
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Inggris|Safriah, S.Pd",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I"
-                    ],
-                    "Selasa": [
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "Al Qur'an Hadis|Samsudin, S.H.I",
-                              "Al Qur'an Hadis|Samsudin, S.H.I",
-                              "Ke-NU-an|Sugiro, S.Pd.I",
-                              "Akhidah Akhlak|Wahyu Ushulludin, S.Th.!",
-                              "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
-                              "Informatika|Fitrianto Puji P, S.Kom"
-                    ],
-                    "Rabu": [
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd.",
-                              "Matematika|Karsono, S.Pt",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Bahasa Jawa|Arif Puji Santoso, S.Pd",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Matematika|Karsono, S.Pt"
-                    ],
-                    "Kamis": [
-                              "BK|Imam Zaenudin, S.Pd.I",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Matematika|Karsono, S.Pt",
-                              "Matematika|Karsono, S.Pt"
-                    ],
-                    "Jumat": [
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd.",
-                              "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd."
-                    ],
-                    "Sabtu": [
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd."
-                    ]
-          },
-          "8I": {
-                    "Senin": [
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Bahasa Arab|Endah Lestari, S.Pd.I",
-                              "Al Qur'an Hadis|Samsudin, S.H.I",
-                              "Al Qur'an Hadis|Samsudin, S.H.I"
-                    ],
-                    "Selasa": [
-                              "Matematika|Karsono, S.Pt",
-                              "Bahasa Indonesia|Hanifah, S.Pd",
-                              "Bahasa Indonesia|Hanifah, S.Pd",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Bahasa Jawa|Arif Puji Santoso, S.Pd",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Pendidikan Pancasila|Slamet, S.Pd."
-                    ],
-                    "Rabu": [
-                              "Bahasa Indonesia|Hanifah, S.Pd",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "Ke-NUan-|Sugiro, S.Pd.I",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
-                              "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd."
-                    ],
-                    "Kamis": [
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "BK|Imam Zaenudin, S.Pd.I",
-                              "Bahasa Inggris|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Inggris|Ramadhenthy Ahlan, S.Pd.",
-                              "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E"
-                    ],
-                    "Jumat": [
-                              "Matematika|Karsono, S.Pt",
-                              "Matematika|Karsono, S.Pt",
-                              "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
-                              "Ilmu Pengetahuan Sosial|Emi Astuti, S.E"
-                    ],
-                    "Sabtu": [
-                              "Matematika|Karsono, S.Pt",
-                              "Bahasa Indonesia|Hanifah, S.Pd",
-                              "Bahasa Indonesia|Hanifah, S.Pd",
-                              "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd.",
-                              "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd."
-                    ]
-          },
-          "8J": {
-                    "Senin": [
-                              "Bahasa Indonesia|Hanifah, S.Pd",
-                              "Bahasa Indonesia|Hanifah, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Leonita Pramuda Wardani, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Bahasa Indonesia|Hanifah, S.Pd"
-                    ],
-                    "Selasa": [
-                              "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd.",
-                              "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd.",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Ke-NU-an|Sugiro, S.Pd.I",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Bahasa Inggris|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Jawa|Arif Puji Santoso, S.Pd",
-                              "Prakarya|S. Enny Musrifa M, S.Pd."
-                    ],
-                    "Rabu": [
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "PJOK|Arif Puji Santoso, S.Pd",
-                              "Akhidah Akhlak|Wahyu Ushulludin, S.Th.l",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "Fiqih|Wahyu Ushulludin, S.Th.I",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si"
-                    ],
-                    "Kamis": [
-                              "Al Qur'an Hadis|Samsudin, S.H.I",
-                              "Al Qur'an Hadis|Samsudin, S.H.I",
-                              "BK|Imam Zaenudin, S.Pd.I.",
-                              "Bahasa Indonesia|Hanifah, S.Pd",
-                              "Bahasa Indonesia|Hanifah, S.Pd",
-                              "Bahasa Inggris|Ramadhenthy Ahlan, S.Pd.",
-                              "Bahasa Inggris|Ramadhenthy Ahlan, S.Pd."
-                    ],
-                    "Jumat": [
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Matematika|Kurniawan Aji Sularsono, S.Pd",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
-                              "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si"
-                    ],
-                    "Sabtu": [
-                              "Akhidah Akhlak|Wahyu Ushulludin, S. Th.I",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Pendidikan Pancasila|Slamet, S.Pd.",
-                              "Ilmu Pengetahuan Sosial|Leonita Pramuda Wardani, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Leonita Pramuda Wardani, S.Pd"
-                    ]
-          },
-          "9A": {
-                    "Senin": [
-                              "Ke-NU-an|Ahlan, S.Ag.",
-                              "Ke-NU-an|Ahlan, S.Ag.",
-                              "Bahasa Jawa|Purbayu Budi S.",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "Fiqih|Agus Rahmat"
-                    ],
-                    "Selasa": [
-                              "Fiqih|Agus Rahmat",
-                              "SKI|Waniti, S.Ag",
-                              "SKI|Waniti, S.Ag",
-                              "PJOK|Leonita P.",
-                              "PJOK|Leonita P.",
-                              "IPS|Imam Zaenudin",
-                              "Prakarya|S.Enny Musrifa",
-                              "Matematika|Ipung Purwanti"
-                    ],
-                    "Rabu": [
-                              "IPS|Imam Zaenudin",
-                              "IPS|Imam Zaenudin",
-                              "Bahasa Indonesia|Istikowati",
-                              "Matematika|Ipung Purwanti",
-                              "Matematika|Ipung Purwanti",
-                              "IPA|Siti Lestari",
-                              "IPA|Siti Lestari",
-                              "Bahasa Indonesia|Istikowati"
-                    ],
-                    "Kamis": [
-                              "IPA|Siti Lestari",
-                              "IPA|Siti Lestari",
-                              "Bahasa Arab|Latifatul M.",
-                              "Akhidah Akhlak|Winarsih",
-                              "Bahasa Indonesia|Istikowati",
-                              "Bahasa Indonesia|Istikowati",
-                              "Matematika|Ipung Purwanti"
-                    ],
-                    "Jumat": [
-                              "PPKn|Retno Susilowati",
-                              "PPKn|Retno Susilowati",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Bahasa Indonesia|Istikowati"
-                    ],
-                    "Sabtu": [
-                              "Bahasa Inggris|Lia Soviani",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Akhidah Akhlak|Winarsih",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Arab|Latifatul M."
-                    ]
-          },
-          "9B": {
-                    "Senin": [
-                              "PPKn|Retno S.",
-                              "PPKn|Retno S.",
-                              "Ke-NU-an|Ahlan, S.Ag.",
-                              "Ke-NU-an|Ahlan, S.Ag.",
-                              "Fiqih|Agus Rahmat",
-                              "IPS|Imam Z.",
-                              "Al Qur'an Hadis|Umi Habibah"
-                    ],
-                    "Selasa": [
-                              "Bahasa Inggris|Lia Soviani",
-                              "PJOK|Leonita P.",
-                              "PJOK|Leonita P.",
-                              "SKI|Waniti, S.Ag",
-                              "SKI|Waniti, S.Ag",
-                              "Fiqih|Agus Rahmat",
-                              "IPS|Imam Z.",
-                              "IPS|Imam Z."
-                    ],
-                    "Rabu": [
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "IPA|Siti Lestari",
-                              "IPA|Siti Lestari",
-                              "Akhidah Akhlak|Winarsih",
-                              "Akhidah Akhlak|Winarsih",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Arab|Latifatul M.",
-                              "Matematika|Ipung Purwanti"
-                    ],
-                    "Kamis": [
-                              "Matematika|Ipung Purwanti",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Indonesia|Istikowati",
-                              "Bahasa Jawa|Purbayu Budi S.",
-                              "Prakarya|S.Enny Musrifa",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Bahasa Inggris|Lia Soviani"
-                    ],
-                    "Jumat": [
-                              "Bahasa Indonesia|Istikowati",
-                              "Bahasa Indonesia|Istikowati",
-                              "Bahasa Indonesia|Istikowati",
-                              "Informatika|Fitrianto Puji P, S.Kom"
-                    ],
-                    "Sabtu": [
-                              "Matematika|Ipung Purwanti",
-                              "Matematika|Ipung Purwanti",
-                              "Bahasa Indonesia|Istikowati",
-                              "IPA|Siti Lestari",
-                              "IPA|Siti Lestari"
-                    ]
-          },
-          "9C": {
-                    "Senin": [
-                              "PJOK|Leonita P.",
-                              "PJOK|Leonita P.",
-                              "IPA|Siti Lestari",
-                              "SKI|Waniti, S.Ag",
-                              "PPKn|Retno S.",
-                              "PPKn|Retno S.",
-                              "Ke-NU-an|Ahlan, S.Ag."
-                    ],
-                    "Selasa": [
-                              "Bahasa Jawa|Purbayu Budi S.",
-                              "Bahasa Inggris|Lia Soviani",
-                              "IPS|Imam Z.",
-                              "IPS|Imam Z.",
-                              "Bahasa Indonesia|Istikowati",
-                              "SKI|Waniti, S.Ag",
-                              "IPA|Siti Lestari",
-                              "IPA|Siti Lestari"
-                    ],
-                    "Rabu": [
-                              "IPA|Siti Lestari",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Akhidah Akhlak|Winarsih",
-                              "Bahasa Indonesia|Istikowati",
-                              "Bahasa Indonesia|Istikowati",
-                              "Fiqih|Agus Rahmat",
-                              "Fiqih|Agus Rahmat",
-                              "IPS|Imam Z."
-                    ],
-                    "Kamis": [
-                              "Bahasa Indonesia|Istikowati",
-                              "Bahasa Indonesia|Istikowati",
-                              "Matematika|Ipung Purwanti",
-                              "Matematika|Ipung Purwanti",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Arab|Latifatul M.",
-                              "Prakarya|S.Enny Musrifa"
-                    ],
-                    "Jumat": [
-                              "Bahasa Inggris|Lia Soviani",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Matematika|Ipung Purwanti",
-                              "Matematika|Ipung Purwanti"
-                    ],
-                    "Sabtu": [
-                              "Bahasa Arab|Latifatul M.",
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "Ke-NU-an|Ahlan, S.Ag.",
-                              "Akhidah Akhlak|Winarsih"
-                    ]
-          },
-          "9D": {
-                    "Senin": [
-                              "Bahasa Indonesia|Istikowati",
-                              "Bahasa Indonesia|Istikowati",
-                              "Akhidah Akhlak|Winarsih",
-                              "Akhidah Akhlak|Winarsih",
-                              "IPA|Siti Lestari",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Bahasa Inggris|Lia Soviani"
-                    ],
-                    "Selasa": [
-                              "Bahasa Indonesia|Istikowati",
-                              "Bahasa Indonesia|Istikowati",
-                              "Ke-NU-an|Ahlan, S.Ag.",
-                              "Ke-NU-an|Ahlan, S.Ag.",
-                              "IPA|Siti Lestari",
-                              "IPA|Siti Lestari",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Arab|Latifatul M."
-                    ],
-                    "Rabu": [
-                              "PPKn|Retno S.",
-                              "Bahasa Indonesia|Istikowati",
-                              "Prakarya|S.Enny Musrifa",
-                              "IPS|Imam Z.",
-                              "IPS|Imam Z.",
-                              "IPS|Imam Z.",
-                              "Matematika|Srie Kuntari",
-                              "Matematika|Srie Kuntari"
-                    ],
-                    "Kamis": [
-                              "PJOK|Leonita P.",
-                              "PJOK|Leonita P.",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Matematika|Srie Kuntari",
-                              "PPKn|Retno S.",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Bahasa Arab|Latifatul M."
-                    ],
-                    "Jumat": [
-                              "Matematika|Srie Kuntari",
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "IPA|Siti Lestari"
-                    ],
-                    "Sabtu": [
-                              "Fiqih|Samsudin",
-                              "Fiqih|Samsudin",
-                              "Bahasa Jawa|Purbayu Budi S.",
-                              "SKI|Waniti, S.Ag",
-                              "SKI|Waniti, S.Ag"
-                    ]
-          },
-          "9E": {
-                    "Senin": [
-                              "Akhidah Akhlak|Winarsih",
-                              "Akhidah Akhlak|Winarsih",
-                              "Bahasa Arab|Latifatul M.",
-                              "IPS|Imam Z.",
-                              "Bahasa Inggris|Lia Soviani",
-                              "IPA|Siti Lestari",
-                              "IPA|Siti Lestari"
-                    ],
-                    "Selasa": [
-                              "SKI|Waniti, S.Ag",
-                              "IPA|Siti Lestari",
-                              "IPA|Siti Lestari",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Indonesia|Istikowati",
-                              "Bahasa Indonesia|Istikowati",
-                              "Bahasa Indonesia|Istikowati"
-                    ],
-                    "Rabu": [
-                              "Ke-NU-an|Ahlan, S.Ag.",
-                              "Ke-NU-an|Ahlan, S.Ag.",
-                              "Bahasa Jawa|Purbayu Budi S.",
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "Bahasa Indonesia|Istikowati",
-                              "Bahasa Indonesia|Istikowati",
-                              "Informatika|Fitrianto Puji P, S.Kom"
-                    ],
-                    "Kamis": [
-                              "Matematika|Srie Kuntari",
-                              "Matematika|Srie Kuntari",
-                              "PJOK|Leonita P.",
-                              "PJOK|Leonita P.",
-                              "Fiqih|Samsudin",
-                              "IPS|Imam Z.",
-                              "IPS|Imam Z."
-                    ],
-                    "Jumat": [
-                              "SKI|Waniti, S.Ag",
-                              "Matematika|Srie Kuntari",
-                              "Matematika|Srie Kuntari",
-                              "Fiqih|Samsudin"
-                    ],
-                    "Sabtu": [
-                              "Prakarya|S.Enny Musrifa",
-                              "PPKn|Retno S.",
-                              "PPKn|Retno S.",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Bahasa Inggris|Lia Soviani"
-                    ]
-          },
-          "9F": {
-                    "Senin": [
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "IPA|Laela Nur L.",
-                              "IPA|Laela Nur L.",
-                              "Fiqih|Samsudin",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Bahasa Arab|Latifatul M."
-                    ],
-                    "Selasa": [
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "IPA|Laela Nur L.",
-                              "Bahasa Jawa|Purbayu Budi S.",
-                              "PPKn|Retno S.",
-                              "Akhidah Akhlak|Winarsih",
-                              "Akhidah Akhlak|Winarsih"
-                    ],
-                    "Rabu": [
-                              "Fiqih|Samsudin",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Inggris|Lia Soviani",
-                              "PPKn|Retno S.",
-                              "IPS|Imam Z.",
-                              "IPA|Laela Nur L."
-                    ],
-                    "Kamis": [
-                              "SKI|Waniti, S.Ag",
-                              "SKI|Waniti, S.Ag",
-                              "Matematika|Srie Kuntari",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Ke-NU-an|Wahyu Ushulludin",
-                              "Matematika|Srie Kuntari"
-                    ],
-                    "Jumat": [
-                              "PJOK|Leonita P.",
-                              "PJOK|Leonita P.",
-                              "IPS|Imam Z.",
-                              "IPS|Imam Z."
-                    ],
-                    "Sabtu": [
-                              "Matematika|Srie Kuntari",
-                              "Matematika|Srie Kuntari",
-                              "Prakarya|S.Enny Musrifa",
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "Ke-NU-an|Wahyu Ushulludin"
-                    ]
-          },
-          "9G": {
-                    "Senin": [
-                              "Prakarya|S.Enny Musrifa M, S.Pd.",
-                              "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Bahasa Indonesia|Siti Mukromah, S.Ag.",
-                              "Bahasa Indonesia|Siti Mukromah, S.Ag.",
-                              "Bahasa Indonesia|Siti Mukromah, S.Ag.",
-                              "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
-                              "Bahasa Inggris|Lia Soviani, S.Pd"
-                    ],
-                    "Selasa": [
-                              "Fiqih|Samsudin, S.H.I",
-                              "Bahasa Inggris|Lia Soviani, S.Pd",
-                              "Bahasa Indonesia|Siti Mukromah, S.Ag.",
-                              "Bahasa Indonesia|Siti Mukromah, S.Ag.",
-                              "Fiqih|Samsudin, S.H.I",
-                              "PJOK|Leonita Pramuda Wardani, S.Pd",
-                              "PJOK|Leonita Pramuda Wardani, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Imam Zaenudin, S.Pd.I"
-                    ],
-                    "Rabu": [
-                              "Ilmu Pengetahuan Sosial|Imam Zaenudin, S.Pd.I",
-                              "Bahasa Inggris|Lia Soviani, S.Pd",
-                              "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
-                              "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
-                              "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Pendidikan Pancasila|Retno Susilowati, S.H",
-                              "Matematika|Srie Kuntari, S.Pd."
-                    ],
-                    "Kamis": [
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag",
-                              "Sejarah Kebudayaan Islam|Waniti, S.Ag",
-                              "Akhidah Akhlak|Winarsih, S.Ag",
-                              "Al Qur'an Hadis|Umi Habibah, S.Pd.I",
-                              "-|-",
-                              "-|-",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
-                              "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd"
-                    ],
-                    "Jumat": [
-                              "Matematika|Srie Kuntari, S.Pd.",
-                              "Matematika|Srie Kuntari, S.Pd.",
-                              "Matematika|Srie Kuntari, S.Pd.",
-                              "Bahasa Jawa|Purbayu Budi Santosa, S.Pd"
-                    ],
-                    "Sabtu": [
-                              "Ke-NU-an|Laili Latifah, S.Pd.",
-                              "Ilmu Pengetahuan Sosial|Imam Zaenudin, S.Pd.I",
-                              "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
-                              "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
-                              "Al Qur'an Hadis|Umi Habibah, S.Pd.I"
-                    ]
-          },
-          "9H": {
-                    "Senin": [
-                              "IPS|Imam Z.",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Bahasa Inggris|Lia Soviani",
-                              "PJOK|Leonita P.",
-                              "PJOK|Leonita P.",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "IPA|Laela Nur L."
-                    ],
-                    "Selasa": [
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "Matematika|Srie Kuntari",
-                              "Prakarya|S.Enny Musrifa",
-                              "PPKn|Retno S.",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "IPA|Laela Nur L.",
-                              "IPA|Laela Nur L."
-                    ],
-                    "Rabu": [
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Inggris|Lia Soviani",
-                              "PPKn|Retno S.",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Ke-NU-an|Laili Latifah"
-                    ],
-                    "Kamis": [
-                              "Bahasa Arab|Latifatul M.",
-                              "Akhidah Akhlak|Winarsih",
-                              "Akhidah Akhlak|Winarsih",
-                              "IPA|Laela Nur L.",
-                              "SKI|Waniti, S.Ag",
-                              "SKI|Waniti, S.Ag",
-                              "Ke-NU-an|Laili Latifah"
-                    ],
-                    "Jumat": [
-                              "Fiqih|Samsudin",
-                              "Fiqih|Samsudin",
-                              "Bahasa Jawa|Purbayu Budi S.",
-                              "Bahasa Indonesia|Siti Mukromah"
-                    ],
-                    "Sabtu": [
-                              "IPS|Imam Z.",
-                              "IPS|Imam Z.",
-                              "Matematika|Srie Kuntari",
-                              "Matematika|Srie Kuntari",
-                              "Matematika|Srie Kuntari"
-                    ]
-          },
-          "9I": {
-                    "Senin": [
-                              "Matematika|Srie Kuntari",
-                              "Matematika|Srie Kuntari",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Bahasa Arab|Latifatul M.",
-                              "Akhidah Akhlak|Winarsih",
-                              "Akhidah Akhlak|Winarsih",
-                              "Bahasa Indonesia|Siti Mukromah"
-                    ],
-                    "Selasa": [
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Arab|Latifatul M.",
-                              "Ke-NU-an|Laili Latifah",
-                              "Ke-NU-an|Laili Latifah",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Fiqih|Samsudin",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Bahasa Indonesia|Siti Mukromah"
-                    ],
-                    "Rabu": [
-                              "PJOK|Leonita P.",
-                              "PJOK|Leonita P.",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Matematika|Srie Kuntari",
-                              "Matematika|Srie Kuntari",
-                              "SKI|Waniti, S.Ag",
-                              "SKI|Waniti, S.Ag"
-                    ],
-                    "Kamis": [
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "IPA|Laela Nur L.",
-                              "IPA|Laela Nur L.",
-                              "Prakarya|S.Enny Musrifa",
-                              "Bahasa Jawa|Purbayu Budi S.",
-                              "PPKn|Retno S.",
-                              "PPKn|Retno S."
-                    ],
-                    "Jumat": [
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "IPS|Imam Z.",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Bahasa Inggris|Lia Soviani"
-                    ],
-                    "Sabtu": [
-                              "IPA|Laela Nur L.",
-                              "IPA|Laela Nur L.",
-                              "Fiqih|Samsudin",
-                              "IPS|Imam Z.",
-                              "IPS|Imam Z."
-                    ]
-          },
-          "9J": {
-                    "Senin": [
-                              "Al Qur'an Hadis|Umi Habibah",
-                              "IPS|Imam Z.",
-                              "Fiqih|Samsudin",
-                              "Fiqih|Samsudin",
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Matematika|Srie Kuntari",
-                              "Bahasa Jawa|Purbayu Budi S."
-                    ],
-                    "Selasa": [
-                              "PPKn|Retno S.",
-                              "PPKn|Retno S.",
-                              "Bahasa Arab|Latifatul M.",
-                              "Matematika|Srie Kuntari",
-                              "Matematika|Srie Kuntari",
-                              "Akhidah Akhlak|Winarsih",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Bahasa Inggris|Lia Soviani"
-                    ],
-                    "Rabu": [
-                              "Matematika|Srie Kuntari",
-                              "Ke-NU-an|Laili Latifah",
-                              "Ke-NU-an|Laili Latifah",
-                              "PJOK|Leonita P.",
-                              "PJOK|Leonita P.",
-                              "Bahasa Inggris|Lia Soviani",
-                              "Akhidah Akhlak|Winarsih",
-                              "Al Qur'an Hadis|Umi Habibah"
-                    ],
-                    "Kamis": [
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Prakarya|S.Enny Musrifa",
-                              "SKI|Waniti, S.Ag",
-                              "IPA|Laela Nur L.",
-                              "IPA|Laela Nur L.",
-                              "Bahasa Indonesia|Siti Mukromah"
-                    ],
-                    "Jumat": [
-                              "IPS|Imam Z.",
-                              "SKI|Waniti, S.Ag",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Arab|Latifatul M."
-                    ],
-                    "Sabtu": [
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "IPS|Imam Z.",
-                              "IPA|Laela Nur L.",
-                              "IPA|Laela Nur L."
-                    ]
-          },
-          "9K": {
-                    "Senin": [
-                              "Matematika|Ipung Purwanti",
-                              "Matematika|Ipung Purwanti",
-                              "Al Qur'an Hadis|Agus Rahmat",
-                              "Al Qur'an Hadis|Agus Rahmat",
-                              "Bahasa Arab|Latifatul M.",
-                              "Bahasa Arab|Latifatul M.",
-                              "Akhidah Akhlak|Winarsih"
-                    ],
-                    "Selasa": [
-                              "Matematika|Ipung Purwanti",
-                              "Matematika|Ipung Purwanti",
-                              "Bahasa Jawa|Purbayu Budi S.",
-                              "PJOK|Arif Puji S.",
-                              "PJOK|Arif Puji S.",
-                              "Bahasa Arab|Latifatul M.",
-                              "Ke-NU-an|Laili Latifah",
-                              "Ke-NU-an|Laili Latifah"
-                    ],
-                    "Rabu": [
-                              "Informatika|Fitrianto Puji P, S.Kom",
-                              "Akhidah Akhlak|Winarsih",
-                              "IPA|Laela Nur L.",
-                              "IPA|Laela Nur L.",
-                              "Prakarya|S.Enny Musrifa",
-                              "Fiqih|Samsudin",
-                              "Bahasa Inggris|Rita Rosdiana",
-                              "Bahasa Indonesia|Siti Mukromah"
-                    ],
-                    "Kamis": [
-                              "PPKn|Retno S.",
-                              "PPKn|Retno S.",
-                              "Bahasa Inggris|Rita Rosdiana",
-                              "Bahasa Inggris|Rita Rosdiana",
-                              "IPS|Emi Astuti",
-                              "IPS|Emi Astuti",
-                              "IPA|Laela Nur L."
-                    ],
-                    "Jumat": [
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Fiqih|Samsudin",
-                              "IPA|Laela Nur L."
-                    ],
-                    "Sabtu": [
-                              "SKI|Waniti, S.Ag",
-                              "SKI|Waniti, S.Ag",
-                              "IPS|Emi Astuti",
-                              "Bahasa Indonesia|Siti Mukromah",
-                              "Bahasa Indonesia|Siti Mukromah"
-                    ]
-          }
+  "7A": {
+    "Senin": [
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd"
+    ],
+    "Selasa": [
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Pendidikan Pancasila|Retno Susilowati, S.H",
+      "Pendidikan Pancasila|Retno Susilowati, S.H"
+    ],
+    "Rabu": [
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "BK|Purbayu Budi Santosa, S.Pd",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd"
+    ],
+    "Kamis": [
+      "Akhidah Akhlak|Asep Sugianto S.Pd",
+      "Akhidah Akhlak|Asep Sugianto S.Pd",
+      "Fiqih|Umi Habibah, S.Pd.I",
+      "Fiqih|Umi Habibah, S.Pd.I",
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Ke-NU-an|Agus Rahmat, S.H.I",
+      null
+    ],
+    "Jumat": [
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      null,
+      null,
+      null,
+      null
+    ],
+    "Sabtu": [
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I"
+    ]
+  },
+  "7B": {
+    "Senin": [
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Fiqih|Umi Habibah, S.Pd.I",
+      "Fiqih|Umi Habibah, S.Pd.I",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E"
+    ],
+    "Selasa": [
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "BK|Purbayu Budi Santosa, S.Pd",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd"
+    ],
+    "Rabu": [
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Akhidah Akhlak|Asep Sugianto S.Pd",
+      "Bahasa Jawa|Purbayu Budi Santosa, S.Pd",
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "Pendidikan Pancasila|Retno Susilowati, S.H",
+      "Pendidikan Pancasila|Retno Susilowati, S.H"
+    ],
+    "Kamis": [
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      null
+    ],
+    "Jumat": [
+      "Akhidah Akhlak|Asep Sugianto S.Pd",
+      "Ke-NU-an|Agus Rahmat, S.H.I",
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      null,
+      null,
+      null,
+      null
+    ],
+    "Sabtu": [
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd."
+    ]
+  },
+  "7C": {
+    "Senin": [
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Prakarya|S.Enny Musrifa M, S.Pd."
+    ],
+    "Selasa": [
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "Bahasa Jawa|Purbayu Budi Santosa, S.Pd",
+      "BK|Purbayu Budi Santosa, S.Pd"
+    ],
+    "Rabu": [
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Ilmu Pengetahuan Alam|Siti Lestari, S.Pd",
+      "Fiqih|Umi Habibah, S.Pd.I",
+      "Fiqih|Umi Habibah, S.Pd.I",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I"
+    ],
+    "Kamis": [
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Pendidikan Pancasila|Retno Susilowati, S.H",
+      "Pendidikan Pancasila|Retno Susilowati, S.H",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      null
+    ],
+    "Jumat": [
+      "Ke-NU-an|Agus Rahmat, S.H.I",
+      "Akhidah Akhlak|Asep Sugianto S.Pd",
+      "Akhidah Akhlak|Asep Sugianto S.Pd",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      null,
+      null,
+      null,
+      null
+    ],
+    "Sabtu": [
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E"
+    ]
+  },
+  "7D": {
+    "Senin": [
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd."
+    ],
+    "Selasa": [
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "BK|Purbayu Budi Santosa, S.Pd",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd."
+    ],
+    "Rabu": [
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd"
+    ],
+    "Kamis": [
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Ke-NU-an|Agus Rahmat, S.H.I",
+      "Fiqih|Umi Habibah, S.Pd.I",
+      "Fiqih|Umi Habibah, S.Pd.I",
+      "Akhidah Akhlak|Asep Sugianto S.Pd",
+      null
+    ],
+    "Jumat": [
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Akhidah Akhlak|Asep Sugianto S.Pd",
+      null,
+      null,
+      null,
+      null
+    ],
+    "Sabtu": [
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Bahasa Jawa|Arif Puji Santoso, S.Pd",
+      null,
+      null,
+      null
+    ]
+  },
+  "7E": {
+    "Senin": [
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "BK|Purbayu Budi Santosa, S.Pd",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I"
+    ],
+    "Selasa": [
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Akhidah Akhlak|Asep Sugianto S.Pd"
+    ],
+    "Rabu": [
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Akhidah Akhlak|Asep Sugianto S.Pd",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Matematika|Laili Latifah, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd."
+    ],
+    "Kamis": [
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Matematika|Laili Latifah, S.Pd.",
+      "Matematika|Laili Latifah, S.Pd.",
+      "Bahasa Jawa|Arif Puji Santoso, S.Pd",
+      "Fiqih|Umi Habibah, S.Pd.I",
+      null
+    ],
+    "Jumat": [
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Matematika|Laili Latifah, S.Pd.",
+      "Bahasa Indonesia|Putri Hasna Nida Nandini, S.Pd.",
+      "Fiqih|Umi Habibah, S.Pd.I"
+    ],
+    "Sabtu": [
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Ke-NU-an|Agus Rahmat, S.H.I",
+      null,
+      null,
+      null
+    ]
+  },
+  "7F": {
+    "Senin": [
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "Akhidah Akhlak|Asep Sugianto S.Pd",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "BK|Purbayu Budi Santosa, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      null
+    ],
+    "Selasa": [
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Matematika|Ipung Purwanti, S.T",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd."
+    ],
+    "Rabu": [
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Matematika|Ipung Purwanti, S.T",
+      "Matematika|Ipung Purwanti, S.T",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd"
+    ],
+    "Kamis": [
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Ke-NU-an|Hanifah, S.Pd",
+      "Bahasa Indonesia|Safriah, S.Pd",
+      "Bahasa Indonesia|Safriah, S.Pd",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      null
+    ],
+    "Jumat": [
+      "Bahasa Indonesia|Safriah, S.Pd",
+      "Bahasa Indonesia|Safriah, S.Pd",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Bahasa Jawa|Arif Puji Santoso, S.Pd",
+      null,
+      null,
+      null,
+      null
+    ],
+    "Sabtu": [
+      "Bahasa Indonesia|Safriah, S.Pd",
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Akhidah Akhlak|Asep Sugianto S.Pd",
+      null,
+      null,
+      null
+    ]
+  },
+  "7G": {
+    "Senin": [
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
+      "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Matematika|Ipung Purwanti, S.T",
+      "Matematika|Ipung Purwanti, S.T",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      null
+    ],
+    "Selasa": [
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "BK|Purbayu Budi Santosa, S.Pd",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd"
+    ],
+    "Rabu": [
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Indonesia|Safriah, S.Pd"
+    ],
+    "Kamis": [
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Indonesia|Safriah, S.Pd",
+      "Bahasa Indonesia|Safriah, S.Pd",
+      null
+    ],
+    "Jumat": [
+      "Bahasa Jawa|Arif Puji Santoso, S.Pd",
+      "Ke-NU-an|Hanifah, S.Pd",
+      "Bahasa Indonesia|Safriah, S.Pd",
+      "Bahasa Indonesia|Safriah, S.Pd",
+      null,
+      null,
+      null,
+      null
+    ],
+    "Sabtu": [
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Matematika|Ipung Purwanti, S.T",
+      "Matematika|Ipung Purwanti, S.T",
+      "Prakarya|S.Enny Musrifa M, S.Pd."
+    ]
+  },
+  "7H": {
+    "Senin": [
+      "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
+      "BK|Purbayu Budi Santosa, S.Pd",
+      "Matematika|Ipung Purwanti, S.T",
+      "Matematika|Ipung Purwanti, S.T",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Jawa|Arif Puji Santoso, S.Pd",
+      null
+    ],
+    "Selasa": [
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "Matematika|Ipung Purwanti, S.T",
+      "Matematika|Ipung Purwanti, S.T",
+      "Ke-NU-an|Hanifah, S.Pd"
+    ],
+    "Rabu": [
+      "Bahasa Inggris|Rita Rosdiana, S.Pd.",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Bahasa Indonesia|Leonita Pramuda Wardani, S.Pd",
+      "Bahasa Indonesia|Leonita Pramuda Wardani, S.Pd",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd."
+    ],
+    "Kamis": [
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Bahasa Indonesia|Leonita Pramuda Wardani, S.Pd",
+      "Bahasa Indonesia|Leonita Pramuda Wardani, S.Pd",
+      "Bahasa Indonesia|Leonita Pramuda Wardani, S.Pd"
+    ],
+    "Jumat": [
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I"
+    ],
+    "Sabtu": [
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "Bahasa Inggris|Rita Rosdiana, S.Pd."
+    ]
+  },
+  "8A": {
+    "Senin": [
+      "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
+      "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
+      "Bahasa Indonesia|Istikowati, S.Pd",
+      "Bahasa Indonesia|Istikowati, S.Pd",
+      "Ke-NU-an|Hanifah, S.Pd",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Pendidikan Pancasila|Slamet, S.Pd."
+    ],
+    "Selasa": [
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
+      "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
+      "Bahasa Indonesia|Istikowati, S.Pd",
+      "Fiqih|Umi Habibah, S.Pd.I",
+      "Fiqih|Umi Habibah, S.Pd.I",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag"
+    ],
+    "Rabu": [
+      "BK|Purbayu Budi Santosa, S.Pd",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd"
+    ],
+    "Kamis": [
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      null
+    ],
+    "Jumat": [
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Bahasa Jawa|Aziz Kuntoro, S.Pd."
+    ],
+    "Sabtu": [
+      "Bahasa Indonesia|Istikowati, S.Pd",
+      "Bahasa Indonesia|Istikowati, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd."
+    ]
+  },
+  "8B": {
+    "Senin": [
+      "Matematika|Karsono, S.Pt",
+      "Matematika|Karsono, S.Pt",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "BK|Purbayu Budi Santosa, S.Pd",
+      "Bahasa Indonesia|Istikowati, S.Pd",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag"
+    ],
+    "Selasa": [
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Prakarya|S. Enny Musrifa M, S.Pd.",
+      "Bahasa Indonesia|Istikowati, S.Pd",
+      "Al Qur'an Hadis|Hanifah, S.Pd",
+      "Al Qur'an Hadis|Hanifah, S.Pd",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd"
+    ],
+    "Rabu": [
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Fiqih|Samsudin, S.H.I",
+      "Fiqih|Samsudin, S.H.I",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Bahasa Jawa|Aziz Kuntoro, S.Pd."
+    ],
+    "Kamis": [
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ke-NU-an|Sugiro, S.Pd.I",
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Bahasa Indonesia|Istikowati, S.Pd"
+    ],
+    "Jumat": [
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Matematika|Karsono, S.Pt",
+      "Matematika|Karsono, S.Pt"
+    ],
+    "Sabtu": [
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Indonesia|Istikowati, S.Pd",
+      "Bahasa Indonesia|Istikowati, S.Pd"
+    ]
+  },
+  "8C": {
+    "Senin": [
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Matematika|Karsono, S.Pt",
+      "Matematika|Karsono, S.Pt",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag",
+      "Ke-NU-an|Sugiro, S.Pd.I",
+      "BK|Imam Zaenudin, S.Pd.I"
+    ],
+    "Selasa": [
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Matematika|Karsono, S.Pt",
+      "Prakarya|S. Enny Musrifa M, S.Pd.",
+      "Bahasa Jawa|Aziz Kuntoro, S.Pd.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Indonesia|Fatma Hidayatutsani, S.Pd",
+      "Fiqih|Samsudin, S.H.I",
+      "Fiqih|Samsudin, S.H.I"
+    ],
+    "Rabu": [
+      "Matematika|Karsono, S.Pt",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Akhidah Akhlak|Winarsih, S.Ag"
+    ],
+    "Kamis": [
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Alam|Fatma Hidayatutsani, S.Pd",
+      null
+    ],
+    "Jumat": [
+      "Bahasa Indonesia|Fatma Hidayatutsani, S.Pd",
+      "Bahasa Indonesia|Fatma Hidayatutsani, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      null,
+      null,
+      null,
+      null
+    ],
+    "Sabtu": [
+      "Bahasa Indonesia|Fatma Hidayatutsani, S.Pd",
+      "Bahasa Indonesia|Fatma Hidayatutsani, S.Pd",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag",
+      "Al Qur'an Hadis|Hanifah, S.Pd",
+      "Al Qur'an Hadis|Hanifah, S.Pd"
+    ]
+  },
+  "8D": {
+    "Senin": [
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "BK|Imam Zaenudin, S.Pd.I",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Matematika|Karsono, S.Pt",
+      "Matematika|Karsono, S.Pt",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si"
+    ],
+    "Selasa": [
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Matematika|Karsono, S.Pt",
+      "Matematika|Karsono, S.Pt",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si"
+    ],
+    "Rabu": [
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Ke-NU-an|Sugiro, S.Pd.I",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "PJOK|Aziz Kuntoro, S.Pd.",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Bahasa Arab|Endah Lestari, S.Pd.I."
+    ],
+    "Kamis": [
+      "Al Qur'an Hadis|Hanifah, S.Pd",
+      "Al Qur'an Hadis|Hanifah, S.Pd",
+      "Fiqih|Samsudin, S.H.I",
+      "Fiqih|Samsudin, S.H.I",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Bahasa Jawa|Aziz Kuntoro, S.Pd.",
+      null
+    ],
+    "Jumat": [
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      null,
+      null,
+      null,
+      null
+    ],
+    "Sabtu": [
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Inggris|Safriah, S.Pd"
+    ]
+  },
+  "8E": {
+    "Senin": [
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "BK|Imam Zaenudin, S.Pd.I",
+      "Al Qur'an Hadis|Hanifah, S.Pd",
+      "Matematika|Karsono, S.Pt"
+    ],
+    "Selasa": [
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Bahasa Jawa|Aziz Kuntoro, S.Pd.",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Matematika|Karsono, S.Pt",
+      "Matematika|Karsono, S.Pt"
+    ],
+    "Rabu": [
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Matematika|Karsono, S.Pt",
+      "Ke-NU-an|Sugiro, S.Pd.I",
+      "Al Qur'an Hadis|Hanifah, S.Pd",
+      "Sejarah Kebudayaan  Islam|Waniti, S.Ag",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Pendidikan Pancasila|Slamet, S.Pd."
+    ],
+    "Kamis": [
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      null
+    ],
+    "Jumat": [
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      null,
+      null,
+      null,
+      null
+    ],
+    "Sabtu": [
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Fiqih|Samsudin, S.H.I",
+      "Fiqih|Samsudin, S.H.I"
+    ]
+  },
+  "8F": {
+    "Senin": [
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      null
+    ],
+    "Selasa": [
+      "BK|Imam Zaenudin, S.Pd.I",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Fiqih|Wahyu Ushulludin, S.Th.I"
+    ],
+    "Rabu": [
+      "Fiqih|Wahyu Ushulludin, S.Th.l",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Matematika|Karsono, S.Pt",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Ke-NU-an|Sugiro, S.Pd.I"
+    ],
+    "Kamis": [
+      "Matematika|Karsono, S.Pt",
+      "Matematika|Karsono, S.Pt",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Matematika|Karsono, S.Pt",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I."
+    ],
+    "Jumat": [
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Al Qur'an Hadis|Hanifah, S.Pd",
+      "Al Qur'an Hadis|Hanifah, S.Pd"
+    ],
+    "Sabtu": [
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "Bahasa Jawa|Aziz Kuntoro, S.Pd.",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      null,
+      null,
+      null
+    ]
+  },
+  "8G": {
+    "Senin": [
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Sejarah Kebudayaan Islam|Asep Sugianto S.Pd",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "Bahasa Inggris|Safriah, S.Pd",
+      null
+    ],
+    "Selasa": [
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd"
+    ],
+    "Rabu": [
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Al Qur'an Hadis|Hanifah, S.Pd",
+      "Ilmu Pengetahuan Sosial|Imam Zaenudin, S.Pd.I",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Matematika|Karsono, S.Pt",
+      "Matematika|Karsono, S.Pt",
+      "Akhidah Akhlak|Wahyu Ushulludin, S.Th.l"
+    ],
+    "Kamis": [
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "Matematika|Karsono, S.Pt",
+      "Matematika|Karsono, S.Pt",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Ke-NU-an|Sugiro, S.Pd.I",
+      "Akhidah Akhlak|Wahyu Ushulludin, S.Th.1",
+      null
+    ],
+    "Jumat": [
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      null,
+      null,
+      null,
+      null
+    ],
+    "Sabtu": [
+      "Al Qur'an Hadis|Hanifah, S.Pd",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Jawa|Arif Puji Santoso, S.Pd",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      null,
+      null,
+      null
+    ]
+  },
+  "8H": {
+    "Senin": [
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Inggris|Safriah, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      null
+    ],
+    "Selasa": [
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "Al Qur'an Hadis|Samsudin, S.H.I",
+      "Al Qur'an Hadis|Samsudin, S.H.I",
+      "Ke-NU-an|Sugiro, S.Pd.I",
+      "Akhidah Akhlak|Wahyu Ushulludin, S.Th.!",
+      "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
+      "Informatika|Fitrianto Puji P, S.Kom"
+    ],
+    "Rabu": [
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Matematika|Karsono, S.Pt",
+      "Bahasa Jawa|Arif Puji Santoso, S.Pd",
+      "Bahasa Jawa|Arif Puji Santoso, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Matematika|Karsono, S.Pt"
+    ],
+    "Kamis": [
+      "BK|Imam Zaenudin, S.Pd.I",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Matematika|Karsono, S.Pt",
+      "Matematika|Karsono, S.Pt"
+    ],
+    "Jumat": [
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd.",
+      "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd."
+    ],
+    "Sabtu": [
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd"
+    ]
+  },
+  "8I": {
+    "Senin": [
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Bahasa Arab|Endah Lestari, S.Pd.I.",
+      "Al Qur'an Hadis|Samsudin, S.H.I",
+      "Al Qur'an Hadis|Samsudin, S.H.I",
+      null
+    ],
+    "Selasa": [
+      "Matematika|Karsono, S.Pt",
+      "Bahasa Indonesia|Hanifah, S.Pd",
+      "Bahasa Indonesia|Hanifah, S.Pd",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Jawa|Arif Puji Santoso, S.Pd",
+      "Bahasa Jawa|Arif Puji Santoso, S.Pd",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Pendidikan Pancasila|Slamet, S.Pd."
+    ],
+    "Rabu": [
+      "Bahasa Indonesia|Hanifah, S.Pd",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "Ke-NUan-|Sugiro, S.Pd.I",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E",
+      "Bahasa Indonesia|Ramadhenthy Ahlan, S.Pd"
+    ],
+    "Kamis": [
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "BK|Imam Zaenudin, S.Pd.I",
+      "Bahasa Inggris|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Inggris|Ramadhenthy Ahlan, S.Pd",
+      "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E"
+    ],
+    "Jumat": [
+      "Matematika|Karsono, S.Pt",
+      "Matematika|Karsono, S.Pt",
+      "Akhidah Akhlak|Wahyu Ushulludin, S.Th.I",
+      "Ilmu Pengetahuan Sosial|Emi Astuti, S.E"
+    ],
+    "Sabtu": [
+      "Matematika|Karsono, S.Pt",
+      "Bahasa Indonesia|Hanifah, S.Pd",
+      "Bahasa Indonesia|Hanifah, S.Pd",
+      "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd.",
+      "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd."
+    ]
+  },
+  "8J": {
+    "Senin": [
+      "Bahasa Indonesia|Hanifah, S.Pd",
+      "Bahasa Indonesia|Hanifah, S.Pd",
+      "Ilmu Pengetahuan Sosial|Leonita Pramuda Wardani, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Bahasa Indonesia|Hanifah, S.Pd"
+    ],
+    "Selasa": [
+      "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd.",
+      "Sejarah Kebudayaan Islam|Laili Latifah, S.Pd.",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Ke-NU-an|Sugiro, S.Pd.I",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Inggris|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Jawa|Arif Puji Santoso, S.Pd",
+      "Prakarya|S. Enny Musrifa M, S.Pd."
+    ],
+    "Rabu": [
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "Akhidah Akhlak|Wahyu Ushulludin, S.Th.l",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Bahasa Arab|Yogi Bayun Wiasih, S.Pd.I",
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "Fiqih|Wahyu Ushulludin, S.Th.I",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si"
+    ],
+    "Kamis": [
+      "Al Qur'an Hadis|Samsudin, S.H.I",
+      "Al Qur'an Hadis|Samsudin, S.H.I",
+      "BK|Imam Zaenudin, S.Pd.I.",
+      "Bahasa Indonesia|Hanifah, S.Pd",
+      "Bahasa Indonesia|Hanifah, S.Pd",
+      "Bahasa Inggris|Ramadhenthy Ahlan, S.Pd",
+      "Bahasa Inggris|Ramadhenthy Ahlan, S.Pd"
+    ],
+    "Jumat": [
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Matematika|Kurniawan Aji Sularsono, S.Pd",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si",
+      "Ilmu Pengetahuan Alam|Farid Wujdi, S.Si"
+    ],
+    "Sabtu": [
+      "Akhidah Akhlak|Wahyu Ushulludin, S. Th.I",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Pendidikan Pancasila|Slamet, S.Pd.",
+      "Ilmu Pengetahuan Sosial|Leonita Pramuda Wardani, S.Pd",
+      "Ilmu Pengetahuan Sosial|Leonita Pramuda Wardani, S.Pd"
+    ]
+  },
+  "9A": {
+    "Senin": [
+      "Ke-NU-an|Ahlan, S.Ag.",
+      "Ke-NU-an|Ahlan, S.Ag.",
+      "Bahasa Jawa|Purbayu Budi S.",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Al Qur'an Hadis|Umi Habibah",
+      "Al Qur'an Hadis|Umi Habibah",
+      "Fiqih|Agus Rahmat, S.H.I",
+      "Fiqih|Agus Rahmat, S.H.I"
+    ],
+    "Selasa": [
+      "Fiqih|Agus Rahmat, S.H.I",
+      "SKI|Waniti, S.Ag",
+      "SKI|Waniti, S.Ag",
+      "PJOK|Leonita P.",
+      "PJOK|Leonita P.",
+      "IPS|Imam Zaenudin",
+      "Prakarya|S.Enny Musrifa",
+      "Matematika|Ipung Purwanti"
+    ],
+    "Rabu": [
+      "IPS|Imam Zaenudin",
+      "IPS|Imam Zaenudin",
+      "Bahasa Indonesia|Istikowati",
+      "Matematika|Ipung Purwanti",
+      "Matematika|Ipung Purwanti",
+      "IPA|Siti Lestari, S.Pd",
+      "IPA|Siti Lestari, S.Pd",
+      "Bahasa Indonesia|Istikowati"
+    ],
+    "Kamis": [
+      "IPA|Siti Lestari, S.Pd",
+      "IPA|Siti Lestari, S.Pd",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Akhidah Akhlak|Winarsih",
+      "Bahasa Indonesia|Istikowati",
+      "Bahasa Indonesia|Istikowati",
+      "Matematika|Ipung Purwanti"
+    ],
+    "Jumat": [
+      "PPKn|Retno Susilowati",
+      "PPKn|Retno Susilowati",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Indonesia|Istikowati"
+    ],
+    "Sabtu": [
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Akhidah Akhlak|Winarsih",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd."
+    ]
+  },
+  "9B": {
+    "Senin": [
+      "PPKn|Retno S.",
+      "PPKn|Retno S.",
+      "Ke-NU-an|Ahlan, S.Ag.",
+      "Ke-NU-an|Ahlan, S.Ag.",
+      "Fiqih|Agus Rahmat, S.H.I",
+      "Fiqih|Agus Rahmat, S.H.I",
+      "Al Qur'an Hadis|Umi Habibah",
+      null
+    ],
+    "Selasa": [
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "PJOK|Leonita P.",
+      "PJOK|Leonita P.",
+      "SKI|Waniti, S.Ag",
+      "SKI|Waniti, S.Ag",
+      "Fiqih|Agus Rahmat, S.H.I",
+      "IPS|Imam Z.",
+      "IPS|Imam Z."
+    ],
+    "Rabu": [
+      "Al Qur'an Hadis|Umi Habibah",
+      "IPA|Siti Lestari, S.Pd",
+      "IPA|Siti Lestari, S.Pd",
+      "Akhidah Akhlak|Winarsih",
+      "Akhidah Akhlak|Winarsih",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Matematika|Ipung Purwanti"
+    ],
+    "Kamis": [
+      "Matematika|Ipung Purwanti",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Indonesia|Istikowati",
+      "Bahasa Jawa|Purbayu Budi S.",
+      "Prakarya|S.Enny Musrifa",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Bahasa Inggris|Lia Soviani, S.Pd"
+    ],
+    "Jumat": [
+      "Bahasa Indonesia|Istikowati",
+      "Bahasa Indonesia|Istikowati",
+      "Bahasa Indonesia|Istikowati",
+      "Informatika|Fitrianto Puji P, S.Kom"
+    ],
+    "Sabtu": [
+      "Matematika|Ipung Purwanti",
+      "Matematika|Ipung Purwanti",
+      "Bahasa Indonesia|Istikowati",
+      "IPA|Siti Lestari, S.Pd",
+      "IPA|Siti Lestari, S.Pd"
+    ]
+  },
+  "9C": {
+    "Senin": [
+      "PJOK|Leonita P.",
+      "PJOK|Leonita P.",
+      "IPA|Siti Lestari, S.Pd",
+      "SKI|Waniti, S.Ag",
+      "PPKn|Retno S.",
+      "PPKn|Retno S.",
+      "Ke-NU-an|Ahlan, S.Ag."
+    ],
+    "Selasa": [
+      "Bahasa Jawa|Purbayu Budi S.",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "IPS|Imam Z.",
+      "IPS|Imam Z.",
+      "Bahasa Indonesia|Istikowati",
+      "SKI|Waniti, S.Ag",
+      "IPA|Siti Lestari, S.Pd",
+      "IPA|Siti Lestari, S.Pd"
+    ],
+    "Rabu": [
+      "IPA|Siti Lestari, S.Pd",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Akhidah Akhlak|Winarsih",
+      "Bahasa Indonesia|Istikowati",
+      "Bahasa Indonesia|Istikowati",
+      "Fiqih|Agus Rahmat, S.H.I",
+      "Fiqih|Agus Rahmat, S.H.I",
+      "IPS|Imam Z."
+    ],
+    "Kamis": [
+      "Bahasa Indonesia|Istikowati",
+      "Bahasa Indonesia|Istikowati",
+      "Matematika|Ipung Purwanti",
+      "Matematika|Ipung Purwanti",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Prakarya|S.Enny Musrifa"
+    ],
+    "Jumat": [
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Matematika|Ipung Purwanti",
+      "Matematika|Ipung Purwanti"
+    ],
+    "Sabtu": [
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Al Qur'an Hadis|Umi Habibah",
+      "Al Qur'an Hadis|Umi Habibah",
+      "Ke-NU-an|Ahlan, S.Ag.",
+      "Akhidah Akhlak|Winarsih"
+    ]
+  },
+  "9D": {
+    "Senin": [
+      "Bahasa Indonesia|Istikowati",
+      "Bahasa Indonesia|Istikowati",
+      "Akhidah Akhlak|Winarsih",
+      "Akhidah Akhlak|Winarsih",
+      "IPA|Siti Lestari, S.Pd",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Bahasa Inggris|Lia Soviani, S.Pd"
+    ],
+    "Selasa": [
+      "Bahasa Indonesia|Istikowati",
+      "Bahasa Indonesia|Istikowati",
+      "Ke-NU-an|Ahlan, S.Ag.",
+      "Ke-NU-an|Ahlan, S.Ag.",
+      "IPA|Siti Lestari, S.Pd",
+      "IPA|Siti Lestari, S.Pd",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd."
+    ],
+    "Rabu": [
+      "PPKn|Retno S.",
+      "Bahasa Indonesia|Istikowati",
+      "Prakarya|S.Enny Musrifa",
+      "IPS|Imam Z.",
+      "IPS|Imam Z.",
+      "IPS|Imam Z.",
+      "Matematika|Srie Kuntari",
+      "Matematika|Srie Kuntari"
+    ],
+    "Kamis": [
+      "PJOK|Leonita P.",
+      "PJOK|Leonita P.",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Matematika|Srie Kuntari",
+      "PPKn|Retno S.",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd."
+    ],
+    "Jumat": [
+      "Matematika|Srie Kuntari",
+      "Al Qur'an Hadis|Umi Habibah",
+      "Al Qur'an Hadis|Umi Habibah",
+      "IPA|Siti Lestari, S.Pd"
+    ],
+    "Sabtu": [
+      "Fiqih|Samsudin",
+      "Fiqih|Samsudin",
+      "Bahasa Jawa|Purbayu Budi S.",
+      "SKI|Waniti, S.Ag",
+      "SKI|Waniti, S.Ag"
+    ]
+  },
+  "9E": {
+    "Senin": [
+      "Akhidah Akhlak|Winarsih",
+      "Akhidah Akhlak|Winarsih",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "IPS|Imam Z.",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "IPA|Siti Lestari, S.Pd",
+      "IPA|Siti Lestari, S.Pd"
+    ],
+    "Selasa": [
+      "SKI|Waniti, S.Ag",
+      "IPA|Siti Lestari, S.Pd",
+      "IPA|Siti Lestari, S.Pd",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Indonesia|Istikowati",
+      "Bahasa Indonesia|Istikowati",
+      "Bahasa Indonesia|Istikowati"
+    ],
+    "Rabu": [
+      "Ke-NU-an|Ahlan, S.Ag.",
+      "Ke-NU-an|Ahlan, S.Ag.",
+      "Bahasa Jawa|Purbayu Budi S.",
+      "Al Qur'an Hadis|Umi Habibah",
+      "Al Qur'an Hadis|Umi Habibah",
+      "Bahasa Indonesia|Istikowati",
+      "Bahasa Indonesia|Istikowati",
+      "Informatika|Fitrianto Puji P, S.Kom"
+    ],
+    "Kamis": [
+      "Matematika|Srie Kuntari",
+      "Matematika|Srie Kuntari",
+      "PJOK|Leonita P.",
+      "PJOK|Leonita P.",
+      "Fiqih|Samsudin",
+      "IPS|Imam Z.",
+      "IPS|Imam Z."
+    ],
+    "Jumat": [
+      "SKI|Waniti, S.Ag",
+      "Matematika|Srie Kuntari",
+      "Matematika|Srie Kuntari",
+      "Fiqih|Samsudin"
+    ],
+    "Sabtu": [
+      "Prakarya|S.Enny Musrifa",
+      "PPKn|Retno S.",
+      "PPKn|Retno S.",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Bahasa Inggris|Lia Soviani, S.Pd"
+    ]
+  },
+  "9F": {
+    "Senin": [
+      "Bahasa Indonesia|Siti Mukromah",
+      "Bahasa Indonesia|Siti Mukromah",
+      "IPA|Laela Nur L.",
+      "IPA|Laela Nur L.",
+      "Fiqih|Samsudin",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd."
+    ],
+    "Selasa": [
+      "Bahasa Indonesia|Siti Mukromah",
+      "Bahasa Indonesia|Siti Mukromah",
+      "Al Qur'an Hadis|Umi Habibah",
+      "IPA|Laela Nur L.",
+      "Bahasa Jawa|Purbayu Budi S.",
+      "PPKn|Retno S.",
+      "Akhidah Akhlak|Winarsih",
+      "Akhidah Akhlak|Winarsih"
+    ],
+    "Rabu": [
+      "Fiqih|Samsudin",
+      "Bahasa Indonesia|Siti Mukromah",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "PPKn|Retno S.",
+      "IPS|Imam Z.",
+      "IPA|Laela Nur L."
+    ],
+    "Kamis": [
+      "SKI|Waniti, S.Ag",
+      "SKI|Waniti, S.Ag",
+      "Matematika|Srie Kuntari",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Ke-NU-an|Wahyu Ushulludin",
+      "Matematika|Srie Kuntari"
+    ],
+    "Jumat": [
+      "PJOK|Leonita P.",
+      "PJOK|Leonita P.",
+      "IPS|Imam Z.",
+      "IPS|Imam Z."
+    ],
+    "Sabtu": [
+      "Matematika|Srie Kuntari",
+      "Matematika|Srie Kuntari",
+      "Prakarya|S.Enny Musrifa",
+      "Al Qur'an Hadis|Umi Habibah",
+      "Ke-NU-an|Wahyu Ushulludin"
+    ]
+  },
+  "9G": {
+    "Senin": [
+      "Prakarya|S.Enny Musrifa M, S.Pd.",
+      "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Bahasa Indonesia|Siti Mukromah, S.Ag.",
+      "Bahasa Indonesia|Siti Mukromah, S.Ag.",
+      "Bahasa Indonesia|Siti Mukromah, S.Ag.",
+      "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
+      "Bahasa Inggris|Lia Soviani, S.Pd"
+    ],
+    "Selasa": [
+      "Fiqih|Samsudin, S.H.I",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Bahasa Indonesia|Siti Mukromah, S.Ag.",
+      "Bahasa Indonesia|Siti Mukromah, S.Ag.",
+      "Fiqih|Samsudin, S.H.I",
+      "PJOK|Leonita Pramuda Wardani, S.Pd",
+      "PJOK|Leonita Pramuda Wardani, S.Pd",
+      "Ilmu Pengetahuan Sosial|Imam Zaenudin, S.Pd.I"
+    ],
+    "Rabu": [
+      "Ilmu Pengetahuan Sosial|Imam Zaenudin, S.Pd.I",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Pendidikan Pancasila|Retno Susilowati, S.H",
+      "Matematika|Srie Kuntari, S.Pd."
+    ],
+    "Kamis": [
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag",
+      "Sejarah Kebudayaan Islam|Waniti, S.Ag",
+      "Akhidah Akhlak|Winarsih, S.Ag",
+      "Al Qur'an Hadis|Umi Habibah, S.Pd.I",
+      "-|-",
+      "-|-",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd",
+      "Ilmu Pengetahuan Sosial|Arif Irfanudin, S.Pd"
+    ],
+    "Jumat": [
+      "Matematika|Srie Kuntari, S.Pd.",
+      "Matematika|Srie Kuntari, S.Pd.",
+      "Matematika|Srie Kuntari, S.Pd.",
+      "Bahasa Jawa|Purbayu Budi Santosa, S.Pd"
+    ],
+    "Sabtu": [
+      "Ke-NU-an|Laili Latifah, S.Pd.",
+      "Ilmu Pengetahuan Sosial|Imam Zaenudin, S.Pd.I",
+      "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
+      "Ilmu Pengetahuan Alam|Laela Nur Latifah, S.Pd.",
+      "Al Qur'an Hadis|Umi Habibah, S.Pd.I"
+    ]
+  },
+  "9H": {
+    "Senin": [
+      "IPS|Imam Z.",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "PJOK|Leonita P.",
+      "PJOK|Leonita P.",
+      "Bahasa Indonesia|Siti Mukromah",
+      "IPA|Laela Nur L."
+    ],
+    "Selasa": [
+      "Al Qur'an Hadis|Umi Habibah",
+      "Al Qur'an Hadis|Umi Habibah",
+      "Matematika|Srie Kuntari",
+      "Prakarya|S.Enny Musrifa",
+      "PPKn|Retno S.",
+      "Bahasa Indonesia|Siti Mukromah",
+      "IPA|Laela Nur L.",
+      "IPA|Laela Nur L."
+    ],
+    "Rabu": [
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "PPKn|Retno S.",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Indonesia|Siti Mukromah",
+      "Bahasa Indonesia|Siti Mukromah",
+      "Ke-NU-an|Laili Latifah"
+    ],
+    "Kamis": [
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Akhidah Akhlak|Winarsih",
+      "Akhidah Akhlak|Winarsih",
+      "IPA|Laela Nur L.",
+      "SKI|Waniti, S.Ag",
+      "SKI|Waniti, S.Ag",
+      "Ke-NU-an|Laili Latifah"
+    ],
+    "Jumat": [
+      "Fiqih|Samsudin",
+      "Fiqih|Samsudin",
+      "Bahasa Jawa|Purbayu Budi S.",
+      "Bahasa Indonesia|Siti Mukromah"
+    ],
+    "Sabtu": [
+      "IPS|Imam Z.",
+      "IPS|Imam Z.",
+      "Matematika|Srie Kuntari",
+      "Matematika|Srie Kuntari",
+      "Matematika|Srie Kuntari"
+    ]
+  },
+  "9I": {
+    "Senin": [
+      "Matematika|Srie Kuntari",
+      "Matematika|Srie Kuntari",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Akhidah Akhlak|Winarsih",
+      "Akhidah Akhlak|Winarsih",
+      "Bahasa Indonesia|Siti Mukromah"
+    ],
+    "Selasa": [
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Ke-NU-an|Laili Latifah",
+      "Ke-NU-an|Laili Latifah",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Fiqih|Samsudin",
+      "Bahasa Indonesia|Siti Mukromah",
+      "Bahasa Indonesia|Siti Mukromah"
+    ],
+    "Rabu": [
+      "PJOK|Leonita P.",
+      "PJOK|Leonita P.",
+      "Bahasa Indonesia|Siti Mukromah",
+      "Bahasa Indonesia|Siti Mukromah",
+      "Matematika|Srie Kuntari",
+      "Matematika|Srie Kuntari",
+      "SKI|Waniti, S.Ag",
+      "SKI|Waniti, S.Ag"
+    ],
+    "Kamis": [
+      "Al Qur'an Hadis|Umi Habibah",
+      "IPA|Laela Nur L.",
+      "IPA|Laela Nur L.",
+      "Prakarya|S.Enny Musrifa",
+      "Bahasa Jawa|Purbayu Budi S.",
+      "PPKn|Retno S.",
+      "PPKn|Retno S."
+    ],
+    "Jumat": [
+      "Al Qur'an Hadis|Umi Habibah",
+      "IPS|Imam Z.",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Bahasa Inggris|Lia Soviani, S.Pd"
+    ],
+    "Sabtu": [
+      "IPA|Laela Nur L.",
+      "IPA|Laela Nur L.",
+      "Fiqih|Samsudin",
+      "IPS|Imam Z.",
+      "IPS|Imam Z."
+    ]
+  },
+  "9J": {
+    "Senin": [
+      "Al Qur'an Hadis|Umi Habibah",
+      "IPS|Imam Z.",
+      "Fiqih|Samsudin",
+      "Fiqih|Samsudin",
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Matematika|Srie Kuntari",
+      "Bahasa Jawa|Purbayu Budi S."
+    ],
+    "Selasa": [
+      "PPKn|Retno S.",
+      "PPKn|Retno S.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Matematika|Srie Kuntari",
+      "Matematika|Srie Kuntari",
+      "Akhidah Akhlak|Winarsih",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Bahasa Inggris|Lia Soviani, S.Pd"
+    ],
+    "Rabu": [
+      "Matematika|Srie Kuntari",
+      "Ke-NU-an|Laili Latifah",
+      "Ke-NU-an|Laili Latifah",
+      "PJOK|Leonita P.",
+      "PJOK|Leonita P.",
+      "Bahasa Inggris|Lia Soviani, S.Pd",
+      "Akhidah Akhlak|Winarsih",
+      "Al Qur'an Hadis|Umi Habibah"
+    ],
+    "Kamis": [
+      "Bahasa Indonesia|Siti Mukromah",
+      "Bahasa Indonesia|Siti Mukromah",
+      "Prakarya|S.Enny Musrifa",
+      "SKI|Waniti, S.Ag",
+      "IPA|Laela Nur L.",
+      "IPA|Laela Nur L.",
+      "Bahasa Indonesia|Siti Mukromah"
+    ],
+    "Jumat": [
+      "IPS|Imam Z.",
+      "SKI|Waniti, S.Ag",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd."
+    ],
+    "Sabtu": [
+      "Bahasa Indonesia|Siti Mukromah",
+      "Bahasa Indonesia|Siti Mukromah",
+      "IPS|Imam Z.",
+      "IPA|Laela Nur L.",
+      "IPA|Laela Nur L."
+    ]
+  },
+  "9K": {
+    "Senin": [
+      "Matematika|Ipung Purwanti",
+      "Matematika|Ipung Purwanti",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Al Qur'an Hadis|Agus Rahmat, S.H.I",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Akhidah Akhlak|Winarsih",
+      null
+    ],
+    "Selasa": [
+      "Matematika|Ipung Purwanti",
+      "Matematika|Ipung Purwanti",
+      "Bahasa Jawa|Purbayu Budi S.",
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "PJOK|Arif Puji Santoso, S.Pd",
+      "Bahasa Arab|Latifatul Munawaroh, S.Pd.I., M.Pd.",
+      "Ke-NU-an|Laili Latifah",
+      "Ke-NU-an|Laili Latifah"
+    ],
+    "Rabu": [
+      "Informatika|Fitrianto Puji P, S.Kom",
+      "Akhidah Akhlak|Winarsih",
+      "IPA|Laela Nur L.",
+      "IPA|Laela Nur L.",
+      "Prakarya|S.Enny Musrifa",
+      "Fiqih|Samsudin",
+      "Bahasa Inggris|Rita Rosdiana",
+      "Bahasa Indonesia|Siti Mukromah"
+    ],
+    "Kamis": [
+      "PPKn|Retno S.",
+      "PPKn|Retno S.",
+      "Bahasa Inggris|Rita Rosdiana",
+      "Bahasa Inggris|Rita Rosdiana",
+      "IPS|Emi Astuti",
+      "IPS|Emi Astuti",
+      "IPA|Laela Nur L."
+    ],
+    "Jumat": [
+      "Bahasa Indonesia|Siti Mukromah",
+      "Bahasa Indonesia|Siti Mukromah",
+      "Fiqih|Samsudin",
+      "IPA|Laela Nur L."
+    ],
+    "Sabtu": [
+      "SKI|Waniti, S.Ag",
+      "SKI|Waniti, S.Ag",
+      "IPS|Emi Astuti",
+      "Bahasa Indonesia|Siti Mukromah",
+      "Bahasa Indonesia|Siti Mukromah"
+    ]
+  }
 };
 
         const getScheduleForClass = (className) => {
@@ -2945,34 +3022,72 @@
               document.body.removeChild(link);
           };
 
-          const handleExportAgendaKelasCSV = () => {
-              let csvContent = "\uFEFFREKAPITULASI AGENDA KELAS " + activeClass + "\n\n";
-              csvContent += "No;Tanggal;Jam;Mata Pelajaran;Guru Pengampu;Materi Pokok;Siswa Tidak Hadir;Tugas / Catatan\n";
-
+          const getAgendaKelasEntries = () => {
+              const classRecords = Object.values(agendaKelasData).filter(v => v.kelas === activeClass);
+              const uniqueDates = [...new Set(classRecords.map(v => v.tanggal))];
+              uniqueDates.sort((a, b) => {
+                  const parse = (str) => {
+                      const p = str.split(' ');
+                      if(p.length < 4) return 0;
+                      const months = { 'Januari':0, 'Februari':1, 'Maret':2, 'April':3, 'Mei':4, 'Juni':5, 'Juli':6, 'Agustus':7, 'September':8, 'Oktober':9, 'November':10, 'Desember':11 };
+                      return new Date(parseInt(p[3]), months[p[2]] || 0, parseInt(p[1])).getTime();
+                  };
+                  return parse(b) - parse(a);
+              });
               const entries = [];
-              Object.keys(agendaKelasData).forEach(key => {
-                  const val = agendaKelasData[key];
-                  if (val.kelas === activeClass && (val.materi || val.absen || val.tugas)) {
-                      entries.push(val);
+              uniqueDates.forEach(tanggal => {
+                  const dayOfWeek = tanggal.split(',')[0].trim();
+                  const raw = getScheduleForClass(activeClass);
+                  const daySch = raw ? raw.find(d => d.day === dayOfWeek) : null;
+                  if (daySch) {
+                      const validRows = daySch.rows.filter(r => r.mapel && r.mapel !== '-' && r.guru && r.guru !== '-');
+                      const grouped = [];
+                      let currentGroup = null;
+                      validRows.forEach(row => {
+                          if (!currentGroup) {
+                              currentGroup = { ...row, jamAwal: row.jam, jamAkhir: row.jam };
+                          } else if (currentGroup.mapel === row.mapel && currentGroup.guru === row.guru) {
+                              currentGroup.jamAkhir = row.jam;
+                          } else {
+                              grouped.push(currentGroup);
+                              currentGroup = { ...row, jamAwal: row.jam, jamAkhir: row.jam };
+                          }
+                      });
+                      if (currentGroup) grouped.push(currentGroup);
+                      
+                      grouped.forEach(g => {
+                          const jamLabel = g.jamAwal === g.jamAkhir ? g.jamAwal : `${g.jamAwal}-${g.jamAkhir}`;
+                          const filled = classRecords.find(v => v.tanggal === tanggal && v.jam === jamLabel && v.mapel === g.mapel);
+                          entries.push({
+                              tanggal: tanggal,
+                              jam: jamLabel,
+                              mapel: g.mapel,
+                              guru: g.guru,
+                              materi: filled ? filled.materi : '',
+                              absen: filled ? filled.absen : '',
+                              tugas: filled ? filled.tugas : ''
+                          });
+                      });
                   }
               });
-              entries.sort((a, b) => {
-                  if (a.tanggal !== b.tanggal) return a.tanggal.localeCompare(b.tanggal);
-                  return a.jam.localeCompare(b.jam);
-              });
+              return entries;
+          };
 
+          const handleExportAgendaKelasCSV = () => {
+              let csvContent = "\uFEFFREKAPITULASI JURNAL PELAJARAN KELAS " + activeClass + "\n\n";
+              csvContent += "No;Tanggal;Jam;Mata Pelajaran;Guru Pengampu;Materi Pokok;Siswa Tidak Hadir;Tugas / Catatan\n";
+              const entries = getAgendaKelasEntries();
               entries.forEach((e, idx) => {
                   const safeMateri = `"${(e.materi || '').replace(/"/g, '""')}"`; 
                   const safeAbsen = `"${(e.absen || '').replace(/"/g, '""')}"`;
                   const safeTugas = `"${(e.tugas || '').replace(/"/g, '""')}"`;
                   csvContent += `${idx + 1};${e.tanggal};${e.jam};${e.mapel};${e.guru};${safeMateri};${safeAbsen};${safeTugas}\n`;
               });
-
               const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
               const url = URL.createObjectURL(blob);
               const link = document.createElement('a');
               link.setAttribute('href', url);
-              link.setAttribute('download', `Rekap_Agenda_Kelas_${activeClass}.csv`);
+              link.setAttribute('download', `Rekap_jurnal_pelajaran_kelas_${activeClass}.csv`);
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
@@ -3052,6 +3167,7 @@
                       setLoggedInUser(foundTeacher.name); // Selalu pakai nama baku dari database
                       sessionStorage.setItem('simadu_auth', 'true');
                       sessionStorage.setItem('simadu_user', foundTeacher.name);
+                      setSelectedJadwalTeacher(foundTeacher.name);
                       setLoginError('');
                   } else {
                       setLoginError('PIN / Password yang Anda masukkan salah!');
@@ -3418,10 +3534,10 @@
                       📝 Jurnal Mengajar
                     </button>
                     <button 
-                      onClick={() => setActiveTab('agenda_kelas')}
-                      className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'agenda_kelas' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
+                      onClick={() => setActiveTab('jurnal_pelajaran_kelas')}
+                      className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'jurnal_pelajaran_kelas' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
                     >
-                      📚 Jadwal Pelajaran (Agenda)
+                      📚 Jurnal Pelajaran Kelas
                     </button>
                     <button 
                       onClick={() => setActiveTab('laporan')}
@@ -3673,12 +3789,14 @@
                             >
                               💯 Daftar Nilai
                             </button>
-                            <button 
-                              onClick={() => setActiveReportTab('agenda_kelas')}
-                              className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 ${activeReportTab === 'agenda_kelas' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                            >
-                              📚 Agenda Kelas
-                            </button>
+                              {waliKelasInfo && (
+                                  <button 
+                                    onClick={() => setActiveReportTab('jurnal_pelajaran_kelas')}
+                                    className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 ${activeReportTab === 'jurnal_pelajaran_kelas' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
+                                  >
+                                    📚 Jurnal Pelajaran Kelas
+                                  </button>
+                              )}
                         </div>
                     </div>
 
@@ -4047,13 +4165,13 @@
                         </div>
                     )}
 
-                    {/* 6. Rekap Agenda Kelas */}
-                    {activeReportTab === 'agenda_kelas' && (
+                    {/* 6. Rekap Jurnal Pelajaran Kelas */}
+                    {activeReportTab === 'jurnal_pelajaran_kelas' && (
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
                           <div className="bg-emerald-50 border-b border-emerald-100 p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
                             <div className="text-center sm:text-left">
-                              <h2 className="text-lg font-black text-emerald-900 tracking-wide uppercase">REKAPITULASI AGENDA KELAS {activeClass}</h2>
-                              <p className="text-sm font-semibold text-emerald-800">DATA JADWAL PELAJARAN (AGENDA) • SEMESTER GANJIL TAHUN AJARAN 2026/2027</p>
+                              <h2 className="text-lg font-black text-emerald-900 tracking-wide uppercase">REKAPITULASI Jurnal Pelajaran Kelas {activeClass}</h2>
+                              <p className="text-sm font-semibold text-emerald-800">DATA JURNAL PELAJARAN KELAS • SEMESTER GANJIL TAHUN AJARAN 2026/2027</p>
                             </div>
                             <button type="button" onClick={handleExportAgendaKelasCSV} className="px-4 py-2 bg-white/90 hover:bg-white text-emerald-900 font-bold rounded-lg text-xs shadow-sm transition-all border border-emerald-300">
                                 Unduh CSV
@@ -4075,23 +4193,11 @@
                               </thead>
                               <tbody>
                                 {(() => {
-                                    const entries = [];
-                                    Object.keys(agendaKelasData).forEach(key => {
-                                        const val = agendaKelasData[key];
-                                        if (val.kelas === activeClass && (val.materi || val.absen || val.tugas)) {
-                                            entries.push(val);
-                                        }
-                                    });
-                                    
-                                    // Sort by Date then Jam
-                                    entries.sort((a, b) => {
-                                        if (a.tanggal !== b.tanggal) return a.tanggal.localeCompare(b.tanggal);
-                                        return a.jam.localeCompare(b.jam);
-                                    });
+                                      const entries = getAgendaKelasEntries();
 
-                                    if (entries.length === 0) {
+                                      if (entries.length === 0) {
                                         return (
-                                            <tr><td colSpan="8" className="py-8 text-center text-slate-400">Belum ada agenda kelas yang tercatat.</td></tr>
+                                            <tr><td colSpan="8" className="py-8 text-center text-slate-400">Belum ada Jurnal Pelajaran Kelas yang tercatat.</td></tr>
                                         );
                                     }
                                     
@@ -4185,14 +4291,7 @@
                 )}
 
                 {/* TAB: DATA WALI KELAS */}
-                {activeTab === 'walikelas' && !waliKelasInfo && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 p-6 rounded-2xl shadow-sm text-center mt-4">
-                        <svg className="w-12 h-12 mx-auto mb-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        <h3 className="text-lg font-bold mb-2">Akses Ditolak</h3>
-                        <p className="text-sm">Halaman Daftar Wali Kelas ini hanya dapat diakses oleh akun Wali Kelas.</p>
-                    </div>
-                )}
-                {activeTab === 'walikelas' && waliKelasInfo && (
+                {activeTab === 'walikelas' && (
                   <div className="space-y-4">
                     <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
                       <div className="bg-slate-800 p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-center gap-4 border-b border-slate-700">
@@ -4216,60 +4315,60 @@
                         </div>
                       </div>
                       
-                      <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '65vh' }}>
-                        <table className="w-full text-sm text-left border-collapse">
-                            <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600 border-b border-slate-200 shadow-sm">
-                                <tr>
-                                    <th className="py-3 px-4 font-bold text-center w-16">No</th>
-                                    <th className="py-3 px-4 font-bold">Nama Guru</th>
-                                    <th className="py-3 px-4 font-bold text-center">Kelas</th>
-                                    <th className="py-3 px-4 font-bold">NIP</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {WALI_KELAS_DATA.filter(w => 
-                                    w.name.toLowerCase().includes(searchWaliQuery.toLowerCase()) || 
-                                    w.class.toLowerCase().includes(searchWaliQuery.toLowerCase()) ||
-                                    w.nip.toLowerCase().includes(searchWaliQuery.toLowerCase())
-                                ).map((wali, idx) => (
-                                    <tr key={wali.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
-                                        <td className="py-3 px-4 text-center font-semibold text-slate-500">{wali.id}</td>
-                                        <td className="py-3 px-4 font-bold text-slate-800">{wali.name}</td>
-                                        <td className="py-3 px-4 text-center">
-                                            <span className="inline-block px-3 py-1 bg-amber-50 text-amber-700 border border-amber-200 rounded-lg text-xs font-bold shadow-sm">
-                                                {wali.class}
+                      <div className="p-4 sm:p-6 overflow-y-auto custom-scrollbar bg-slate-50/50" style={{ maxHeight: '65vh' }}>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                            {WALI_KELAS_DATA.filter(w => 
+                                w.name.toLowerCase().includes(searchWaliQuery.toLowerCase()) || 
+                                w.class.toLowerCase().includes(searchWaliQuery.toLowerCase()) ||
+                                w.nip.toLowerCase().includes(searchWaliQuery.toLowerCase())
+                            ).map((wali, idx) => (
+                                <div key={wali.id} className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-200 overflow-hidden flex flex-col group relative">
+                                    <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500"></div>
+                                    <div className="p-5 flex flex-col h-full">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-black text-lg border border-emerald-200 shadow-inner">
+                                                {wali.name.charAt(0)}
+                                            </div>
+                                            <span className="px-3 py-1 bg-slate-100 text-slate-700 font-black text-sm rounded-lg border border-slate-200 shadow-sm">
+                                                Kelas {wali.class}
                                             </span>
-                                        </td>
-                                        <td className="py-3 px-4 text-slate-600 font-mono text-xs">
-                                            {wali.nip}
-                                        </td>
-                                    </tr>
-                                ))}
-                                {WALI_KELAS_DATA.filter(w => 
-                                    w.name.toLowerCase().includes(searchWaliQuery.toLowerCase()) || 
-                                    w.class.toLowerCase().includes(searchWaliQuery.toLowerCase()) ||
-                                    w.nip.toLowerCase().includes(searchWaliQuery.toLowerCase())
-                                ).length === 0 && (
-                                    <tr>
-                                        <td colSpan="4" className="py-8 text-center text-slate-500 font-medium">Data Wali Kelas tidak ditemukan.</td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                      </div>
-                      <div className="bg-slate-50 p-3 border-t border-slate-200 text-xs text-slate-500 font-semibold text-center">
+                                        </div>
+                                        <h3 className="font-bold text-slate-800 text-base leading-tight mb-2 group-hover:text-emerald-700 transition-colors">{wali.name}</h3>
+                                        <div className="mt-auto pt-3 border-t border-slate-100">
+                                            <p className="text-xs text-slate-500 font-medium flex items-center gap-1">
+                                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.417.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg>
+                                                NIP: {wali.nip || '-'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        
+                        {WALI_KELAS_DATA.filter(w => 
+                            w.name.toLowerCase().includes(searchWaliQuery.toLowerCase()) || 
+                            w.class.toLowerCase().includes(searchWaliQuery.toLowerCase()) ||
+                            w.nip.toLowerCase().includes(searchWaliQuery.toLowerCase())
+                        ).length === 0 && (
+                            <div className="py-12 text-center flex flex-col items-center justify-center">
+                                <svg className="w-16 h-16 text-slate-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                <p className="text-slate-500 font-medium text-lg">Data Wali Kelas tidak ditemukan.</p>
+                                <p className="text-slate-400 text-sm mt-1">Coba sesuaikan kata kunci pencarian Anda.</p>
+                            </div>
+                        )}
+                      </div>                      <div className="bg-slate-50 p-3 border-t border-slate-200 text-xs text-slate-500 font-semibold text-center">
                           Total: {WALI_KELAS_DATA.length} Wali Kelas
                       </div>
                     </div>
                   </div>
                 )}
 
-                {/* TAB: JADWAL PELAJARAN (AGENDA KELAS) */}
-                {activeTab === 'agenda_kelas' && (
+                {/* TAB: Jurnal Pelajaran Kelas */}
+                {activeTab === 'jurnal_pelajaran_kelas' && (
                   <div className="space-y-4">
                       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
                           <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
-                              📚 Jadwal Pelajaran (Agenda Kelas)
+                              📚 Jurnal Pelajaran Kelas
                           </h2>
                           <p className="text-sm text-slate-600 mt-1">Hari ini: <strong className="uppercase">{currentDateStr}</strong></p>
                       </div>
@@ -4366,7 +4465,7 @@
                                       <div className="p-4 flex flex-col gap-4">
                                           {!isEditable && (
                                               <div className="bg-amber-50 text-amber-800 text-xs font-bold p-3 rounded-lg border border-amber-200">
-                                                  🔒 Belum / Bukan Waktunya Mengisi. Formulir agenda hanya bisa diisi dari saat jam pelajaran dimulai hingga 45 menit setelah jam selesai.
+                                                  🔒 Belum / Bukan Waktunya Mengisi. Formulir jurnal hanya bisa diisi dari saat jam pelajaran dimulai hingga 45 menit setelah jam selesai.
                                               </div>
                                           )}
                                           <div>
@@ -4399,10 +4498,26 @@
                                                       disabled={!isEditable}
                                                       onChange={(e) => handleChange('tugas', e.target.value)}
                                                       className={`w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 ${!isEditable ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''}`}
-                                                      placeholder="Ketik tugas jika ada..."
+                                                      placeholder="Kosongkan jika tidak ada"
                                                   />
                                               </div>
                                           </div>
+                                      </div>
+                                      <div className="bg-slate-50 border-t border-slate-200 p-3 flex justify-end">
+                                          <button 
+                                              type="button"
+                                              disabled={!isEditable}
+                                              onClick={() => {
+                                                  // Show a quick success alert
+                                                  if(isEditable) {
+                                                      alert(`✅ Berhasil! Data Jurnal Pelajaran Kelas ${g.kelas} telah tersimpan dan otomatis terkirim ke Laporan Wali Kelas.`);
+                                                  }
+                                              }}
+                                              className={`px-4 py-2 font-bold rounded-lg text-xs shadow-sm transition-all flex items-center gap-2 ${isEditable ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-slate-300 text-slate-500 cursor-not-allowed'}`}
+                                          >
+                                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                              Simpan Data
+                                          </button>
                                       </div>
                                   </div>
                               );

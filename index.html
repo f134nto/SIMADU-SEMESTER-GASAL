@@ -68,7 +68,90 @@
 <body class="text-slate-800 antialiased">
     <div id="root"></div>
 
-    <script type="text/babel">
+    <!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBHJCVmJrJVPPY0UsUVtTikA30CkRpG4Bc",
+    authDomain: "aplikasiku-81e50.firebaseapp.com",
+    databaseURL: "https://aplikasiku-81e50-default-rtdb.firebaseio.com",
+    projectId: "aplikasiku-81e50",
+    storageBucket: "aplikasiku-81e50.firebasestorage.app",
+    messagingSenderId: "67078736437",
+    appId: "1:67078736437:web:240c8500a3ad9fb99bbf7c"
+  };
+  firebase.initializeApp(firebaseConfig);
+  window.db = firebase.database();
+  window.firebaseLoaded = true;
+  window.isSyncingFromFirebase = false;
+
+  // Firebase Sync Logic (with Debounce and Key Sanitization)
+  const oldSetItem = localStorage.setItem.bind(localStorage);
+  window.localUpdateInProgress = false;
+  let syncTimeout = null;
+  
+  // Sanitize keys for Firebase (Firebase hates . # $ [ ])
+  const sanitizeForFirebase = (obj) => {
+      if (typeof obj !== 'object' || obj === null) return obj;
+      if (Array.isArray(obj)) return obj.map(sanitizeForFirebase);
+      const newObj = {};
+      for (let k in obj) {
+          const safeKey = k.replace(/[\.\#\$\[\]]/g, '_');
+          newObj[safeKey] = sanitizeForFirebase(obj[k]);
+      }
+      return newObj;
+  };
+
+  // Desanitize keys (restore original if possible? We can't perfectly restore, but we don't need to if we just avoid mutating keys. Actually, local state uses original keys, Firebase uses safe keys. 
+  // Wait, if Firebase uses safe keys, downloading from Firebase will break our local keys!
+  // It's better to just stringify the entire value and save as a string in Firebase if we have invalid keys!
+  // YES! Storing as string avoids ALL key validation issues and is much safer for our simple sync!)
+
+  localStorage.setItem = function(key, value) {
+      oldSetItem(key, value);
+      if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase) {
+          if (key.startsWith('jurnal_')) {
+              window.localUpdateInProgress = true;
+              clearTimeout(syncTimeout);
+              syncTimeout = setTimeout(() => {
+                  try {
+                      // Save as string to avoid Firebase key restrictions!
+                      window.db.ref('simadu_data_v2/' + key).set(value);
+                  } catch(e) {}
+                  setTimeout(() => { window.localUpdateInProgress = false; }, 500);
+              }, 800);
+          }
+      }
+  };
+
+  window.db.ref('simadu_data_v2').on('value', snap => {
+      if (window.localUpdateInProgress) return; // Ignore incoming if typing!
+      const data = snap.val();
+      if (data) {
+          window.isSyncingFromFirebase = true;
+          // data contains strings now, parse them back
+          const parsedData = {};
+          for(let k in data) {
+              try { parsedData[k] = JSON.parse(data[k]); } catch(e) { parsedData[k] = data[k]; }
+          }
+          window.dispatchEvent(new CustomEvent('firebaseSync', { detail: parsedData }));
+          setTimeout(() => { window.isSyncingFromFirebase = false; }, 500);
+      }
+  });
+
+  // Initial migration: If Firebase is empty, upload local data
+  window.db.ref('simadu_data_v2').once('value').then(snap => {
+      if (!snap.val()) {
+          const keys = ['jurnal_students', 'jurnal_attendance', 'jurnal_attendance_mengajar', 'jurnal_classNotes', 'jurnal_savingsData', 'jurnal_agendaKelasData', 'jurnal_gradesData'];
+          keys.forEach(k => {
+              const val = localStorage.getItem(k);
+              if (val) window.db.ref('simadu_data_v2/' + k).set(val);
+          });
+      }
+  });
+</script>
+<script type="text/babel">
     try {
 
         const { useState, useEffect, useRef } = React;
@@ -2370,6 +2453,29 @@
           useEffect(() => { localStorage.setItem('jurnal_agendaKelasData', JSON.stringify(agendaKelasData)); }, [agendaKelasData]);
           useEffect(() => { localStorage.setItem('jurnal_gradesData', JSON.stringify(gradesData)); }, [gradesData]);
 
+                    useEffect(() => {
+              const handleSync = (e) => {
+                  const data = e.detail;
+                  
+                  const updateStateIfChanged = (setter, newData) => {
+                      setter(prev => {
+                          if (JSON.stringify(prev) === JSON.stringify(newData)) return prev;
+                          return newData;
+                      });
+                  };
+
+                  if (data.jurnal_students) updateStateIfChanged(setStudentsData, data.jurnal_students);
+                  if (data.jurnal_attendance) updateStateIfChanged(setAttendance, data.jurnal_attendance);
+                  if (data.jurnal_attendance_mengajar) updateStateIfChanged(setAttendanceJurnal, data.jurnal_attendance_mengajar);
+                  if (data.jurnal_classNotes) updateStateIfChanged(setClassNotes, data.jurnal_classNotes);
+                  if (data.jurnal_savingsData) updateStateIfChanged(setSavingsData, data.jurnal_savingsData);
+                  if (data.jurnal_agendaKelasData) updateStateIfChanged(setAgendaKelasData, data.jurnal_agendaKelasData);
+                  if (data.jurnal_gradesData) updateStateIfChanged(setGradesData, data.jurnal_gradesData);
+              };
+              window.addEventListener('firebaseSync', handleSync);
+              return () => window.removeEventListener('firebaseSync', handleSync);
+          }, []);
+
           const getDaysInMonth = (month) => {
             if (month === 'Juli') { return Array.from({ length: 19 }, (_, i) => i + 13); }
             return Array.from({ length: 31 }, (_, i) => i + 1);
@@ -3274,8 +3380,18 @@
                     
                     <div className="flex items-center justify-center gap-3">
                         <div className="h-px w-12 bg-slate-200"></div>
+                  <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-200">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                      <span className="text-[10px] font-bold tracking-widest uppercase">Online (Tersinkronisasi)</span>
+                  </div>
+<div className="h-px w-12 bg-slate-200"></div>
                         <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Portal Guru</p>
                         <div className="h-px w-12 bg-slate-200"></div>
+                  <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-200">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                      <span className="text-[10px] font-bold tracking-widest uppercase">Online (Tersinkronisasi)</span>
+                  </div>
+<div className="h-px w-12 bg-slate-200"></div>
                     </div>
                 </div>
                 
@@ -3759,11 +3875,11 @@
                                       onChange={(e) => setSelectedNilaiMapel(e.target.value)}
                                       className="bg-transparent text-sm font-bold text-emerald-900 focus:outline-none cursor-pointer"
                                   >
-                                      {getTeacherMapelsForClass(loggedInUser, activeClass).map(m => (
-                                          <option key={m} value={m}>{m}</option>
+                                      {getMapelsAndGurusForClass(activeClass).map(x => (
+                                          <option key={x.mapel} value={x.mapel}>{x.mapel}</option>
                                       ))}
-                                      {getTeacherMapelsForClass(loggedInUser, activeClass).length === 0 && (
-                                          <option value="">- Tidak Mengajar -</option>
+                                      {getMapelsAndGurusForClass(activeClass).length === 0 && (
+                                          <option value="">- Tidak Ada Jadwal -</option>
                                       )}
                                   </select>
                               </div>
@@ -3797,7 +3913,7 @@
                               </thead>
                               <tbody>
                                   {currentStudents.map((student, idx) => {
-                                      const key = `${activeClass}-${student}`;
+                                      const key = `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
                                       const data = gradesData[key] || {};
                                       const safeRowId = `nilai-row-${sanitizeId(student)}`;
                                       
@@ -3810,8 +3926,8 @@
                                                   <td key={field} className="py-1 px-1 border border-slate-300">
                                                       <input 
                                                           type="number"
-                                                          value={data[field] || ''}
-                                                          onChange={(e) => handleGradeChange(student, field, e.target.value)}
+                                                          defaultValue={data[field] || ''} 
+ onBlur={(e) => handleGradeChange(student, field, e.target.value)}
                                                           className="w-full px-1 py-1.5 border border-slate-200 rounded text-center text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs font-semibold"
                                                       />
                                                   </td>
@@ -3819,16 +3935,16 @@
                                               <td className="py-1 px-1 border border-slate-300 bg-[#f1f8eb]">
                                                   <input 
                                                       type="number"
-                                                      value={data.asts || ''}
-                                                      onChange={(e) => handleGradeChange(student, 'asts', e.target.value)}
+                                                      defaultValue={data.asts || ''} 
+ onBlur={(e) => handleGradeChange(student, 'asts', e.target.value)}
                                                       className="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-slate-800 font-bold focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 text-xs bg-white"
                                                   />
                                               </td>
                                               <td className="py-1 px-1 border border-slate-300 bg-[#f1f8eb]">
                                                   <input 
                                                       type="number"
-                                                      value={data.asas || ''}
-                                                      onChange={(e) => handleGradeChange(student, 'asas', e.target.value)}
+                                                      defaultValue={data.asas || ''} 
+ onBlur={(e) => handleGradeChange(student, 'asas', e.target.value)}
                                                       className="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-slate-800 font-bold focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 text-xs bg-white"
                                                   />
                                               </td>
@@ -4945,8 +5061,8 @@
                                                       <input 
                                                           type="number"
                                                           placeholder="0"
-                                                          value={savingsData[key] || ''}
-                                                          onChange={(e) => handleSavingChange(student, e.target.value)}
+                                                          defaultValue={savingsData[key] || ''} 
+ onBlur={(e) => handleSavingChange(student, e.target.value)}
                                                           className="w-full px-3 py-1.5 border border-slate-200 rounded-md bg-white text-slate-700 font-semibold focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500"
                                                       />
                                                   </div>

@@ -5,12 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SIMADU - MTs Ma'arif NU 1 Wangon</title>
     <script>
-        var oldError = console.error;
+                var oldError = console.error;
         console.error = function() {
             var args = Array.prototype.slice.call(arguments);
             var msg = args.join(' ');
-            document.body.innerHTML += '<div style="color:red; padding:20px; font-family:monospace; background:white; position:fixed; top:0; left:0; right:0; bottom:0; z-index:999999;">' +
-                '<h3>TERJADI ERROR (Mohon fotokan ini):</h3><pre style="white-space:pre-wrap;">' + msg + '</pre></div>';
+            if (msg.indexOf('[BABEL] Note:') === -1) {
+                document.body.innerHTML += '<div style="color:red; padding:20px; font-family:monospace; background:white; position:fixed; top:0; left:0; right:0; bottom:0; z-index:999999;">' +
+                    '<h3>TERJADI ERROR (Mohon fotokan ini):</h3><pre style="white-space:pre-wrap;">' + msg + '</pre></div>';
+            }
             oldError.apply(console, args);
         };
         window.addEventListener('error', function(event) {
@@ -64,6 +66,30 @@
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type=number] { -moz-appearance: textfield; }
     </style>
+<style>
+  @media print {
+      body * {
+          visibility: hidden;
+      }
+      .data-siswa-print-container, .data-siswa-print-container * {
+          visibility: visible;
+      }
+      .data-siswa-print-container {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          margin: 0;
+          padding: 0;
+      }
+      .print\:hidden {
+          display: none !important;
+      }
+      .print\:block {
+          display: block !important;
+      }
+  }
+</style>
 </head>
 <body class="text-slate-800 antialiased">
     <div id="root"></div>
@@ -143,7 +169,7 @@
   // Initial migration: If Firebase is empty, upload local data
   window.db.ref('simadu_data_v2').once('value').then(snap => {
       if (!snap.val()) {
-          const keys = ['jurnal_students', 'jurnal_attendance', 'jurnal_attendance_mengajar', 'jurnal_classNotes', 'jurnal_savingsData', 'jurnal_agendaKelasData', 'jurnal_gradesData'];
+          const keys = ['jurnal_students', 'jurnal_student_details', 'jurnal_attendance', 'jurnal_attendance_mengajar', 'jurnal_classNotes', 'jurnal_savingsData', 'jurnal_agendaKelasData', 'jurnal_gradesData'];
           keys.forEach(k => {
               const val = localStorage.getItem(k);
               if (val) window.db.ref('simadu_data_v2/' + k).set(val);
@@ -155,6 +181,1089 @@
     try {
 
         const { useState, useEffect, useRef } = React;
+
+        const STUDENTS_DETAIL_DATA = {
+  '9H': [
+    { name: 'Akmalu Rifky', nis: '260257', gender: 'L' },
+    { name: 'Aldian Putra Ramadhan', nis: '240291', gender: 'L' },
+    { name: 'Alona Syafa Nafisa', nis: '240000', gender: 'P' },
+    { name: 'Alqi Pratama', nis: '240293', gender: 'L' },
+    { name: 'Anugrah Bima Nugroho', nis: '240294', gender: 'L' },
+    { name: 'Asna Fauziyah Ulayya', nis: '240296', gender: 'P' },
+    { name: 'Azka Ardiana Putra', nis: '240298', gender: 'L' },
+    { name: 'Defan Ariyanto', nis: '240299', gender: 'L' },
+    { name: 'Dhina Mitra', nis: '240300', gender: 'P' },
+    { name: 'Diah Puspitarini', nis: '240301', gender: 'P' },
+    { name: 'Dziky Fajar Nurfaizi', nis: '240302', gender: 'L' },
+    { name: 'Evita Putri Anggraeni', nis: '240303', gender: 'P' },
+    { name: 'Fatfah Safingatun Aulia', nis: '240304', gender: 'P' },
+    { name: 'Galih Marcelino Ramadhan', nis: '240306', gender: 'L' },
+    { name: 'Hafeza Dwi Faik Kabisa', nis: '240307', gender: 'L' },
+    { name: 'Indah Salsabila', nis: '240309', gender: 'P' },
+    { name: 'Janah Idha Pratiwi', nis: '240310', gender: 'P' },
+    { name: 'Jauzaa Hadi Nurrudin', nis: '240311', gender: 'P' },
+    { name: 'Jova Hakiki', nis: '240312', gender: 'L' },
+    { name: 'Meyzha Miryanti', nis: '240313', gender: 'P' },
+    { name: 'Muhamad Ajib Fathurrohman', nis: '240314', gender: 'L' },
+    { name: 'Nada Nazhifah Sugianto', nis: '240315', gender: 'P' },
+    { name: 'Naila Aprilia Safitri', nis: '240316', gender: 'P' },
+    { name: 'Nauval Arif Pratama', nis: '240317', gender: 'L' },
+    { name: 'Panji Laksono', nis: '240319', gender: 'L' },
+    { name: 'Rafa Alkhafizi', nis: '240320', gender: 'L' },
+    { name: 'Rafa Dilis Asyakrulloh', nis: '240321', gender: 'L' },
+    { name: 'Rafli Andreano', nis: '240322', gender: 'L' },
+    { name: 'Raka Dilis Asyakrulloh', nis: '240323', gender: 'L' },
+    { name: 'Resmi Fajriani', nis: '240324', gender: 'P' },
+    { name: 'Ricky Indra Aditya', nis: '240325', gender: 'L' },
+    { name: 'Riska Ayu Setyawati', nis: '240326', gender: 'P' },
+    { name: 'Rizki \'Ainurrohman', nis: '240327', gender: 'L' },
+    { name: 'Trias Nur Febriansah', nis: '240328', gender: 'L' },
+    { name: 'Velisa', nis: '240329', gender: 'P' },
+    { name: 'Zakiya Zain', nis: '240330', gender: 'P' },
+  ],
+  '9B': [
+    { name: 'Adi Indra Setiyawan', nis: '240041', gender: 'L' },
+    { name: 'Ahmad Bayhaqi', nis: '240042', gender: 'L' },
+    { name: 'Al Mahesa Keryl', nis: '240043', gender: 'L' },
+    { name: 'Alin Rahmawati Dewi', nis: '240045', gender: 'P' },
+    { name: 'Andin Zulfa Azizah', nis: '240046', gender: 'P' },
+    { name: 'Andini Nurulita Saputri', nis: '240047', gender: 'P' },
+    { name: 'Ardi Naufal Aziz', nis: '240048', gender: 'L' },
+    { name: 'Aurin Erlinda Khiar', nis: '240050', gender: 'P' },
+    { name: 'Bachtiar Ersyad Al Hakim', nis: '241111', gender: 'L' },
+    { name: 'Bilqis Maesaroh', nis: '240051', gender: 'P' },
+    { name: 'Calvin Meika Saputra', nis: '240052', gender: 'L' },
+    { name: 'Chaerul Alifah', nis: '240053', gender: 'P' },
+    { name: 'Dwiky Maulana Faathir', nis: '240055', gender: 'L' },
+    { name: 'Elvina Dini Maheswari', nis: '240056', gender: 'P' },
+    { name: 'Fadly Dwi Abdillah', nis: '240057', gender: 'L' },
+    { name: 'Fen Nanda Kasih', nis: '240058', gender: 'P' },
+    { name: 'Firza Mei Dinata', nis: '240059', gender: 'L' },
+    { name: 'Hafidz Maulana Subekti', nis: '240060', gender: 'L' },
+    { name: 'Haikal Gilang Akbar', nis: '240061', gender: 'L' },
+    { name: 'Ibnu Muzaqi Syukur', nis: '240062', gender: 'L' },
+    { name: 'Lovina Danis Meiliyana', nis: '240063', gender: 'P' },
+    { name: 'Marlinda Khusnul Khotimah', nis: '240064', gender: 'P' },
+    { name: 'Mohamad Jalaludin Majid', nis: '182510', gender: 'L' },
+    { name: 'Muhammad Sun\'an', nis: '240067', gender: 'L' },
+    { name: 'Muhammad Syazwan Nasrulloh', nis: '240068', gender: 'L' },
+    { name: 'Muhhamad Ulil Abshor', nis: '250383', gender: 'L' },
+    { name: 'Reisya Azka Ardhini', nis: '240069', gender: 'P' },
+    { name: 'Rizky Fitriyanto', nis: '240071', gender: 'L' },
+    { name: 'Rizky Maulana', nis: '240072', gender: 'L' },
+    { name: 'Sakti Akbar Manulloh', nis: '240073', gender: 'L' },
+    { name: 'Selvi Fatimatus Zahra', nis: '240074', gender: 'P' },
+    { name: 'Sifa Karunia Setiany', nis: '240075', gender: 'P' },
+    { name: 'Siti Hasnah Mulyani', nis: '240076', gender: 'P' },
+    { name: 'Ulin Rahmatika Putri', nis: '240077', gender: 'P' },
+    { name: 'Valenza Zaneta Meka', nis: '240078', gender: 'P' },
+    { name: 'Venisya Catur Wulandini', nis: '240079', gender: 'P' },
+    { name: 'Zaki Zafar Efendi', nis: '240080', gender: 'L' },
+    { name: 'Zianka Kizania Amorete Bhota', nis: '240081', gender: 'P' },
+  ],
+  '7B': [
+    { name: 'Abyudaya Akbar S', nis: '260033', gender: 'L' },
+    { name: 'Alan Hariansyah', nis: '260034', gender: 'L' },
+    { name: 'Aulia Nurul R', nis: '260035', gender: 'P' },
+    { name: 'Bilqis Indri Herawati', nis: '260036', gender: 'P' },
+    { name: 'Devania Naurra Bulan Maulida', nis: '260037', gender: 'P' },
+    { name: 'Dika Arya Saputra', nis: '260038', gender: 'L' },
+    { name: 'Dzikrikal Ramadhan', nis: '260039', gender: 'L' },
+    { name: 'Eki Zaldi Lazaroni', nis: '260040', gender: 'L' },
+    { name: 'Fadila Resti Meilani', nis: '260041', gender: 'P' },
+    { name: 'Fiqri Rachman Saputra', nis: '260042', gender: 'L' },
+    { name: 'Friska Mayfatul Khofifah', nis: '260043', gender: 'P' },
+    { name: 'Habibi Syihabsani', nis: '260044', gender: 'L' },
+    { name: 'Huda Mahdy Assajid', nis: '260045', gender: 'L' },
+    { name: 'Ilham Maulana', nis: '260046', gender: 'L' },
+    { name: 'Jovan Sinantara P', nis: '260047', gender: 'L' },
+    { name: 'Lulu Nafisah Yafi .S', nis: '260048', gender: 'P' },
+    { name: 'Malky Waziful Khalil', nis: '260049', gender: 'L' },
+    { name: 'Muhamad Abi Alfianzar', nis: '260050', gender: 'L' },
+    { name: 'Naura Nadhifa Akmal', nis: '260051', gender: 'P' },
+    { name: 'Novi Indahsari', nis: '260052', gender: 'P' },
+    { name: 'Qori Aena Sakti .P', nis: '260053', gender: 'P' },
+    { name: 'Rahmat Saputra', nis: '260054', gender: 'L' },
+    { name: 'Raihan Dwi Subekti', nis: '260055', gender: 'L' },
+    { name: 'Sadiid Tri Zakwan', nis: '260056', gender: 'L' },
+    { name: 'Sangaji Ilmanagara', nis: '260057', gender: 'L' },
+    { name: 'Shakila Diaz Permata', nis: '260058', gender: 'P' },
+    { name: 'Sifara Pranindita Ayunda Surya Pratiwi', nis: '260059', gender: 'P' },
+    { name: 'Vita Kumalasari', nis: '260060', gender: 'P' },
+    { name: 'Weli Silwia', nis: '260061', gender: 'P' },
+    { name: 'Yumna Nadhira Thafana', nis: '260062', gender: 'P' },
+    { name: 'Zaenal Zairul Arifin', nis: '260063', gender: 'L' },
+  ],
+  '8H': [
+    { name: 'Ahmad Alvino', nis: '250256', gender: 'L' },
+    { name: 'Ahmad Nur Faizal', nis: '250257', gender: 'L' },
+    { name: 'Al Farrellian Esa Raditya', nis: '250258', gender: 'L' },
+    { name: 'Alfindo Derby Pratama', nis: '250259', gender: 'L' },
+    { name: 'Alvarizi Yanuar Saputra', nis: '250260', gender: 'L' },
+    { name: 'Arasyya Putri Fatha Rezkya', nis: '250261', gender: 'P' },
+    { name: 'Arkham Safik Maulana', nis: '250262', gender: 'L' },
+    { name: 'Bunga Putri Cania', nis: '250263', gender: 'P' },
+    { name: 'Chelsea Ramadina Hermanto', nis: '250264', gender: 'P' },
+    { name: 'Farrel Khoerul Azis', nis: '250265', gender: 'L' },
+    { name: 'Fathiin Aliim Mutawakil', nis: '250266', gender: 'L' },
+    { name: 'Fathin Khoirunnisa', nis: '250267', gender: 'P' },
+    { name: 'Fatihaturohmah', nis: '250268', gender: 'P' },
+    { name: 'Fauzia Adelya Kholifah', nis: '250269', gender: 'P' },
+    { name: 'Felita Audie Marchelly', nis: '250270', gender: 'P' },
+    { name: 'Fino Saputra', nis: '250271', gender: 'L' },
+    { name: 'Hafizh Al Ghifari', nis: '250272', gender: 'L' },
+    { name: 'Hasan Yahya', nis: '250377', gender: 'L' },
+    { name: 'Helen Shafiqah', nis: '250273', gender: 'P' },
+    { name: 'Ihsan', nis: '250274', gender: 'L' },
+    { name: 'Irbah Jihan Najwa', nis: '250275', gender: 'P' },
+    { name: 'Kenza Marvel Raffasya', nis: '225027', gender: 'L' },
+    { name: 'Khalifatus Syaqinah', nis: '250279', gender: 'P' },
+    { name: 'Khalilatul Maulida', nis: '250277', gender: 'P' },
+    { name: 'Khoirul Azmi', nis: '250278', gender: 'L' },
+    { name: 'Maura Maulidha Al Syafa', nis: '250281', gender: 'P' },
+    { name: 'Muhamad Tristan Aprilio', nis: '250282', gender: 'L' },
+    { name: 'Muhammad Zaki Aufa', nis: '250283', gender: 'L' },
+    { name: 'Nabila Janah', nis: '250284', gender: 'P' },
+    { name: 'Nabila Putri Yesi Amalia', nis: '250285', gender: 'P' },
+    { name: 'Pradisstia Boy Cavalera', nis: '250286', gender: 'L' },
+    { name: 'Rahmat Hidayatullah', nis: '250287', gender: 'L' },
+    { name: 'Renata Rania Putri', nis: '250288', gender: 'P' },
+    { name: 'Ridho Alfa Rizky', nis: '260251', gender: 'L' },
+    { name: 'Ridho Rifa\'i', nis: '250289', gender: 'L' },
+    { name: 'Ryzqi Tri Maulana', nis: '250290', gender: 'L' },
+  ],
+  '8B': [
+    { name: 'Achmad Alvin Sururi', nis: '250037', gender: 'L' },
+    { name: 'Afan Oktavian', nis: '250038', gender: 'L' },
+    { name: 'Airin Wulandari', nis: '250039', gender: 'P' },
+    { name: 'Alif Al Muqomul Amin', nis: '250040', gender: 'L' },
+    { name: 'Aqila Lisa Tahzani', nis: '250041', gender: 'P' },
+    { name: 'Azzahra Bella Faradila', nis: '250042', gender: 'P' },
+    { name: 'Delisa Dwi Azlina', nis: '250043', gender: 'P' },
+    { name: 'Dwi Cantik Elfiana Sembiring', nis: '250044', gender: 'P' },
+    { name: 'Fatin Vanisa Oktaviani', nis: '250045', gender: 'P' },
+    { name: 'Ferliansyah Anggraeni Prameta', nis: '250046', gender: 'P' },
+    { name: 'Firza Rahman Alghifari', nis: '250047', gender: 'L' },
+    { name: 'Isna Yulianti', nis: '250048', gender: 'P' },
+    { name: 'Jesika Rosalinda', nis: '250049', gender: 'P' },
+    { name: 'Juan Zhilgwyn Oxxy Setiawan', nis: '250050', gender: 'L' },
+    { name: 'Kharis Maulana Abdillah', nis: '250051', gender: 'L' },
+    { name: 'Lutfi Sakhi Zaidan', nis: '250052', gender: 'L' },
+    { name: 'Marcel Adam Saputra', nis: '250054', gender: 'L' },
+    { name: 'Maulana Dama Afwani', nis: '250055', gender: 'L' },
+    { name: 'Muhamad Abdulloh Wahyu Sakti Aji', nis: '250053', gender: 'L' },
+    { name: 'Muhammad Firdaus Az Zukhruf', nis: '250056', gender: 'L' },
+    { name: 'Muthiya Azahra', nis: '250057', gender: 'P' },
+    { name: 'Nayshila Anggita Putri', nis: '250058', gender: 'P' },
+    { name: 'Nevisya Putri Anindia', nis: '250059', gender: 'P' },
+    { name: 'Nizar Maulana Sarif', nis: '250060', gender: 'L' },
+    { name: 'Novita Ade Cahyani', nis: '250061', gender: 'P' },
+    { name: 'Nugraha Syarif', nis: '250062', gender: 'L' },
+    { name: 'Nurul Balqis', nis: '250063', gender: 'P' },
+    { name: 'Prabu Keanu Airlangga', nis: '250064', gender: 'L' },
+    { name: 'Raf Agung Wijaya', nis: '250065', gender: 'L' },
+    { name: 'Regina Rihardini', nis: '250066', gender: 'P' },
+    { name: 'Reka Sevita Devi', nis: '250067', gender: 'P' },
+    { name: 'Reyhan Juneka', nis: '250068', gender: 'L' },
+    { name: 'Rizky Rafa Zaky', nis: '250069', gender: 'L' },
+    { name: 'Rosqi Fadilah', nis: '250070', gender: 'P' },
+    { name: 'Safira Bunga Sa`Baniah', nis: '250071', gender: 'P' },
+    { name: 'Yusrina Assyabiya Rafifa', nis: '250072', gender: 'P' },
+    { name: 'Zahro Munaiqibatul \'Ulya', nis: '250073', gender: 'P' },
+  ],
+  '9K': [
+    { name: 'Adellia Nasya Ramadani', nis: '240374', gender: 'P' },
+    { name: 'Aisya Maulida', nis: '240128', gender: 'P' },
+    { name: 'Aliffya Krisna Rachmadiani', nis: '240044', gender: 'P' },
+    { name: 'Alifiani Rahmawati', nis: '240334', gender: 'P' },
+    { name: 'Alya Fadillah Rahma', nis: '240255', gender: 'P' },
+    { name: 'Anggraeni', nis: '240089', gender: 'P' },
+    { name: 'Anindya Syifaul Laely', nis: '240377', gender: 'P' },
+    { name: 'Anzil Febrian Nurrohman', nis: '240295', gender: 'L' },
+    { name: 'Aprilia Anggraeni', nis: '240214', gender: 'P' },
+    { name: 'Arsakha Faqih Nurrohman', nis: '240049', gender: 'L' },
+    { name: 'Aura Saqira Firnanda', nis: '240091', gender: 'P' },
+    { name: 'Ayu Rahmawati', nis: '240297', gender: 'P' },
+    { name: 'Berlian Nur Cahya', nis: '240379', gender: 'P' },
+    { name: 'Dea Triyanna Wardani', nis: '240096', gender: 'P' },
+    { name: 'Dessy Ayu Wulandari', nis: '240340', gender: 'P' },
+    { name: 'Farrel Fahreza Fauzi', nis: '240271', gender: 'L' },
+    { name: 'Fransisca Aliza Putri Naedi', nis: '240388', gender: 'P' },
+    { name: 'Hasna Nafeesa Zarifa', nis: '240431', gender: 'P' },
+    { name: 'Iffah Lea Ramadhani', nis: '240308', gender: 'P' },
+    { name: 'Kenzy Tang Lu', nis: '240235', gender: 'L' },
+    { name: 'Lia Asifa', nis: '240108', gender: 'P' },
+    { name: 'Linda Anggita Putri', nis: '240236', gender: 'P' },
+    { name: 'Nazwa Tri Fanesa', nis: '240318', gender: 'P' },
+    { name: 'Novastra Zalfa Arinhi', nis: '180065', gender: 'P' },
+    { name: 'Novita Nurkhasanah', nis: '240031', gender: 'P' },
+    { name: 'Panggih Margining Rizkia', nis: '240199', gender: 'P' },
+    { name: 'Prahyang Dewi Mukti', nis: '240116', gender: 'P' },
+    { name: 'Rani Hikmahwati', nis: '240204', gender: 'P' },
+    { name: 'Rendy Sugiarto', nis: '240118', gender: 'L' },
+    { name: 'Ridho Satriawan', nis: '240367', gender: 'L' },
+    { name: 'Rina Estiningtyas', nis: '240035', gender: 'P' },
+    { name: 'Risky Febritianto', nis: '240070', gender: 'L' },
+    { name: 'Syafa Aulia Adinda Putri', nis: '240370', gender: 'P' },
+    { name: 'Syifa Nurfadhilah', nis: '240123', gender: 'P' },
+    { name: 'Wasis Puji Prasetyo', nis: '240410', gender: 'L' },
+    { name: 'Yesi Vernandha', nis: '240371', gender: 'P' },
+    { name: 'Zitatun Khoeru Nada', nis: '240166', gender: 'P' },
+  ],
+  '8D': [
+    { name: 'Adam Maulana Ahsan', nis: '250111', gender: 'L' },
+    { name: 'Airilyn Laura Faustin', nis: '250112', gender: 'P' },
+    { name: 'Alfiyan Zaki Ramadhan', nis: '250113', gender: 'L' },
+    { name: 'Alif Alviano', nis: '250114', gender: 'L' },
+    { name: 'Alifah Istiqomah', nis: '250115', gender: 'P' },
+    { name: 'Alky Dwi Santoso', nis: '250116', gender: 'L' },
+    { name: 'Alvito Afriliano', nis: '250117', gender: 'L' },
+    { name: 'Alzena Lalita Rahma', nis: '250118', gender: 'P' },
+    { name: 'Anatasya', nis: '250119', gender: 'P' },
+    { name: 'Aqilla Talita Phupy Izzati', nis: '250120', gender: 'P' },
+    { name: 'Arya Maulana', nis: '260249', gender: 'L' },
+    { name: 'Ayesha Siyena Mikhayla', nis: '250121', gender: 'P' },
+    { name: 'Ayyun Nala Nafi\'ah', nis: '250122', gender: 'P' },
+    { name: 'Cika Fia Amelia', nis: '250123', gender: 'P' },
+    { name: 'Daffa Khoeru Prayogi', nis: '250124', gender: 'L' },
+    { name: 'Destianita Enjellina', nis: '250125', gender: 'P' },
+    { name: 'Desty Ajeng Suryaningrum', nis: '250126', gender: 'P' },
+    { name: 'Dita Dwi Afriani', nis: '250127', gender: 'P' },
+    { name: 'Endah Futaihah Rizqi', nis: '250128', gender: 'P' },
+    { name: 'Fairuz Shidqi Aufa Bahtiar', nis: '250129', gender: 'L' },
+    { name: 'Fhiko Zaky Afyansyah', nis: '250131', gender: 'L' },
+    { name: 'Galih Pratama', nis: '250382', gender: 'L' },
+    { name: 'Hanifah Febriana Mandiri', nis: '250132', gender: 'P' },
+    { name: 'Haura Nazhifa', nis: '250133', gender: 'P' },
+    { name: 'Ikhwan', nis: '250134', gender: 'L' },
+    { name: 'Jildan Mahesa', nis: '250135', gender: 'L' },
+    { name: 'Marwah Laili Malihah', nis: '250136', gender: 'P' },
+    { name: 'Muhammad Alif', nis: '250137', gender: 'L' },
+    { name: 'Muhammad Farel Subekti', nis: '250138', gender: 'L' },
+    { name: 'Muhammad Ikmal Maulana', nis: '250139', gender: 'L' },
+    { name: 'Putri Nur Cholifah', nis: '250140', gender: 'P' },
+    { name: 'Rafa Fairuz Celestyn', nis: '250141', gender: 'L' },
+    { name: 'Rafka Juna Saputra', nis: '250142', gender: 'L' },
+    { name: 'Reza Adi Saputra', nis: '250143', gender: 'L' },
+    { name: 'Rezzi Alfiando Saputra', nis: '250144', gender: 'L' },
+    { name: 'Rijal Rafli Syah', nis: '250145', gender: 'L' },
+    { name: 'Selomita Ayu Prameswari', nis: '250146', gender: 'P' },
+  ],
+  '9J': [
+    { name: 'Ade Aziz Al Munawar', nis: '240373', gender: 'L' },
+    { name: 'Akhmad Ghaffaar', nis: '240375', gender: 'L' },
+    { name: 'Alifah Khorunisa', nis: '240376', gender: 'P' },
+    { name: 'Arfan Akmal Faturahman', nis: '240378', gender: 'L' },
+    { name: 'Berlian Pramesti', nis: '240380', gender: 'P' },
+    { name: 'Dila Aureliani Wijaya', nis: '240381', gender: 'P' },
+    { name: 'Dion Saputra', nis: '240382', gender: 'L' },
+    { name: 'Erick Tirta Ananda', nis: '240383', gender: 'L' },
+    { name: 'Eza Anjar Priyanto', nis: '240384', gender: 'L' },
+    { name: 'Ezha Deo Arifin', nis: '240385', gender: 'L' },
+    { name: 'Fadli Maulana', nis: '240386', gender: 'L' },
+    { name: 'Fajri Al Qari Firdaus', nis: '240387', gender: 'L' },
+    { name: 'Gendhis Novelya Pratiwi', nis: '240389', gender: 'P' },
+    { name: 'Hani Najwa Mufidah', nis: '240390', gender: 'P' },
+    { name: 'Hardana Wahyu Supandi', nis: '240391', gender: 'L' },
+    { name: 'Iksan Permana', nis: '240392', gender: 'L' },
+    { name: 'Ishfi Uswatun Khasanah', nis: '240393', gender: 'P' },
+    { name: 'Kalimaya Anggraeni', nis: '240394', gender: 'P' },
+    { name: 'Keysa Oktaviana', nis: '240395', gender: 'P' },
+    { name: 'Khusfatun Nafziah', nis: '240396', gender: 'P' },
+    { name: 'Kukuh Dana Santoso', nis: '240397', gender: 'L' },
+    { name: 'Muhammad Aldian Zanuari Putra', nis: '240398', gender: 'L' },
+    { name: 'Muhammad Zainal Fathoni', nis: '240399', gender: 'L' },
+    { name: 'Noufal Septha Ardiansyah', nis: '240400', gender: 'L' },
+    { name: 'Novezya Lindi Hasyifa', nis: '240401', gender: 'P' },
+    { name: 'Novita Nur Hanifah', nis: '240402', gender: 'P' },
+    { name: 'Ogi Setiawan', nis: '240403', gender: 'L' },
+    { name: 'Putra Juan Erlangga', nis: '240404', gender: 'L' },
+    { name: 'Ranum Syawalina Sari', nis: '240405', gender: 'P' },
+    { name: 'Safa Velisia Nur Aeni', nis: '240406', gender: 'P' },
+    { name: 'Satria Octa Vian', nis: '240407', gender: 'L' },
+    { name: 'Siti Masitoh', nis: '240408', gender: 'P' },
+    { name: 'Sri Suhartini', nis: '240409', gender: 'P' },
+    { name: 'Wening Oktaviana', nis: '240411', gender: 'P' },
+    { name: 'Yerin Marselina', nis: '240412', gender: 'P' },
+    { name: 'Yuspita Yuliana', nis: '240413', gender: 'P' },
+  ],
+  '9A': [
+    { name: 'Adhwa Fauziyah Ramadhani', nis: '240001', gender: 'P' },
+    { name: 'Ahmad Nizabul Manan', nis: '240003', gender: 'L' },
+    { name: 'Aksa Syaban Putra', nis: '240004', gender: 'L' },
+    { name: 'Alvin Ferdiansyah', nis: '240005', gender: 'L' },
+    { name: 'Arzafa Asharazaq Novavitanto', nis: '240006', gender: 'L' },
+    { name: 'Assyadulloh Maulana Alfaqih', nis: '240007', gender: 'L' },
+    { name: 'Asyifa Arza Ismain', nis: '240008', gender: 'P' },
+    { name: 'Ayu Khoirunnisa', nis: '240009', gender: 'P' },
+    { name: 'Azza Firnanda', nis: '240010', gender: 'L' },
+    { name: 'Cahya Alfi Nur Sa\'Adah', nis: '240011', gender: 'P' },
+    { name: 'Chaca Aulia Khamaratih', nis: '240012', gender: 'P' },
+    { name: 'Chintya Cahyani', nis: '240013', gender: 'P' },
+    { name: 'Diandra Kirani', nis: '240014', gender: 'P' },
+    { name: 'Diva Queenita Rahmadhani', nis: '240015', gender: 'P' },
+    { name: 'Evelyn Yulia Zaenal', nis: '240016', gender: 'P' },
+    { name: 'Fernanda Putra Mahreza', nis: '240017', gender: 'L' },
+    { name: 'Fiolin Qotrunnada Nufus', nis: '240018', gender: 'P' },
+    { name: 'Gina Anggraeni Anasywa', nis: '240019', gender: 'P' },
+    { name: 'Hafshah Zakiyah Zulfa', nis: '240020', gender: 'P' },
+    { name: 'Kenzi Naizar Al Dzaki', nis: '240021', gender: 'L' },
+    { name: 'Maulydiana Talitha Hayu Muchsin', nis: '240022', gender: 'P' },
+    { name: 'Muhamad Irfan Ramadhan', nis: '240023', gender: 'L' },
+    { name: 'Muhamad Zulkarnain', nis: '240024', gender: 'L' },
+    { name: 'Muhammad  Yaqut Al Arsy', nis: '250364', gender: 'L' },
+    { name: 'Muhammad Sabi Hibatulloh', nis: '250376', gender: 'L' },
+    { name: 'Muhammad Zufar Arganto', nis: '240025', gender: 'L' },
+    { name: 'Mulyana Ahsyahfa Wijayanti', nis: '240026', gender: 'P' },
+    { name: 'Nadia Anitasari', nis: '240027', gender: 'P' },
+    { name: 'Naira Dwi Ufaira', nis: '240028', gender: 'P' },
+    { name: 'Nayla Syifa Rahma Aprilia', nis: '240029', gender: 'P' },
+    { name: 'Nova Adi Pratama', nis: '240030', gender: 'L' },
+    { name: 'Raditya Aldiansyah Saputra', nis: '240033', gender: 'L' },
+    { name: 'Rena Afriyani', nis: '240034', gender: 'P' },
+    { name: 'Setiawan Galih Ragil Saputra', nis: '240036', gender: 'L' },
+    { name: 'Setya Rizky Saputra', nis: '240037', gender: 'L' },
+    { name: 'Sylvia Nur Aini', nis: '240038', gender: 'P' },
+    { name: 'Wafira Juliana Saputri', nis: '240039', gender: 'P' },
+    { name: 'Wulan Inka Novebriyanti', nis: '240040', gender: 'P' },
+  ],
+  '8F': [
+    { name: 'Aditya Bagus Novriansyah', nis: '250183', gender: 'L' },
+    { name: 'Aditya Rifqi Adriyansyah', nis: '250184', gender: 'L' },
+    { name: 'Aji Satrianto', nis: '250185', gender: 'L' },
+    { name: 'Alfi Syawalliyah', nis: '240253', gender: 'P' },
+    { name: 'Allyka Charlotta Prasetyo', nis: '250186', gender: 'P' },
+    { name: 'Astuti', nis: '250188', gender: 'P' },
+    { name: 'Bahgrain Abdika Fahrizi', nis: '250190', gender: 'L' },
+    { name: 'Carmelita Nayla Nadhifa', nis: '250191', gender: 'P' },
+    { name: 'Dewangga Nur Sa\'Bani', nis: '250192', gender: 'L' },
+    { name: 'Elisa Nofiana Putri', nis: '250193', gender: 'P' },
+    { name: 'Faiza Putri Muliani', nis: '250194', gender: 'P' },
+    { name: 'Gayuh Rahma Tanjali', nis: '250195', gender: 'P' },
+    { name: 'Ghaisan Fadelian Rosya', nis: '250196', gender: 'L' },
+    { name: 'Iskarima Nur\'Aeni', nis: '250197', gender: 'P' },
+    { name: 'Kaela Masruroh', nis: '250198', gender: 'P' },
+    { name: 'Khaela Suliningsih', nis: '250199', gender: 'P' },
+    { name: 'Khair Rizqi Digdaya', nis: '250200', gender: 'L' },
+    { name: 'King Oktara', nis: '250201', gender: 'L' },
+    { name: 'M. Luthfi Al Abrar', nis: '250202', gender: 'L' },
+    { name: 'Mawati', nis: '250203', gender: 'P' },
+    { name: 'Muhammad Qiannas Al Hafiizh', nis: '250204', gender: 'L' },
+    { name: 'Muhammad Rannu Dzakwan', nis: '250205', gender: 'L' },
+    { name: 'Muhammad Rizki Julianto', nis: '250206', gender: 'L' },
+    { name: 'Mu\'izza\' Khoirunnisa', nis: '250207', gender: 'P' },
+    { name: 'Mustofa Fauzi', nis: '250208', gender: 'L' },
+    { name: 'Nadil Hali Anafis', nis: '250209', gender: 'L' },
+    { name: 'Ngindatul Ainun Esa', nis: '250210', gender: 'L' },
+    { name: 'Novela Alya Alzera', nis: '250211', gender: 'P' },
+    { name: 'Rezki Fajrianto', nis: '250212', gender: 'L' },
+    { name: 'Robina Firlani', nis: '250213', gender: 'P' },
+    { name: 'Romie Aizar Lazuard Al Manafy', nis: '250214', gender: 'L' },
+    { name: 'Rona Iswatun Atik Robina', nis: '250215', gender: 'P' },
+    { name: 'Salwa Fida Azzahra', nis: '250216', gender: 'P' },
+    { name: 'Sekar Kinan Yustrianti', nis: '250217', gender: 'P' },
+    { name: 'Yogi Hikmah Nurmajiid', nis: '250218', gender: 'L' },
+  ],
+  '9E': [
+    { name: 'Alif Fahmi Zaman', nis: '260255', gender: 'P' },
+    { name: 'Angga Reksha Permana', nis: '240169', gender: 'L' },
+    { name: 'Arrozaq Bintang Prasetyo', nis: '240171', gender: 'L' },
+    { name: 'Ayu Virdianni', nis: '240172', gender: 'P' },
+    { name: 'Aznu Alibia Saputra', nis: '240173', gender: 'L' },
+    { name: 'Azzahwa Rivana Aprilia', nis: '240174', gender: 'P' },
+    { name: 'Cahya Dwi Safira', nis: '240175', gender: 'P' },
+    { name: 'Desvita Fajrini', nis: '240176', gender: 'P' },
+    { name: 'Dewa Ainurfathurohman', nis: '240177', gender: 'L' },
+    { name: 'Dinda Agustin Ramadani', nis: '240178', gender: 'P' },
+    { name: 'Faid Farzana', nis: '240179', gender: 'L' },
+    { name: 'Hilwah Insan Mahadika', nis: '240180', gender: 'L' },
+    { name: 'Irfa Fadli Kamaludin', nis: '240181', gender: 'L' },
+    { name: 'Isnaeni Oktaviana', nis: '240182', gender: 'P' },
+    { name: 'Jaenal Arifin', nis: '240183', gender: 'L' },
+    { name: 'Janitra Kaila Tabina', nis: '240184', gender: 'P' },
+    { name: 'Kemal Ardiansyah', nis: '240185', gender: 'L' },
+    { name: 'Levigna Akhsanul Fewianica', nis: '240186', gender: 'P' },
+    { name: 'Livia Nur Azizah', nis: '240187', gender: 'P' },
+    { name: 'Maitsa Ananta Pratiwi', nis: '240188', gender: 'P' },
+    { name: 'Marwah Aura Izdihaar', nis: '240189', gender: 'P' },
+    { name: 'Maulana Sidiq', nis: '240190', gender: 'L' },
+    { name: 'Mohamad Ridwan Saputra', nis: '240193', gender: 'L' },
+    { name: 'Muhammad Azky Amiruzaky', nis: '240194', gender: 'L' },
+    { name: 'Muhammad Iqbal Devandrian', nis: '240195', gender: 'L' },
+    { name: 'Muhammad Yazid Al Bustomi', nis: '240196', gender: 'L' },
+    { name: 'Nur Aini Listia', nis: '250366', gender: 'P' },
+    { name: 'Oswasa Renata', nis: '240198', gender: 'P' },
+    { name: 'Rafif Zaki Priyanto', nis: '240200', gender: 'L' },
+    { name: 'Rafka Muhamad Ramadhan', nis: '240201', gender: 'L' },
+    { name: 'Rafki Pangestu Robi Gustira', nis: '240202', gender: 'L' },
+    { name: 'Rafli Avan Kurniawan', nis: '240203', gender: 'L' },
+    { name: 'Rumaisha Ghaisani', nis: '240208', gender: 'P' },
+    { name: 'Syifa Aliana Putri', nis: '250367', gender: 'P' },
+    { name: 'Tri Rahma Hayuningtias', nis: '240205', gender: 'P' },
+    { name: 'Ufaira Nur Afifa', nis: '040206', gender: 'P' },
+    { name: 'Zahra Dwi Aryanti', nis: '240207', gender: 'P' },
+  ],
+  '9D': [
+    { name: 'Ade Prianto', nis: '240124', gender: 'L' },
+    { name: 'Adesta Laelatul Gina', nis: '240125', gender: 'P' },
+    { name: 'Adlu Aziz Manjaya', nis: '240126', gender: 'L' },
+    { name: 'Agista Fahsya Almuizz Ramadhan', nis: '240127', gender: 'L' },
+    { name: 'Ajeng Setia Asih', nis: '240129', gender: 'P' },
+    { name: 'Alfaro Hirasah Rahbani', nis: '240130', gender: 'L' },
+    { name: 'Anindia Dhea Pratama', nis: '240132', gender: 'P' },
+    { name: 'Anugrah Rida Agil Kurniawan', nis: '240133', gender: 'L' },
+    { name: 'Arfa Zahrotun Najwa', nis: '240134', gender: 'P' },
+    { name: 'Arlova Sashiera Narastania', nis: '240135', gender: 'P' },
+    { name: 'Avril Aditiya Pratama', nis: '240136', gender: 'L' },
+    { name: 'Azka Ahmad Nifail', nis: '240137', gender: 'L' },
+    { name: 'Citra Fauziyyah Ramadhani', nis: '240139', gender: 'P' },
+    { name: 'Fadil Fatan Hudzaefah', nis: '240140', gender: 'L' },
+    { name: 'Fadli Fairus', nis: '240141', gender: 'L' },
+    { name: 'Friska Apriliani Putri', nis: '240142', gender: 'P' },
+    { name: 'Ilmas Trimulya', nis: '240143', gender: 'L' },
+    { name: 'Jesica Anggun Permadani', nis: '240144', gender: 'P' },
+    { name: 'Kanaya Aulia Rahma', nis: '240145', gender: 'P' },
+    { name: 'Khalifah Nur Azizah', nis: '240146', gender: 'P' },
+    { name: 'Kharis Ikhsan Maola', nis: '240147', gender: 'L' },
+    { name: 'Mauza Rahmadani Yasmin', nis: '240149', gender: 'P' },
+    { name: 'Muhammad Alfine Al\'Arasy', nis: '240150', gender: 'L' },
+    { name: 'Muhammad Yusuf Khoir', nis: '240151', gender: 'L' },
+    { name: 'Nae\'ema Maulani', nis: '240152', gender: 'P' },
+    { name: 'Nur Alifah', nis: '240153', gender: 'P' },
+    { name: 'Palesya Restu Alena', nis: '240154', gender: 'P' },
+    { name: 'Pratama Dwi Ananta', nis: '240155', gender: 'L' },
+    { name: 'Queensa Aulia Ramadhani', nis: '240156', gender: 'P' },
+    { name: 'Rafka Raditya Pratama', nis: '240157', gender: 'L' },
+    { name: 'Raza Albar Maulana', nis: '240159', gender: 'L' },
+    { name: 'Rehan Aditiya', nis: '240160', gender: 'L' },
+    { name: 'Rini Sugiharti', nis: '240161', gender: 'P' },
+    { name: 'Satria Putra Ramadhan', nis: '240162', gender: 'L' },
+    { name: 'Usni Latifah', nis: '240163', gender: 'P' },
+    { name: 'Valencia Bilqis Apriliani', nis: '240164', gender: 'P' },
+    { name: 'Yesha Nur Rohmah', nis: '240165', gender: 'P' },
+  ],
+  '8E': [
+    { name: 'Afiqah Salsabila Yusuf', nis: '250147', gender: 'P' },
+    { name: 'Aflah Shafa Yafi\'ah', nis: '250148', gender: 'P' },
+    { name: 'Aisyah Ayudia Inara', nis: '250149', gender: 'P' },
+    { name: 'Akrom Farras Nabil', nis: '250150', gender: 'L' },
+    { name: 'Awan Wilis Setia', nis: '250151', gender: 'L' },
+    { name: 'Catherine Azaria', nis: '250152', gender: 'P' },
+    { name: 'Dea Kurnia Naafiah', nis: '250153', gender: 'P' },
+    { name: 'Desprika Maharani', nis: '250154', gender: 'P' },
+    { name: 'Ernes Revan Pratama', nis: '250155', gender: 'L' },
+    { name: 'Fadil Dwi Saputra', nis: '250156', gender: 'L' },
+    { name: 'Fairel Atharis Khalif', nis: '250157', gender: 'L' },
+    { name: 'Fandi Ramadhan', nis: '250158', gender: 'L' },
+    { name: 'Farrel Naufal Dewanta', nis: '250159', gender: 'L' },
+    { name: 'Fathan Aqil Ibawa', nis: '260250', gender: 'L' },
+    { name: 'Helmi Nurul Khasanah', nis: '250162', gender: 'P' },
+    { name: 'Indi Aulia Turrohmah', nis: '250161', gender: 'P' },
+    { name: 'Khoeru Nur Navisa', nis: '250378', gender: 'P' },
+    { name: 'Messi Daffa Fauzan', nis: '250165', gender: 'L' },
+    { name: 'Muhamad Raihan Al Masruroh', nis: '250164', gender: 'L' },
+    { name: 'Muhammad Bintang Pratama', nis: '250163', gender: 'L' },
+    { name: 'Muhammad Ihsan Fakhri', nis: '250166', gender: 'L' },
+    { name: 'Muhammad Juna Ramadhan', nis: '250167', gender: 'L' },
+    { name: 'Nafiz Nabihan', nis: '250168', gender: 'L' },
+    { name: 'Noval Dwi Syahputra', nis: '250169', gender: 'L' },
+    { name: 'Qinan Dwi Saputra', nis: '250170', gender: 'L' },
+    { name: 'Raihan Aska Dhia Pratama', nis: '250171', gender: 'L' },
+    { name: 'Raisa Muji Maulidya', nis: '250172', gender: 'P' },
+    { name: 'Refan Fernando', nis: '250173', gender: 'L' },
+    { name: 'Risma Jumiarti', nis: '250174', gender: 'P' },
+    { name: 'Rizal Bahir', nis: '250175', gender: 'L' },
+    { name: 'Sinar Syifa\'ul Qulb Permana', nis: '250177', gender: 'P' },
+    { name: 'Syiffa Firhania Wahidin', nis: '250178', gender: 'P' },
+    { name: 'Wahyu Prayoga', nis: '250179', gender: 'L' },
+    { name: 'Yhanaz Maulana', nis: '250180', gender: 'L' },
+    { name: 'Yuanita Dwi Rahmadani', nis: '250181', gender: 'P' },
+    { name: 'Zaky Huzaifah', nis: '250182', gender: 'L' },
+  ],
+  '7 G': [
+    { name: 'Afiza Ifra Farzana', nis: '260191', gender: 'P' },
+    { name: 'Afnan Atma Purnama', nis: '260192', gender: 'L' },
+    { name: 'Ainun Cahya Oktafiani', nis: '260193', gender: 'P' },
+    { name: 'Albert Desta Anugrah', nis: '260194', gender: 'L' },
+    { name: 'Ardanu Gusti Kusuma', nis: '260195', gender: 'L' },
+    { name: 'Artha Karunia Nur Zaky', nis: '260196', gender: 'L' },
+    { name: 'Athifa Nur Inaya', nis: '260197', gender: 'P' },
+    { name: 'Briliant Syafi Qois', nis: '260198', gender: 'L' },
+    { name: 'Delita Zalfa Abidah', nis: '260199', gender: 'P' },
+    { name: 'Desta Pandu Pratama', nis: '260200', gender: 'L' },
+    { name: 'Dika Nagata Faishal', nis: '260201', gender: 'L' },
+    { name: 'Dina Azahra', nis: '260202', gender: 'P' },
+    { name: 'Erbina Yoan', nis: '260203', gender: 'P' },
+    { name: 'Fabian Damar P.', nis: '260204', gender: 'L' },
+    { name: 'Fadil Rizki Bahtiar', nis: '260205', gender: 'L' },
+    { name: 'Fattah Ilham Alfarizi', nis: '260206', gender: 'L' },
+    { name: 'Juan Adipati Pranata', nis: '260207', gender: 'L' },
+    { name: 'Kaka Riski Pratama', nis: '260208', gender: 'L' },
+    { name: 'Keisya Adha Maulana', nis: '260209', gender: 'L' },
+    { name: 'M.Faqi Nur Hidayat', nis: '260210', gender: 'L' },
+    { name: 'Marchella Angelica Bintoro', nis: '260211', gender: 'P' },
+    { name: 'Meynanda Karunia Putri', nis: '260212', gender: 'P' },
+    { name: 'Moza Pramono', nis: '260213', gender: 'L' },
+    { name: 'Muhammad Rasyid Aprillio', nis: '260214', gender: 'L' },
+    { name: 'Muhammad Revano Ardiansyah', nis: '260215', gender: 'L' },
+    { name: 'Nadhifa Marwaha', nis: '260216', gender: 'P' },
+    { name: 'Riffai Fajar Maulana', nis: '260217', gender: 'L' },
+    { name: 'Rizky Ardiansyah', nis: '260218', gender: 'L' },
+    { name: 'Syakila Aiko Radela', nis: '260219', gender: 'P' },
+  ],
+  '8I': [
+    { name: 'Adam Farfan', nis: '250291', gender: 'L' },
+    { name: 'Adit Rafa Alfaro', nis: '250292', gender: 'L' },
+    { name: 'Akilla Rizki Aprilia', nis: '250293', gender: 'P' },
+    { name: 'Alana Amania Setiyawan', nis: '250294', gender: 'P' },
+    { name: 'Angellica Ayu Ningsih', nis: '250295', gender: 'P' },
+    { name: 'Anindya Safi Syakira', nis: '250296', gender: 'P' },
+    { name: 'Arya Yaffi Zaim Pujiono', nis: '250297', gender: 'L' },
+    { name: 'Bagus Sidiq Zakariya', nis: '250298', gender: 'L' },
+    { name: 'Belva Letisya Putri', nis: '250299', gender: 'P' },
+    { name: 'Dafa Hanif Mahardika', nis: '250300', gender: 'L' },
+    { name: 'Dini Dwiana Lestari', nis: '250301', gender: 'P' },
+    { name: 'Farida Putri Destari', nis: '250302', gender: 'P' },
+    { name: 'Faris Setiawan', nis: '250303', gender: 'L' },
+    { name: 'Haqiqi Abdul Syafiq', nis: '250304', gender: 'L' },
+    { name: 'Ibra Najib Arjuan', nis: '250305', gender: 'L' },
+    { name: 'Ilham Orlando', nis: '250306', gender: 'L' },
+    { name: 'Janur Azzukhruf Malik', nis: '250307', gender: 'L' },
+    { name: 'Khusnul Hernata Tasya', nis: '250308', gender: 'P' },
+    { name: 'Meisya Dwi Mulyani', nis: '250309', gender: 'P' },
+    { name: 'Mikayla Zahra Putri Arifni', nis: '250310', gender: 'P' },
+    { name: 'Mohammad Akbar Rivaldi', nis: '250311', gender: 'L' },
+    { name: 'Muhamad Khoirul Azzam', nis: '250312', gender: 'L' },
+    { name: 'Muhammad Rifai Rabbani', nis: '250313', gender: 'L' },
+    { name: 'Naufal Rahmadani', nis: '250314', gender: 'L' },
+    { name: 'Naurah Nabilah Naflah Zahirah', nis: '250315', gender: 'P' },
+    { name: 'Novrin Althaf Maulana', nis: '250316', gender: 'L' },
+    { name: 'Nur Aliffa Turohman', nis: '250317', gender: 'L' },
+    { name: 'Pandu Cahya Bekti', nis: '250318', gender: 'L' },
+    { name: 'Rafi Aditiya Putra', nis: '250319', gender: 'L' },
+    { name: 'Resti Lili Rahmawati', nis: '250320', gender: 'P' },
+    { name: 'Sahrini Junianingsih', nis: '250321', gender: 'P' },
+    { name: 'Sari Wulandari', nis: '250322', gender: 'P' },
+    { name: 'Sekar Ayu Yuliana', nis: '250323', gender: 'P' },
+    { name: 'Shafa Maulidya Fairiz', nis: '250324', gender: 'P' },
+    { name: 'Verlita Rahmawati', nis: '250325', gender: 'P' },
+    { name: 'Wahyu Pratama', nis: '250326', gender: 'L' },
+    { name: 'Yurizki Putra Wiguna', nis: '250327', gender: 'L' },
+    { name: 'Zazka Abimanyu', nis: '250328', gender: 'L' },
+  ],
+  '9F': [
+    { name: 'Abdul Hafizh', nis: '240209', gender: 'L' },
+    { name: 'Aira Desvana Letisya', nis: '240210', gender: 'P' },
+    { name: 'Aji Nurohman', nis: '240211', gender: 'L' },
+    { name: 'Amelia Shabrina Anggraini', nis: '240213', gender: 'P' },
+    { name: 'Arina Cintya Putri', nis: '240215', gender: 'P' },
+    { name: 'Asyraf Maulana', nis: '240216', gender: 'L' },
+    { name: 'Atika Dwi Kanaya', nis: '240217', gender: 'P' },
+    { name: 'Azmi Dzaka', nis: '240218', gender: 'L' },
+    { name: 'Azrian Kaesyafa Alfaro', nis: '240219', gender: 'L' },
+    { name: 'Bryan Alfandi', nis: '240220', gender: 'L' },
+    { name: 'Delin Khofif Fitriyani', nis: '240221', gender: 'P' },
+    { name: 'Faith Janitra Arsyad', nis: '240222', gender: 'L' },
+    { name: 'Fatir Tri Sulistiyo', nis: '240223', gender: 'L' },
+    { name: 'Felisa Wulandari', nis: '240224', gender: 'P' },
+    { name: 'Felisha Naftalika Putri', nis: '240225', gender: 'P' },
+    { name: 'Fikri Arrosyid', nis: '240226', gender: 'L' },
+    { name: 'Gishella Diandra Rizkyanti', nis: '240227', gender: 'P' },
+    { name: 'Hafiz Prasetyo', nis: '240228', gender: 'L' },
+    { name: 'Hafiz Taruna Wijaya', nis: '240229', gender: 'L' },
+    { name: 'Hana Qothrun Nada', nis: '240230', gender: 'P' },
+    { name: 'Hilfigar Dwi Romadhoni', nis: '240231', gender: 'L' },
+    { name: 'Hitta Greenfantri Niagara', nis: '240232', gender: 'P' },
+    { name: 'Intan Nursepty', nis: '240233', gender: 'P' },
+    { name: 'Juliete Angelina Murphy', nis: '240234', gender: 'P' },
+    { name: 'Maykel Ridho Pratama', nis: '240237', gender: 'L' },
+    { name: 'Mika Susilowati', nis: '240238', gender: 'P' },
+    { name: 'Muhamad Rizky Al Hafiz', nis: '240239', gender: 'L' },
+    { name: 'Muhammad Arif Maulana Zikrullah', nis: '240240', gender: 'L' },
+    { name: 'Muhammad Khafid Maulana', nis: '240241', gender: 'L' },
+    { name: 'Nadia Arfiqoh Az-Zahra', nis: '240242', gender: 'P' },
+    { name: 'Rizky  Aqila Azmy Yansah', nis: '240243', gender: 'P' },
+    { name: 'Rofiq Hidayat', nis: '240244', gender: 'L' },
+    { name: 'Saiful Iqrom', nis: '240245', gender: 'L' },
+    { name: 'Salsa Lathifah Mubarokah', nis: '240246', gender: 'P' },
+    { name: 'Vilda Julianti', nis: '240248', gender: 'P' },
+    { name: 'Wildan Syafi', nis: '240249', gender: 'L' },
+    { name: 'Zalfa Alya Nabilla', nis: '240250', gender: 'P' },
+    { name: 'Muhammad Ali Hisyam Arryadh', nis: '260256', gender: 'L' },
+  ],
+  '7H': [
+    { name: 'Aditiya Mahya', nis: '260220', gender: 'L' },
+    { name: 'Agung Riyanto', nis: '260221', gender: 'L' },
+    { name: 'Airlangga Syahputra Margiono', nis: '260222', gender: 'L' },
+    { name: 'Alkhalif Bagus P', nis: '260223', gender: 'L' },
+    { name: 'Ayayit Nur Husen', nis: '260224', gender: 'L' },
+    { name: 'Azmi Hail Fataa', nis: '260225', gender: 'L' },
+    { name: 'Chairli Ramadani', nis: '260226', gender: 'L' },
+    { name: 'Daffa Arya Ghussan', nis: '260227', gender: 'L' },
+    { name: 'Dekha Sahal Aliq', nis: '260228', gender: 'L' },
+    { name: 'Denny Subagyo', nis: '260229', gender: 'L' },
+    { name: 'Desta Eka Pratama', nis: '260230', gender: 'L' },
+    { name: 'Dika Saputra', nis: '260231', gender: 'L' },
+    { name: 'Farel Adinata Prayoga', nis: '260232', gender: 'L' },
+    { name: 'Ferdinan Prasetio', nis: '260233', gender: 'L' },
+    { name: 'Haura Nadif Afifah', nis: '260234', gender: 'P' },
+    { name: 'Hiva Sema Yulita', nis: '260235', gender: 'P' },
+    { name: 'Jacinda Wafiqah Ramania Syarif', nis: '260236', gender: 'P' },
+    { name: 'Kinara Ahza Izdihar', nis: '260237', gender: 'P' },
+    { name: 'Natasya Saqila Aliyanor', nis: '260238', gender: 'P' },
+    { name: 'Naura Tri Cahyaningsih', nis: '260239', gender: 'P' },
+    { name: 'Rafa Azka Azizan', nis: '260240', gender: 'L' },
+    { name: 'Rafa Yusuf Iman', nis: '260241', gender: 'L' },
+    { name: 'Rafardhan Athalla El Wafi', nis: '260242', gender: 'L' },
+    { name: 'Raffa Narendra Putra', nis: '260243', gender: 'L' },
+    { name: 'Rafka Maulana Arrasyid', nis: '260244', gender: 'L' },
+    { name: 'Rona Jinan Kamilah', nis: '260245', gender: 'P' },
+    { name: 'Sevan Apriyanto', nis: '260246', gender: 'L' },
+    { name: 'Shakila Nadhita Putri', nis: '260247', gender: 'P' },
+    { name: 'Virzhi Hafidzha Rusliana', nis: '260248', gender: 'P' },
+  ],
+  '8C': [
+    { name: 'Aqila Andara Khanza', nis: '250074', gender: 'P' },
+    { name: 'Aysha Reski Afriyanti', nis: '250075', gender: 'P' },
+    { name: 'Brian Alifiandra Rayhantama', nis: '250076', gender: 'L' },
+    { name: 'Devina Dwi Safara', nis: '250078', gender: 'P' },
+    { name: 'Dinda Larasati', nis: '250077', gender: 'P' },
+    { name: 'Faiz Muhammad Wasri', nis: '250079', gender: 'L' },
+    { name: 'Faizal Raditya Pratama', nis: '250080', gender: 'L' },
+    { name: 'Farhan Nurrohman', nis: '250081', gender: 'L' },
+    { name: 'Fatan Maulana Shidiq', nis: '250082', gender: 'L' },
+    { name: 'Fathin Lailatun Nafingah', nis: '250083', gender: 'P' },
+    { name: 'Ferlin Dwi Anindia', nis: '250084', gender: 'P' },
+    { name: 'Ferly Cahya Dwi Putra', nis: '250085', gender: 'L' },
+    { name: 'Hafizh Maulana Dzaki Ibrahim', nis: '250086', gender: 'L' },
+    { name: 'Haris Dwi Darmawan', nis: '250087', gender: 'L' },
+    { name: 'Hilma Desfita Nur Hikmah', nis: '250088', gender: 'P' },
+    { name: 'Ibnu Nafi Faeyza', nis: '250089', gender: 'L' },
+    { name: 'Jesen Vanezo', nis: '250090', gender: 'L' },
+    { name: 'Kevin Abdul Latif', nis: '250091', gender: 'L' },
+    { name: 'Kinan Suro Panggalih', nis: '250092', gender: 'L' },
+    { name: 'Kirania Nevila Pradestya', nis: '250093', gender: 'P' },
+    { name: 'Meiza Ayu Lestari', nis: '250096', gender: 'P' },
+    { name: 'Mohammad Zidan Alfahri', nis: '250095', gender: 'L' },
+    { name: 'Muhamad Khoirul Anam', nis: '250094', gender: 'L' },
+    { name: 'Muhammad Azkha Aldiansyah', nis: '250097', gender: 'L' },
+    { name: 'Nabila Anindhita Ramadhani', nis: '250098', gender: 'P' },
+    { name: 'Nur Lailatun Ni\'Mah', nis: '250099', gender: 'P' },
+    { name: 'Rafa Maulana', nis: '250100', gender: 'L' },
+    { name: 'Rafif Mumtaz Annizar', nis: '250101', gender: 'L' },
+    { name: 'Ragil Bari Maulana', nis: '250102', gender: 'L' },
+    { name: 'Rayfan Rizky Pratama', nis: '250103', gender: 'L' },
+    { name: 'Rega Arya Ardiansyah', nis: '250104', gender: 'L' },
+    { name: 'Robby Al Faqih', nis: '250105', gender: 'L' },
+    { name: 'Siti Yuliana Afika', nis: '250106', gender: 'P' },
+    { name: 'Swandi Tata Nazurah', nis: '250107', gender: 'L' },
+    { name: 'Syaqina Aqlan', nis: '250108', gender: 'P' },
+    { name: 'Thifaal Ibtihal', nis: '250109', gender: 'L' },
+    { name: 'Wildan Futhona', nis: '250110', gender: 'L' },
+    { name: 'Wulan Latifatul Maghfiroh', nis: '250375', gender: 'P' },
+  ],
+  '9I': [
+    { name: 'Afif \'Ali Musyafa', nis: '240331', gender: 'L' },
+    { name: 'Afita Nur Salehah', nis: '240332', gender: 'P' },
+    { name: 'Afka Dwi Ariswa', nis: '250380', gender: 'L' },
+    { name: 'Agistia Laila Nur Ramadhani', nis: '240333', gender: 'P' },
+    { name: 'Alika Nova Zain', nis: '240335', gender: 'P' },
+    { name: 'Ami Yunira', nis: '240338', gender: 'P' },
+    { name: 'Anisa Dwi Andriyani', nis: '240337', gender: 'P' },
+    { name: 'Callysta Nareswari Wijaya', nis: '250370', gender: 'P' },
+    { name: 'Denova Azzahra', nis: '240339', gender: 'P' },
+    { name: 'Devin Ibra Aprilio', nis: '240341', gender: 'L' },
+    { name: 'Dinda Anasya Putri', nis: '240342', gender: 'P' },
+    { name: 'Drajat Restu Febrian', nis: '240343', gender: 'L' },
+    { name: 'Faidzah Agniya Ramadhani', nis: '240344', gender: 'P' },
+    { name: 'Fariz Alfaro', nis: '240345', gender: 'L' },
+    { name: 'Fayi Bahtiar Rizqulah', nis: '240346', gender: 'L' },
+    { name: 'Furqon Hafiyyan', nis: '240348', gender: 'L' },
+    { name: 'Gilang Maulana Ramadhan', nis: '240349', gender: 'L' },
+    { name: 'Gusti Zanati', nis: '240350', gender: 'L' },
+    { name: 'Hafidz Prasetyo', nis: '240351', gender: 'L' },
+    { name: 'Hilmi Nur Romadon', nis: '240352', gender: 'L' },
+    { name: 'Inggit Adiyansyah', nis: '260258', gender: 'L' },
+    { name: 'Irsyad Al Ghiffari', nis: '240353', gender: 'L' },
+    { name: 'Jauza Ibnu Vairus Ikhtiar', nis: '240354', gender: 'L' },
+    { name: 'Kaka Putra Wijaya', nis: '240356', gender: 'L' },
+    { name: 'Luthfi  Ayunindya', nis: '240357', gender: 'P' },
+    { name: 'Miftahul Hanif', nis: '240358', gender: 'L' },
+    { name: 'Muhammad Erlangga Yanuar Prasetyo', nis: '240359', gender: 'L' },
+    { name: 'Muhammad Wildan Alfajri', nis: '240361', gender: 'L' },
+    { name: 'Namira Lisa Rodiyah', nis: '240362', gender: 'P' },
+    { name: 'Nendri Anisa Wulandari', nis: '240363', gender: 'P' },
+    { name: 'Niva Relsa Febrian', nis: '240364', gender: 'P' },
+    { name: 'Oktavyan Pratama', nis: '240365', gender: 'L' },
+    { name: 'Rafandra Lionel Asshafi', nis: '260259', gender: 'L' },
+    { name: 'Raka Ardhiansyah', nis: '240366', gender: 'L' },
+    { name: 'Rifda Haniyyah Zalfa', nis: '240368', gender: 'P' },
+    { name: 'Selfiana Safitri', nis: '240369', gender: 'P' },
+    { name: 'Yusuf Tri Mulyono', nis: '240372', gender: 'L' },
+  ],
+  '7D': [
+    { name: 'Abiu Abdu Mubarok', nis: '260097', gender: 'L' },
+    { name: 'Aditya Prasraya Sakti', nis: '260098', gender: 'L' },
+    { name: 'Ahmad Faiq Kamaludin', nis: '260099', gender: 'L' },
+    { name: 'Alby Luthfy Fachry', nis: '260100', gender: 'L' },
+    { name: 'Arfa Putra Al Manaf', nis: '260101', gender: 'L' },
+    { name: 'Atika Zahra Rafika', nis: '260102', gender: 'P' },
+    { name: 'Ferlin Nuri Dwi Anggraeni', nis: '260103', gender: 'P' },
+    { name: 'Fiki Dwi Musyafar', nis: '260104', gender: 'L' },
+    { name: 'Hanan Shafy Muzhaffar', nis: '260105', gender: 'L' },
+    { name: 'Havena Rita Maulidya', nis: '260106', gender: 'P' },
+    { name: 'Izzul Mughni Alfian', nis: '260107', gender: 'L' },
+    { name: 'Khanisa Humaira Firdani', nis: '260108', gender: 'P' },
+    { name: 'Mahesa Deva Dwi Saputra', nis: '260109', gender: 'L' },
+    { name: 'Mikayla Nasya Azzahra', nis: '260110', gender: 'P' },
+    { name: 'Muhammad Ahza Abizar Saputra', nis: '260111', gender: 'L' },
+    { name: 'Oskar Didik Pranoto', nis: '260112', gender: 'L' },
+    { name: 'Qanita Fadillah Hasna', nis: '260113', gender: 'P' },
+    { name: 'Qiara Kalila Putri', nis: '260114', gender: 'P' },
+    { name: 'Rafi Addzaki', nis: '260115', gender: 'L' },
+    { name: 'Raka Nur Fauzan', nis: '260116', gender: 'L' },
+    { name: 'Rara Aliana Saputri', nis: '260117', gender: 'P' },
+    { name: 'Renata Nur Hasanah', nis: '260118', gender: 'P' },
+    { name: 'Rizky Akbar Faizal Aditya', nis: '260119', gender: 'L' },
+    { name: 'Sabrina Aqila Cinta Raksania Bilqis', nis: '260120', gender: 'P' },
+    { name: 'Shean Samau Al Amaro', nis: '260121', gender: 'L' },
+    { name: 'Tata Aufa Mahmud', nis: '260122', gender: 'L' },
+    { name: 'Unzy Risyalata', nis: '260123', gender: 'L' },
+    { name: 'Vannisa Zilziana Putri', nis: '260124', gender: 'P' },
+    { name: 'Wulandari Mirza Aryo', nis: '260125', gender: 'P' },
+  ],
+  '8 G': [
+    { name: 'Adiba Safa Khoerul', nis: '250219', gender: 'L' },
+    { name: 'Adryan Gian Alamsyah', nis: '250220', gender: 'L' },
+    { name: 'Askha Alfatun Nisa', nis: '250221', gender: 'P' },
+    { name: 'Asyilla Fitri Ramadhani', nis: '250222', gender: 'P' },
+    { name: 'Ayu Dya Handayani', nis: '250223', gender: 'P' },
+    { name: 'Azril Dwi Setyawan', nis: '250224', gender: 'L' },
+    { name: 'Azzahra Diah Mahasetia', nis: '250225', gender: 'P' },
+    { name: 'Bagas Fikri Amannulloh', nis: '250226', gender: 'L' },
+    { name: 'Daylen Afandi', nis: '250227', gender: 'L' },
+    { name: 'Dhixria Nur Fitriana', nis: '250228', gender: 'P' },
+    { name: 'Disa Alviano Ananta', nis: '250229', gender: 'L' },
+    { name: 'Faeezah Nadira Putri', nis: '250230', gender: 'P' },
+    { name: 'Fani Ainum Maharani', nis: '250231', gender: 'P' },
+    { name: 'Farel Ibni Fawzan', nis: '250232', gender: 'L' },
+    { name: 'Fathimah Azahra', nis: '250233', gender: 'P' },
+    { name: 'Kafa Nizam Fahri', nis: '250234', gender: 'L' },
+    { name: 'Kaisha Lanang Adriansah', nis: '250235', gender: 'L' },
+    { name: 'Kavka Aditiya Arava', nis: '250236', gender: 'L' },
+    { name: 'Kevin Khoirul Azam', nis: '250237', gender: 'L' },
+    { name: 'Khansa Qonitah Hanania', nis: '250238', gender: 'P' },
+    { name: 'Marsya Sailla Anggraeni', nis: '250240', gender: 'P' },
+    { name: 'Merry Febriana Ratna Sari', nis: '250241', gender: 'P' },
+    { name: 'Muhamad Denis El Amin', nis: '250239', gender: 'L' },
+    { name: 'Muhammad Ali Almu\'Is', nis: '250242', gender: 'L' },
+    { name: 'Naufal Kurniawan', nis: '250243', gender: 'L' },
+    { name: 'Novara Dinda Wibawa', nis: '250244', gender: 'P' },
+    { name: 'Nur Firda Maulina', nis: '250245', gender: 'P' },
+    { name: 'Puguh Dwi Ridho Setia Nur Hidayat', nis: '250246', gender: 'L' },
+    { name: 'Putri Zakiyyah Sari', nis: '250247', gender: 'P' },
+    { name: 'Ravel Arva Aditya', nis: '250248', gender: 'L' },
+    { name: 'Relif Revano Putra', nis: '250249', gender: 'L' },
+    { name: 'Rizky Ramdhani', nis: '250250', gender: 'L' },
+    { name: 'Rizky Yuda Arkana', nis: '250251', gender: 'L' },
+    { name: 'Sarif Asman', nis: '250252', gender: 'L' },
+    { name: 'Xavi Exca Putra Cassami', nis: '250254', gender: 'L' },
+    { name: 'Zidan Akbar Saputra', nis: '250255', gender: 'L' },
+  ],
+  '9 G': [
+    { name: 'Ahmad Rizky Waluyo', nis: '240251', gender: 'L' },
+    { name: 'Ahnaf Fadhli Ruliansyah', nis: '240252', gender: 'L' },
+    { name: 'Almira Zaza Aulia', nis: '240254', gender: 'P' },
+    { name: 'Anjali Helga Kayana', nis: '240256', gender: 'P' },
+    { name: 'Aqila Putri Amora', nis: '240257', gender: 'P' },
+    { name: 'Arfi Ariyanto', nis: '240258', gender: 'L' },
+    { name: 'Arif Ferdiansah', nis: '240259', gender: 'L' },
+    { name: 'Asyamsani Nibras', nis: '240260', gender: 'L' },
+    { name: 'Asysyifa Aulia Kurnia Mega', nis: '240261', gender: 'P' },
+    { name: 'Aynal Abdan Pratama', nis: '250368', gender: 'L' },
+    { name: 'Balqis Imanda Lovely', nis: '240262', gender: 'P' },
+    { name: 'Berlian Vanda Ladyska', nis: '240263', gender: 'P' },
+    { name: 'Bhanu Mu\'ammar', nis: '240264', gender: 'L' },
+    { name: 'Cahyani Putri Fatimah', nis: '240265', gender: 'P' },
+    { name: 'Cinta Calista', nis: '240266', gender: 'P' },
+    { name: 'Denita Alinzkia Putri', nis: '240267', gender: 'P' },
+    { name: 'Fadil Bayu Dwi Nugroho', nis: '240268', gender: 'L' },
+    { name: 'Fahri Khoirul Muzaki', nis: '240269', gender: 'L' },
+    { name: 'Fajri Khoerul Amri', nis: '240270', gender: 'L' },
+    { name: 'Fitri Anggraini', nis: '240272', gender: 'P' },
+    { name: 'Hadaya Lutvia Amalia', nis: '240273', gender: 'P' },
+    { name: 'Haikal Satria Syahputra', nis: '240274', gender: 'L' },
+    { name: 'Ikhsan Afandi', nis: '240275', gender: 'L' },
+    { name: 'Iqbal Nouval Zacky', nis: '240276', gender: 'L' },
+    { name: 'Isnaeni Wahyu Nurjanati', nis: '240277', gender: 'P' },
+    { name: 'Jeni Gustina', nis: '240278', gender: 'P' },
+    { name: 'Lita Egi Triana', nis: '240279', gender: 'P' },
+    { name: 'Muhamad Faizul Akbar', nis: '240280', gender: 'L' },
+    { name: 'Muhamad Hamid Kholilurrakhman', nis: '240281', gender: 'L' },
+    { name: 'Muhamad Wahyu Zulfikar', nis: '240282', gender: 'L' },
+    { name: 'Nadia Dinar Salsabila', nis: '240283', gender: 'P' },
+    { name: 'Nasywa Ramadan', nis: '240284', gender: 'L' },
+    { name: 'Nayla Claresta Putri', nis: '240285', gender: 'P' },
+    { name: 'Prasya Allif Firmansyah', nis: '240286', gender: 'L' },
+    { name: 'Rafael Arya Dwi Saputra', nis: '240287', gender: 'L' },
+    { name: 'Salsa Aprilia Suryani', nis: '240289', gender: 'P' },
+    { name: 'Vello Feronika Meysha Lovian', nis: '240290', gender: 'P' },
+  ],
+  '9C': [
+    { name: 'Afika Putri', nis: '240083', gender: 'P' },
+    { name: 'Ahmad Adzkiya Lutfi', nis: '240084', gender: 'L' },
+    { name: 'Al Zarkha Ibrahim', nis: '260252', gender: 'L' },
+    { name: 'Alzam Adli Rauf', nis: '240085', gender: 'L' },
+    { name: 'Amora Gatan Nugroho', nis: '240086', gender: 'L' },
+    { name: 'Andaru Adnan Waliyulloh', nis: '240087', gender: 'L' },
+    { name: 'Andini', nis: '240088', gender: 'P' },
+    { name: 'Aryadika Ramadani', nis: '240090', gender: 'L' },
+    { name: 'Bangkit Wahyu Meilano', nis: '240092', gender: 'L' },
+    { name: 'Brian Aziz Nurrofiq', nis: '240093', gender: 'L' },
+    { name: 'Damar Abian Fatih', nis: '240094', gender: 'L' },
+    { name: 'Danu Wiguna Rhomadon', nis: '240095', gender: 'L' },
+    { name: 'Desta Priana', nis: '240097', gender: 'P' },
+    { name: 'Fadli Saputra', nis: '240098', gender: 'L' },
+    { name: 'Fahriza Yusuf Ramadhan', nis: '240099', gender: 'L' },
+    { name: 'Famela Latifah Ginawati', nis: '240100', gender: 'P' },
+    { name: 'Farrel Khafid Luthfitama', nis: '240101', gender: 'L' },
+    { name: 'Fathih Fajar Rizkya', nis: '240102', gender: 'L' },
+    { name: 'Ficki Adistian', nis: '240103', gender: 'L' },
+    { name: 'Frida Naufarisa', nis: '240104', gender: 'P' },
+    { name: 'Intan Nur Indriani', nis: '240105', gender: 'P' },
+    { name: 'Juna Rahmawidi', nis: '240106', gender: 'L' },
+    { name: 'Khairan Pancayuda', nis: '240107', gender: 'L' },
+    { name: 'Khalifah Widya Nur Nafawati', nis: '260253', gender: 'P' },
+    { name: 'Lyla Ayu Octaviani', nis: '240109', gender: 'P' },
+    { name: 'Muhammad Afiq Maulana', nis: '240110', gender: 'L' },
+    { name: 'Muhammad Fadhil Ramadhan', nis: '240111', gender: 'L' },
+    { name: 'Natasya Dwi Febriyani', nis: '240112', gender: 'P' },
+    { name: 'Nenti Nur Aini', nis: '240113', gender: 'P' },
+    { name: 'Nicholas Gading Sebastian', nis: '240114', gender: 'L' },
+    { name: 'Nurul Fahmi', nis: '240115', gender: 'L' },
+    { name: 'Rena Defiana', nis: '240117', gender: 'P' },
+    { name: 'Rio Alvin Pratama', nis: '240119', gender: 'L' },
+    { name: 'Sabrina Mia Lestari', nis: '240120', gender: 'P' },
+    { name: 'Salasbilla Artanti Cahya Ningrum', nis: '240121', gender: 'P' },
+    { name: 'Shara Syafinatunisa Budiliasari', nis: '240122', gender: 'P' },
+    { name: 'Ubaidillah Zidan Abqori', nis: '260254', gender: 'L' },
+  ],
+  '7A': [
+    { name: 'Afiif Ibnu Aziz', nis: '260001', gender: 'L' },
+    { name: 'Ahmad Fauzan Alevin', nis: '260002', gender: 'L' },
+    { name: 'Alif Kusnandar', nis: '260003', gender: 'L' },
+    { name: 'Alim Darmawan', nis: '260004', gender: 'L' },
+    { name: 'Azka Prima Samudera', nis: '260005', gender: 'L' },
+    { name: 'Azwa Zahwa Bilqis', nis: '260006', gender: 'P' },
+    { name: 'Dhea Evrilia Nur\'Aini', nis: '260007', gender: 'P' },
+    { name: 'Dwi Akbar Kurniawan', nis: '260008', gender: 'L' },
+    { name: 'Dwi Alfi Setyaningsih', nis: '260009', gender: 'P' },
+    { name: 'Fairel Ahza Argani', nis: '260010', gender: 'L' },
+    { name: 'Fatkhan Afkar Sakhi', nis: '260011', gender: 'L' },
+    { name: 'Iltizam Zidan Maulana', nis: '260012', gender: 'L' },
+    { name: 'Isfahani Faridatunida', nis: '260013', gender: 'P' },
+    { name: 'Istikomah', nis: '260014', gender: 'P' },
+    { name: 'Karunia Cahya Alenna', nis: '260015', gender: 'P' },
+    { name: 'Keisha Ayunindya Zahira', nis: '260016', gender: 'P' },
+    { name: 'Kevin Putra Prilian', nis: '260017', gender: 'L' },
+    { name: 'Luqman Fadilah', nis: '260018', gender: 'L' },
+    { name: 'Muhamad Nur Fadli', nis: '260019', gender: 'L' },
+    { name: 'Nadira Khumaira Zahra', nis: '260020', gender: 'P' },
+    { name: 'Najwa Assyifa Zahrani', nis: '260021', gender: 'P' },
+    { name: 'Nimas Ayu Mustikarini', nis: '260022', gender: 'P' },
+    { name: 'Niya Rahmawati', nis: '260023', gender: 'P' },
+    { name: 'Radhitya Ardani', nis: '260024', gender: 'L' },
+    { name: 'Rahmania Salindri Munfarida', nis: '260025', gender: 'P' },
+    { name: 'Raras Naura Salsabila', nis: '260026', gender: 'P' },
+    { name: 'Restu Muhammad Akbar', nis: '260027', gender: 'L' },
+    { name: 'Syahrul Aryanazam', nis: '260028', gender: 'L' },
+    { name: 'Umar Habib Musthofa', nis: '260029', gender: 'L' },
+    { name: 'Vieta Aryani', nis: '260030', gender: 'P' },
+    { name: 'Zaneta Naila Sabrina', nis: '260031', gender: 'P' },
+    { name: 'Ziada Zahra', nis: '260032', gender: 'P' },
+  ],
+  '8A': [
+    { name: 'Adila Zaneta', nis: '250001', gender: 'P' },
+    { name: 'Agung Jatmiko', nis: '250002', gender: 'L' },
+    { name: 'Andisti Eka Saputri', nis: '250003', gender: 'P' },
+    { name: 'Aqila Azzahra Atthafunisa', nis: '250004', gender: 'P' },
+    { name: 'Aqila Jibran Azzahidi', nis: '250005', gender: 'L' },
+    { name: 'Arnila Wahyundha Kusshifa', nis: '260248', gender: 'P' },
+    { name: 'Arsya Sakti Abithah Putra', nis: '250006', gender: 'L' },
+    { name: 'Avisa Elvaretta Santoso', nis: '250007', gender: 'P' },
+    { name: 'Azka Missti Fairuuz', nis: '250008', gender: 'L' },
+    { name: 'Azqhana Zhaqia Octaviani', nis: '250009', gender: 'P' },
+    { name: 'Bibit Masita', nis: '250010', gender: 'P' },
+    { name: 'Dava Alfaro Ramadan', nis: '250011', gender: 'L' },
+    { name: 'Dwi Kholiffatul Fahri', nis: '250012', gender: 'L' },
+    { name: 'Dzakira Nadia Akhyar', nis: '250013', gender: 'P' },
+    { name: 'Fahru Wicaksono', nis: '250014', gender: 'L' },
+    { name: 'Faishal Fa\'Iq Windiarto', nis: '250015', gender: 'L' },
+    { name: 'Fatihah Putih Arundati', nis: '250016', gender: 'P' },
+    { name: 'Hibban Ghozy Maulana', nis: '250017', gender: 'L' },
+    { name: 'Iqbal Awalintar Putra', nis: '250018', gender: 'L' },
+    { name: 'Jaka Arif Kaindra', nis: '250019', gender: 'L' },
+    { name: 'Kayla Putri Ramadhani', nis: '250020', gender: 'P' },
+    { name: 'Kenzie Widjaya', nis: '250021', gender: 'L' },
+    { name: 'Malikha Avitha Mandasari', nis: '250022', gender: 'P' },
+    { name: 'Muhamad Rafi Ardi Naufal', nis: '250024', gender: 'L' },
+    { name: 'Najwa Khaira Wilda', nis: '250025', gender: 'P' },
+    { name: 'Naura Hazna Annida', nis: '250026', gender: 'P' },
+    { name: 'Nayla Dwi Meilani', nis: '250027', gender: 'P' },
+    { name: 'Nila Nurul \'Arofah', nis: '250028', gender: 'P' },
+    { name: 'Nur Afar Romadlon', nis: '250029', gender: 'L' },
+    { name: 'Praditya Agha Budiman', nis: '250030', gender: 'L' },
+    { name: 'Regina Mei Ayu Wardhani Prita N', nis: '250031', gender: 'P' },
+    { name: 'Rizki Bintang Nur Hidayat', nis: '250032', gender: 'L' },
+    { name: 'Siti Nur Aisyah Putri', nis: '250033', gender: 'P' },
+    { name: 'Tsurrayya Yasmin Nur Anisah', nis: '250034', gender: 'P' },
+    { name: 'Varisa Aqila Ainunnisa', nis: '250035', gender: 'P' },
+    { name: 'Vestia Nur Azzafa', nis: '250036', gender: 'P' },
+  ],
+  '7E': [
+    { name: 'Ahlan Ibrahim', nis: '260126', gender: 'L' },
+    { name: 'Aisyah Gangsar Rojabani', nis: '260127', gender: 'P' },
+    { name: 'Alfariel Nurdaffa A', nis: '260128', gender: 'L' },
+    { name: 'Aprilia Devit Kristina Putri', nis: '260129', gender: 'P' },
+    { name: 'Arman Syafiq Amirudin', nis: '260130', gender: 'L' },
+    { name: 'Auni Tri Maharani', nis: '260131', gender: 'P' },
+    { name: 'Bhanu Ahza Firdaus', nis: '260132', gender: 'L' },
+    { name: 'Desvita Aurelina Prijaya', nis: '260133', gender: 'P' },
+    { name: 'Fabiyan Lutfi Amar', nis: '260134', gender: 'L' },
+    { name: 'Faeyza Adika Agustiyar', nis: '260135', gender: 'L' },
+    { name: 'Fathan Aulia Nur Mahardika', nis: '260136', gender: 'L' },
+    { name: 'Fega', nis: '260137', gender: 'P' },
+    { name: 'Fegi', nis: '260138', gender: 'P' },
+    { name: 'Fero', nis: '260139', gender: 'P' },
+    { name: 'Fristi Dwi Lestari', nis: '260140', gender: 'P' },
+    { name: 'Frizka Febriana', nis: '260141', gender: 'P' },
+    { name: 'Ilham Bagus Satria', nis: '260142', gender: 'L' },
+    { name: 'Jemes Hasuem Zio', nis: '260143', gender: 'L' },
+    { name: 'Kanaya Kenzie', nis: '260144', gender: 'L' },
+    { name: 'Muhammad Fadillah Al Abyan', nis: '260145', gender: 'L' },
+    { name: 'Muhammad Hibaan Attaqiy', nis: '260146', gender: 'L' },
+    { name: 'Muhammad Reynand Zakaria', nis: '260147', gender: 'L' },
+    { name: 'Nadhilah Azmah', nis: '260148', gender: 'P' },
+    { name: 'Naifatul Isqiqoh', nis: '260149', gender: 'P' },
+    { name: 'Najwa Seraya', nis: '260150', gender: 'P' },
+    { name: 'Natasya Adzania', nis: '260151', gender: 'P' },
+    { name: 'Putri Nur Anggraeni', nis: '260152', gender: 'P' },
+    { name: 'Salsabila Putri Ramadhani', nis: '260153', gender: 'P' },
+    { name: 'Shabir Nur Dziban', nis: '260154', gender: 'L' },
+    { name: 'Sofiatul Zulfa', nis: '260155', gender: 'P' },
+    { name: 'Syafa Aurelia Khanza', nis: '260156', gender: 'P' },
+    { name: 'Wahyu Yoga Pratama', nis: '260157', gender: 'L' },
+  ],
+  '7C': [
+    { name: 'Akbar Nur Daffa P', nis: '260064', gender: 'L' },
+    { name: 'Alika Eka Putri', nis: '260065', gender: 'P' },
+    { name: 'Aqilla Ananda P.', nis: '260066', gender: 'P' },
+    { name: 'Arum Yulianti', nis: '260067', gender: 'P' },
+    { name: 'Asifa Farzana', nis: '260068', gender: 'P' },
+    { name: 'Aufa Faris Asyham Muhadzib', nis: '260069', gender: 'L' },
+    { name: 'Aziz Al Roufiq', nis: '260070', gender: 'L' },
+    { name: 'Azrul Gian Ardhani', nis: '260071', gender: 'L' },
+    { name: 'Bima Satria', nis: '260072', gender: 'L' },
+    { name: 'Brams Prasetyo', nis: '260073', gender: 'L' },
+    { name: 'Dea Lova Dwi Asifa', nis: '260074', gender: 'P' },
+    { name: 'Dhindha Ayu Lutfitasari', nis: '260075', gender: 'P' },
+    { name: 'Eka Rifqi Adiansah', nis: '260076', gender: 'L' },
+    { name: 'Fahmi Idris Alkafi', nis: '260077', gender: 'L' },
+    { name: 'Fatkhan \'Aqil Syifaa\'', nis: '260078', gender: 'L' },
+    { name: 'Fattaah Fajriyan', nis: '260079', gender: 'L' },
+    { name: 'Galuh Wakhid Arrahman', nis: '260080', gender: 'L' },
+    { name: 'Hafizd Dzaki Putra Pradipta', nis: '260081', gender: 'L' },
+    { name: 'Hanum Febriani', nis: '260082', gender: 'P' },
+    { name: 'Hilmi Berkah Hidayah', nis: '260083', gender: 'L' },
+    { name: 'Ibnu Eza Muzaki', nis: '260084', gender: 'L' },
+    { name: 'Nada Fajria Salsabila', nis: '260085', gender: 'P' },
+    { name: 'Nada Farah Maulida', nis: '260086', gender: 'P' },
+    { name: 'Natasya Adelia Zahra', nis: '260087', gender: 'P' },
+    { name: 'Nazila \'Aina Fatiqoh', nis: '260088', gender: 'P' },
+    { name: 'Rehan April Liano', nis: '260089', gender: 'L' },
+    { name: 'Rindi Fitaningsih', nis: '260090', gender: 'P' },
+    { name: 'Shahfitri Hayyu I.', nis: '260091', gender: 'P' },
+    { name: 'Tazqiatuz Zahra', nis: '260092', gender: 'P' },
+    { name: 'Trisna Olivia', nis: '260093', gender: 'P' },
+    { name: 'Wildan Athya Septian', nis: '260094', gender: 'L' },
+    { name: 'Wilisa Enjelrita', nis: '260095', gender: 'P' },
+    { name: 'Zafran Rafansyah Alfarizi', nis: '260096', gender: 'L' },
+  ],
+  '7F': [
+    { name: 'Adriyan Pradipta', nis: '260158', gender: 'L' },
+    { name: 'Aisyah Nur Fadillah', nis: '260159', gender: 'P' },
+    { name: 'Alif Nur Fajri', nis: '260160', gender: 'L' },
+    { name: 'Alifah Nur Aeda', nis: '260161', gender: 'P' },
+    { name: 'Amira Khanza Az-Zahra', nis: '260162', gender: 'P' },
+    { name: 'Anindya Nayara Yumna', nis: '260163', gender: 'P' },
+    { name: 'Arju Illah', nis: '260164', gender: 'L' },
+    { name: 'Ayuni Puspa Ramadani', nis: '260165', gender: 'P' },
+    { name: 'Azalea Khiar Ramadhani', nis: '260166', gender: 'P' },
+    { name: 'Azhar Ghani Al-Ghazali', nis: '260167', gender: 'L' },
+    { name: 'David Oktaviano Andiansyah', nis: '260168', gender: 'L' },
+    { name: 'Fathan Wijaya Pratama', nis: '260169', gender: 'L' },
+    { name: 'Fatin Nur Karimah', nis: '260170', gender: 'P' },
+    { name: 'Fauzan Hilal Pratama', nis: '260171', gender: 'L' },
+    { name: 'Frazata Abas Hidayat', nis: '260172', gender: 'L' },
+    { name: 'Hamdan Al Amin', nis: '260173', gender: 'L' },
+    { name: 'Hanifah Putri Khairunnisa', nis: '260174', gender: 'P' },
+    { name: 'Kinara Nabil Az-Zafhran', nis: '260175', gender: 'L' },
+    { name: 'Lutfan Muzaki', nis: '260176', gender: 'L' },
+    { name: 'Muhammad Al Fattih Suyitno', nis: '260177', gender: 'L' },
+    { name: 'Muhammad Rayyan Azfar', nis: '260178', gender: 'L' },
+    { name: 'Mutiara Nur Safa', nis: '260179', gender: 'P' },
+    { name: 'Mutiara Nur Sifa', nis: '260180', gender: 'P' },
+    { name: 'Nadia Ramadhani', nis: '260181', gender: 'P' },
+    { name: 'Nafisha Zasqina Solehah', nis: '260182', gender: 'P' },
+    { name: 'Nailah Salma Salsabilah', nis: '260183', gender: 'P' },
+    { name: 'Naura Okalina', nis: '260184', gender: 'P' },
+    { name: 'Raihan Alwi Fahrezi', nis: '260185', gender: 'L' },
+    { name: 'Rohman Sya\'Bani', nis: '260186', gender: 'L' },
+    { name: 'Surya Aditia', nis: '260187', gender: 'L' },
+    { name: 'Talitha Qotrunada', nis: '260188', gender: 'P' },
+    { name: 'Valena Apricia', nis: '260189', gender: 'P' },
+    { name: 'Wildzan Naufal Azhar', nis: '260190', gender: 'L' },
+  ],
+  '8J': [
+    { name: 'Ahmad Fahrurrozi', nis: '250329', gender: 'L' },
+    { name: 'Ajil Sirru Jalil', nis: '250330', gender: 'L' },
+    { name: 'Akbar Putra Pratama', nis: '250331', gender: 'L' },
+    { name: 'Arkana Tsaqif Hibatullah', nis: '250332', gender: 'L' },
+    { name: 'Arlan Darma Saputra', nis: '250333', gender: 'L' },
+    { name: 'Azzam Haedar Dwi Putra', nis: '250334', gender: 'L' },
+    { name: 'Cantika July Ramadan Erdany', nis: '250335', gender: 'P' },
+    { name: 'Daniel Arya Setia Dharma', nis: '250336', gender: 'L' },
+    { name: 'Delisa Alifa Sambila', nis: '250337', gender: 'P' },
+    { name: 'Dinda Candra Kirana', nis: '250338', gender: 'P' },
+    { name: 'Esa Wahyu Ma\'Rufi', nis: '250339', gender: 'L' },
+    { name: 'Fajar Dwi Permana', nis: '250340', gender: 'L' },
+    { name: 'Febi Siskia Ayu Wardhani', nis: '250341', gender: 'P' },
+    { name: 'Febrina Saffa Ardani', nis: '250342', gender: 'P' },
+    { name: 'Fiqri Al Faozan', nis: '250343', gender: 'L' },
+    { name: 'Indah Septiani', nis: '250344', gender: 'P' },
+    { name: 'Lazzero El`Bian Pratama', nis: '250345', gender: 'L' },
+    { name: 'Meita Nur Fadilah', nis: '250346', gender: 'P' },
+    { name: 'Muhamad Nizar Arju Baihaqi', nis: '250347', gender: 'L' },
+    { name: 'Muhamad Zaki Febriansyah', nis: '250348', gender: 'L' },
+    { name: 'Nilna Azkia Rohmah', nis: '250349', gender: 'P' },
+    { name: 'Nilna Syifa Zahro', nis: '250379', gender: 'P' },
+    { name: 'Raihan Arif Sulaiman', nis: '250350', gender: 'L' },
+    { name: 'Reza Dwi Pradipta', nis: '250351', gender: 'L' },
+    { name: 'Rizqi Aji Rahmadi', nis: '250352', gender: 'L' },
+    { name: 'Salamah Ekasafitri', nis: '250353', gender: 'P' },
+    { name: 'Sarah Afaf Adwa', nis: '250354', gender: 'P' },
+    { name: 'Shafah Desinda Putri', nis: '250355', gender: 'P' },
+    { name: 'Shafi Inas Faiqah', nis: '250356', gender: 'P' },
+    { name: 'Siti Sholeha', nis: '250357', gender: 'P' },
+    { name: 'Sultan Adji Fahreza', nis: '250358', gender: 'L' },
+    { name: 'Valenzka Arsylia Byonita', nis: '250359', gender: 'P' },
+    { name: 'Varah Dita Ayuningtyas', nis: '250360', gender: 'P' },
+    { name: 'Wildan Aryanto', nis: '250361', gender: 'L' },
+    { name: 'Yahya Abdullah Masya', nis: '250362', gender: 'L' },
+    { name: 'Yanuar Putra Andrean', nis: '250363', gender: 'L' },
+  ],
+};
+
 
         const INITIAL_STUDENTS = {
           '7A': [
@@ -2309,6 +3418,7 @@
           const [activeMonth, setActiveMonth] = useState('Juli');
           const [selectedNilaiMapel, setSelectedNilaiMapel] = useState('');
           const [selectedReportNilaiMapelGuru, setSelectedReportNilaiMapelGuru] = useState('');
+          const [globalReportMapel, globalReportGuru] = selectedReportNilaiMapelGuru ? selectedReportNilaiMapelGuru.split('|') : ['', ''];
 
           const getMapelsAndGurusForClass = (className) => {
               const mapels = new Map();
@@ -2347,7 +3457,7 @@
           }, [loggedInUser, activeClass, selectedNilaiMapel]);
 
           useEffect(() => {
-              const list = getMapelsAndGurusForClass(activeClass);
+              const list = getMapelsAndGurusForClass(activeClass).filter(x => x.guru === loggedInUser);
               if (list.length > 0) {
                   if (!list.find(x => `${x.mapel}|${x.guru}` === selectedReportNilaiMapelGuru)) {
                       setSelectedReportNilaiMapelGuru(`${list[0].mapel}|${list[0].guru}`);
@@ -2355,7 +3465,7 @@
               } else {
                   setSelectedReportNilaiMapelGuru('');
               }
-          }, [activeClass, selectedReportNilaiMapelGuru]);
+          }, [activeClass, selectedReportNilaiMapelGuru, loggedInUser]);
           
           const [viewJadwalMode, setViewJadwalMode] = useState('kelas');
           const [selectedJadwalClass, setSelectedJadwalClass] = useState('7A');
@@ -2369,6 +3479,20 @@
           const [searchGuruQuery, setSearchGuruQuery] = useState(''); 
           const [searchWaliQuery, setSearchWaliQuery] = useState(''); 
           const [searchResults, setSearchResults] = useState([]);
+
+                    const [studentDetails, setStudentDetails] = useState(() => {
+            try { 
+              const saved = JSON.parse(localStorage.getItem('jurnal_student_details')); 
+              if (saved && Object.keys(saved).length > 0) return saved;
+            } catch (e) { }
+            const initial = {};
+            Object.keys(STUDENTS_DETAIL_DATA).forEach(cls => {
+                STUDENTS_DETAIL_DATA[cls].forEach(st => {
+                    initial[cls + '-' + st.name] = { nis: st.nis, gender: st.gender };
+                });
+            });
+            return initial;
+          });
 
           const [studentsData, setStudentsData] = useState(() => {
             try { return JSON.parse(localStorage.getItem('jurnal_students')) || INITIAL_STUDENTS; } catch (e) { return INITIAL_STUDENTS; }
@@ -2445,6 +3569,7 @@
               };
           }, []);
 
+          useEffect(() => { localStorage.setItem('jurnal_student_details', JSON.stringify(studentDetails)); }, [studentDetails]);
           useEffect(() => { localStorage.setItem('jurnal_students', JSON.stringify(studentsData)); }, [studentsData]);
           useEffect(() => { localStorage.setItem('jurnal_attendance', JSON.stringify(attendance)); }, [attendance]);
           useEffect(() => { localStorage.setItem('jurnal_attendance_mengajar', JSON.stringify(attendanceJurnal)); }, [attendanceJurnal]);
@@ -2464,6 +3589,7 @@
                       });
                   };
 
+                  if (data.jurnal_student_details) updateStateIfChanged(setStudentDetails, data.jurnal_student_details);
                   if (data.jurnal_students) updateStateIfChanged(setStudentsData, data.jurnal_students);
                   if (data.jurnal_attendance) updateStateIfChanged(setAttendance, data.jurnal_attendance);
                   if (data.jurnal_attendance_mengajar) updateStateIfChanged(setAttendanceJurnal, data.jurnal_attendance_mengajar);
@@ -3725,6 +4851,13 @@
                       📝 Jurnal Mengajar
                     </button>
                     <button 
+                      onClick={() => setActiveTab('data_siswa')}
+                      className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'data_siswa' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                      Data Siswa
+                    </button>
+                    <button 
                       onClick={() => setActiveTab('jurnal_pelajaran_kelas')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'jurnal_pelajaran_kelas' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
                     >
@@ -3859,35 +4992,62 @@
 
                 {/* 1. TAB: DAFTAR NILAI (INPUT) */}
                 {activeTab === 'nilai' && (
+                    <div className="flex flex-col gap-4">
+                        {!selectedNilaiMapel ? (
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col p-4 sm:p-6">
+                                <h2 className="text-lg font-black text-slate-900 mb-1">Pilih Halaman Mata Pelajaran</h2>
+                                <p className="text-sm text-slate-600 mb-6">Pilih daftar nilai mata pelajaran yang Anda ampu di Kelas {activeClass}.</p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    {getMapelsAndGurusForClass(activeClass).filter(x => x.guru === loggedInUser).map(x => (
+                                        <button key={x.mapel} onClick={() => setSelectedNilaiMapel(x.mapel)} className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 p-4 rounded-xl shadow-sm transition-all text-left flex items-center gap-4 group">
+                                            <div className="w-12 h-12 bg-emerald-200 text-emerald-800 rounded-lg flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-md font-bold text-slate-800">{x.mapel}</h3>
+                                            </div>
+                                        </button>
+                                    ))}
+                                    {getMapelsAndGurusForClass(activeClass).filter(x => x.guru === loggedInUser).length === 0 && (
+                                        <div className="col-span-full text-center p-8 text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">
+                                            <svg className="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                            <p className="font-semibold text-sm">Anda tidak memiliki jadwal mengajar di kelas ini.</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
                    <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
-                      <div className="bg-[#C5E0B4] border-b border-[#a9c996] p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                          <div>
-                              <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                                  💯 Input Daftar Nilai - Kelas {activeClass}
-                              </h2>
-                              <p className="text-xs text-slate-700 mt-1">Gunakan tabel ini untuk memasukkan nilai Sumatif (S1-S5), ASTS, dan ASAS.</p>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto relative z-10">
-                              <div className="flex items-center gap-2 bg-white px-3 py-1.5 rounded-lg border border-emerald-300 shadow-xs flex-1 sm:flex-none justify-center">
-                                  <span className="text-xs font-bold text-emerald-800">Mapel:</span>
-                                  <select
-                                      value={selectedNilaiMapel}
+                      <div className="bg-[#C5E0B4] border-b border-[#a9c996] p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                          <div className="flex items-center gap-3">
+                              <button onClick={() => setSelectedNilaiMapel('')} className="px-3 py-2 bg-white hover:bg-slate-50 rounded-lg shadow-sm border border-emerald-300 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all">
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                                  Pilih Mapel Lain
+                              </button>
+                              <div className="flex flex-col ml-2">
+                                  <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-0.5">Mata Pelajaran Anda:</span>
+                                  <select 
+                                      value={selectedNilaiMapel} 
                                       onChange={(e) => setSelectedNilaiMapel(e.target.value)}
-                                      className="bg-transparent text-sm font-bold text-emerald-900 focus:outline-none cursor-pointer"
+                                      className="bg-white border border-emerald-400 text-emerald-900 text-sm font-black rounded focus:outline-none focus:ring-2 focus:ring-emerald-500 py-1.5 px-2 cursor-pointer shadow-sm w-[150px] sm:w-[200px]"
                                   >
-                                      {getMapelsAndGurusForClass(activeClass).map(x => (
+                                      {getMapelsAndGurusForClass(activeClass).filter(x => {
+                                          const clean = (s) => s ? s.split(',')[0].toLowerCase().replace(/[^a-z]/g, '') : '';
+                                          const uClean = clean(loggedInUser);
+                                          const gClean = clean(x.guru);
+                                          return gClean === uClean || gClean.includes(uClean) || uClean.includes(gClean);
+                                      }).map(x => (
                                           <option key={x.mapel} value={x.mapel}>{x.mapel}</option>
                                       ))}
-                                      {getMapelsAndGurusForClass(activeClass).length === 0 && (
-                                          <option value="">- Tidak Ada Jadwal -</option>
-                                      )}
                                   </select>
                               </div>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto relative z-10">
                               <button
                                   type="button"
                                   disabled={isSyncing || !selectedNilaiMapel}
                                   onClick={handleSyncGrades}
-                                  className={`px-4 py-2 font-bold rounded-lg text-xs shadow-xs transition-all touch-manipulation whitespace-nowrap flex-1 sm:flex-none ${isSyncing || !selectedNilaiMapel ? 'bg-emerald-400 text-white cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
+                                  className={`px-4 py-2 font-bold rounded-lg text-xs shadow-sm transition-all touch-manipulation whitespace-nowrap flex-1 sm:flex-none ${isSyncing || !selectedNilaiMapel ? 'bg-emerald-400 text-white cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
                               >
                                   {isSyncing ? 'Mengirim...' : 'Kirim Data Nilai'}
                               </button>
@@ -3895,7 +5055,7 @@
                       </div>
                       <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '60vh' }}>
                           <table className="w-full text-sm text-center relative z-0 border-collapse">
-                              <thead className="sticky top-0 z-20 shadow-xs">
+                              <thead className="sticky top-0 z-20 shadow-sm">
                                   <tr>
                                       <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-300 bg-white text-slate-700 w-10">No.</th>
                                       <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-300 min-w-[200px] md:min-w-[250px] bg-white text-slate-700 text-left">Nama Siswa</th>
@@ -3918,7 +5078,7 @@
                                       const safeRowId = `nilai-row-${sanitizeId(student)}`;
                                       
                                       return (
-                                          <tr id={safeRowId} key={idx} className="border-b border-slate-300 hover:bg-slate-50 transition-colors duration-300">
+                                          <tr id={safeRowId} key={`${selectedNilaiMapel}-${idx}`} className="border-b border-slate-300 hover:bg-slate-50 transition-colors duration-300">
                                               <td className="py-2 px-3 text-center font-semibold text-slate-800 bg-white">{idx + 1}</td>
                                               <td className="py-2 px-3 font-bold text-slate-900 bg-white text-left">{student}</td>
                                               
@@ -3927,7 +5087,7 @@
                                                       <input 
                                                           type="number"
                                                           defaultValue={data[field] || ''} 
- onBlur={(e) => handleGradeChange(student, field, e.target.value)}
+                                                          onBlur={(e) => handleGradeChange(student, field, e.target.value)}
                                                           className="w-full px-1 py-1.5 border border-slate-200 rounded text-center text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs font-semibold"
                                                       />
                                                   </td>
@@ -3936,7 +5096,7 @@
                                                   <input 
                                                       type="number"
                                                       defaultValue={data.asts || ''} 
- onBlur={(e) => handleGradeChange(student, 'asts', e.target.value)}
+                                                      onBlur={(e) => handleGradeChange(student, 'asts', e.target.value)}
                                                       className="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-slate-800 font-bold focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 text-xs bg-white"
                                                   />
                                               </td>
@@ -3944,7 +5104,7 @@
                                                   <input 
                                                       type="number"
                                                       defaultValue={data.asas || ''} 
- onBlur={(e) => handleGradeChange(student, 'asas', e.target.value)}
+                                                      onBlur={(e) => handleGradeChange(student, 'asas', e.target.value)}
                                                       className="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-slate-800 font-bold focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 text-xs bg-white"
                                                   />
                                               </td>
@@ -3957,10 +5117,11 @@
                               </tbody>
                           </table>
                       </div>
-                   </div>
-                )}
-
-                {/* TAB: LAPORAN */}
+                  </div>
+                  )}
+              </div>
+              )}
+{/* TAB: LAPORAN */}
                 {activeTab === 'laporan' && (
                   <div className="space-y-6">
                     <div className="w-full flex justify-center mb-2 flex-wrap gap-2">
@@ -4073,11 +5234,10 @@
                                 })}
                                 {currentStudents.length === 0 && (
                                     <tr><td colSpan="26" className="py-8 text-center text-slate-400">Pilih kelas terlebih dahulu</td></tr>
-                                )}
-                              </tbody>
+                                )}                                </tbody>
                             </table>
-                          </div>
                         </div>
+                    </div>
                     )}
 
                     {/* 2. Rekap Kehadiran Tatap Muka (Jurnal Mengajar) */}
@@ -4147,11 +5307,10 @@
                                 })}
                                 {currentStudents.length === 0 && (
                                     <tr><td colSpan="26" className="py-8 text-center text-slate-400">Pilih kelas terlebih dahulu</td></tr>
-                                )}
-                              </tbody>
+                                )}                                </tbody>
                             </table>
-                          </div>
                         </div>
+                    </div>
                     )}
 
                     {/* 3. Rekap Materi Jurnal Mengajar Card */}
@@ -4207,11 +5366,10 @@
                                             </td>
                                         </tr>
                                     ));
-                                })()}
-                              </tbody>
+                                })()}                                </tbody>
                             </table>
-                          </div>
                         </div>
+                    </div>
                     )}
 
                     {/* 4. Rekap Tabungan Card */}
@@ -4306,19 +5464,19 @@
                             </div>
                             <div className="flex flex-wrap items-center gap-3">
                                 <div className="flex items-center gap-2 bg-white/80 px-3 py-1.5 rounded-lg border border-[#a9c996] shadow-sm">
-                                    <span className="text-xs font-bold text-slate-800">Pelajaran:</span>
+                                    <span className="text-xs font-bold text-slate-800">Pelajaran Anda:</span>
                                     <select
                                         value={selectedReportNilaiMapelGuru}
                                         onChange={(e) => setSelectedReportNilaiMapelGuru(e.target.value)}
                                         className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-[200px]"
                                     >
-                                        {getMapelsAndGurusForClass(activeClass).map(x => (
+                                        {getMapelsAndGurusForClass(activeClass).filter(x => x.guru === loggedInUser).map(x => (
                                             <option key={`${x.mapel}|${x.guru}`} value={`${x.mapel}|${x.guru}`}>
-                                                {x.mapel} - {x.guru}
+                                                {x.mapel}
                                             </option>
                                         ))}
-                                        {getMapelsAndGurusForClass(activeClass).length === 0 && (
-                                            <option value="">- Kosong -</option>
+                                        {getMapelsAndGurusForClass(activeClass).filter(x => x.guru === loggedInUser).length === 0 && (
+                                            <option value="">- Tidak Ada Mapel Anda -</option>
                                         )}
                                     </select>
                                 </div>
@@ -4353,7 +5511,8 @@
                               </thead>
                               <tbody>
                                 {currentStudents.map((student, idx) => {
-                                    const key = typeof reportGuru !== "undefined" ? `${activeClass}-${reportGuru}-${reportMapel}-${student}` : `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
+                                    // Use the globally extracted report variables!
+                                    const key = `${activeClass}-${globalReportGuru}-${globalReportMapel}-${student}`;
                                     const data = gradesData[key] || {};
                                     const calc = calculateGrades(student, key);
 
@@ -4368,16 +5527,16 @@
                                           <td className="py-1.5 px-1 border border-slate-300 font-medium text-slate-700">{data.s4 || '-'}</td>
                                           <td className="py-1.5 px-1 border border-slate-300 font-medium text-slate-700">{data.s5 || '-'}</td>
                                           
-                                          <td className="py-1.5 px-1 border border-slate-300 font-bold text-slate-800 bg-[#f1f8eb]">{data.asts || '-'}</td>
+                                          <td className="py-1.5 px-1 border border-slate-300 bg-[#f8fbf5] font-semibold text-slate-800">{data.asts || '-'}</td>
                                           
-                                          <td className="py-1.5 px-1 border border-slate-300 font-medium text-slate-700">{calc.jml || '-'}</td>
-                                          <td className="py-1.5 px-1 border border-slate-300 font-medium text-slate-700">{calc.rata2 ? calc.rata2.toFixed(1) : '-'}</td>
-                                          <td className="py-1.5 px-1 border border-slate-300 font-medium text-slate-700">{calc.p80 ? calc.p80.toFixed(1) : '-'}</td>
+                                          <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-bold text-slate-600">{calc.jml}</td>
+                                          <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-bold text-emerald-700">{calc.rata}</td>
+                                          <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-medium text-slate-600">{calc.p80}</td>
                                           
-                                          <td className="py-1.5 px-1 border border-slate-300 font-bold text-slate-800 bg-[#f1f8eb]">{data.asas || '-'}</td>
+                                          <td className="py-1.5 px-1 border border-slate-300 bg-[#f8fbf5] font-semibold text-slate-800">{data.asas || '-'}</td>
+                                          <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-medium text-slate-600">{calc.p20}</td>
                                           
-                                          <td className="py-1.5 px-1 border border-slate-300 font-medium text-slate-700">{calc.p20 ? calc.p20.toFixed(1) : '-'}</td>
-                                          <td className="py-1.5 px-2 border border-slate-300 font-black text-slate-900 bg-emerald-100 text-sm">{Math.round(calc.na) || '-'}</td>
+                                          <td className="py-1.5 px-2 border border-slate-300 bg-emerald-50 text-emerald-800 font-black">{calc.akhir}</td>
                                       </tr>
                                     );
                                 })}
@@ -4389,8 +5548,7 @@
                           </div>
                         </div>
                     )}
-
-                    {/* 6. Rekap Jurnal Pelajaran Kelas */}
+{/* 6. Rekap Jurnal Pelajaran Kelas */}
                     {activeReportTab === 'jurnal_pelajaran_kelas' && (
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
                           <div className="bg-emerald-50 border-b border-emerald-100 p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
@@ -4438,11 +5596,10 @@
                                             <td className="py-2 px-3 border border-slate-100 whitespace-pre-wrap text-blue-700">{e.tugas || '-'}</td>
                                         </tr>
                                     ));
-                                })()}
-                              </tbody>
+                                })()}                                </tbody>
                             </table>
-                          </div>
                         </div>
+                    </div>
                     )}
 
                   </div>
@@ -4588,6 +5745,296 @@
                   </div>
                 )}
 
+                {/* TAB: Data Siswa */}
+                {activeTab === 'data_siswa' && (
+                  <div className="space-y-4 data-siswa-print-container">
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
+                        <div>
+                            <h2 className="text-lg font-black text-slate-800 flex items-center gap-2">
+                                <svg className="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                Data Siswa Kelas 7, 8 dan 9
+                            </h2>
+                            <p className="text-sm text-slate-600 mt-1">MTs MA'ARIF NU 1 WANGON TAHUN PELAJARAN 2026/2027</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <button onClick={() => {
+                                let tableHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body>`;
+                                tableHtml += `<table border="1" style="border-collapse: collapse; text-align: left;">`;
+                                tableHtml += `<thead><tr style="background-color: #f1f5f9; font-weight: bold;">`;
+                                tableHtml += `<th style="padding: 8px; text-align: center;">No</th>`;
+                                tableHtml += `<th style="padding: 8px;">NIS</th>`;
+                                tableHtml += `<th style="padding: 8px;">Nama Siswa</th>`;
+                                tableHtml += `<th style="padding: 8px; text-align: center;">L/P</th>`;
+                                tableHtml += `<th style="padding: 8px; text-align: center;">Kelas</th>`;
+                                tableHtml += `</tr></thead><tbody>`;
+                                (studentsData[activeClass] || []).forEach((student, idx) => {
+                                    const det = studentDetails[activeClass + '-' + student] || { nis: '-', gender: 'L' };
+                                    tableHtml += `<tr>`;
+                                    tableHtml += `<td style="padding: 4px 8px; text-align: center;">${idx + 1}</td>`;
+                                    tableHtml += `<td style="padding: 4px 8px;">${det.nis}</td>`;
+                                    tableHtml += `<td style="padding: 4px 8px;">${student}</td>`;
+                                    tableHtml += `<td style="padding: 4px 8px; text-align: center;">${det.gender}</td>`;
+                                    tableHtml += `<td style="padding: 4px 8px; text-align: center;">${activeClass}</td>`;
+                                    tableHtml += `</tr>`;
+                                });
+                                tableHtml += `</tbody></table></body></html>`;
+
+                                const blob = new Blob([tableHtml], { type: 'application/vnd.ms-excel' });
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement("a");
+                                link.setAttribute("href", url);
+                                link.setAttribute("download", `Data_Siswa_${activeClass}.xls`);
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                            }} className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded shadow transition-all">
+                                Unduh Excel
+                            </button>
+                            <button onClick={() => window.print()} className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold rounded shadow transition-all">
+                                Print PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Print Header */}
+                    <div className="hidden print:block text-center mb-6">
+                        <h1 className="text-xl font-bold uppercase mb-1">DATA SISWA KELAS 7, 8 DAN 9</h1>
+                        <h2 className="text-lg font-semibold uppercase">MTs MA'ARIF NU 1 WANGON TAHUN PELAJARAN 2026/2027</h2>
+                    </div>
+
+                    {/* Rekap Tables */}
+                    {(() => {
+                        const grades = ['7', '8', '9'];
+                        const classes = {
+                            '7': ['7A','7B','7C','7D','7E','7F','7G','7H'],
+                            '8': ['8A','8B','8C','8D','8E','8F','8G','8H','8I','8J'],
+                            '9': ['9A','9B','9C','9D','9E','9F','9G','9H','9I','9J','9K']
+                        };
+                        const totals = { '7': { L: 0, P: 0 }, '8': { L: 0, P: 0 }, '9': { L: 0, P: 0 }, All: { L: 0, P: 0 } };
+
+                        const getStats = (cls) => {
+                            let L = 0, P = 0;
+                            (studentsData[cls] || []).forEach(st => {
+                                const det = studentDetails[`${cls}-${st}`];
+                                if (det && det.gender === 'P') P++;
+                                else if (det && det.gender === 'L') L++;
+                                else L++;
+                            });
+                            return { L, P, Total: L + P };
+                        };
+
+                        return (
+                            <div className="flex flex-col gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    {grades.map(grade => {
+                                        let gradeL = 0, gradeP = 0;
+                                        return (
+                                            <div key={grade} className="bg-white border border-slate-300 rounded shadow-sm overflow-hidden">
+                                                <table className="w-full text-center text-xs sm:text-sm border-collapse">
+                                                    <thead>
+                                                        <tr className={`text-white font-bold ${grade === '7' ? 'bg-[#00B050]' : grade === '8' ? 'bg-[#00B050]' : 'bg-[#00B050]'}`}>
+                                                            <th className="border border-slate-300 py-1.5 px-2">KELAS</th>
+                                                            <th className="border border-slate-300 py-1.5 px-2">L</th>
+                                                            <th className="border border-slate-300 py-1.5 px-2">P</th>
+                                                            <th className="border border-slate-300 py-1.5 px-2">JUMLAH</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {classes[grade].map(cls => {
+                                                            const stats = getStats(cls);
+                                                            gradeL += stats.L;
+                                                            gradeP += stats.P;
+                                                            return (
+                                                                <tr key={cls}>
+                                                                    <td className="border border-slate-300 py-1 px-2 font-semibold bg-white">{cls}</td>
+                                                                    <td className="border border-slate-300 py-1 px-2">{stats.L || ''}</td>
+                                                                    <td className="border border-slate-300 py-1 px-2">{stats.P || ''}</td>
+                                                                    <td className={`border border-slate-300 py-1 px-2 font-bold ${grade === '7' ? 'bg-[#00B0F0]' : grade === '8' ? 'bg-[#FFFF00]' : 'bg-[#ED7D31]'}`}>
+                                                                        {stats.Total || ''}
+                                                                    </td>
+                                                                </tr>
+                                                            );
+                                                        })}
+                                                        {Array.from({ length: 11 - classes[grade].length }).map((_, i) => (
+                                                            <tr key={`pad-${grade}-${i}`}>
+                                                                <td className="border border-slate-300 py-1 px-2 h-7 bg-white"></td>
+                                                                <td className="border border-slate-300 py-1 px-2"></td>
+                                                                <td className="border border-slate-300 py-1 px-2"></td>
+                                                                <td className={`border border-slate-300 py-1 px-2 ${grade === '7' ? 'bg-[#00B0F0]' : grade === '8' ? 'bg-[#FFFF00]' : 'bg-[#ED7D31]'}`}></td>
+                                                            </tr>
+                                                        ))}
+                                                        {(() => {
+                                                            totals[grade].L = gradeL;
+                                                            totals[grade].P = gradeP;
+                                                            totals.All.L += gradeL;
+                                                            totals.All.P += gradeP;
+                                                            return (
+                                                                <tr className="font-bold">
+                                                                    <td colSpan="3" className={`border border-slate-300 py-1.5 px-2 text-left ${grade === '7' ? 'bg-[#00B0F0]' : grade === '8' ? 'bg-[#FFFF00]' : 'bg-[#ED7D31]'}`}>JUMLAH</td>
+                                                                    <td className={`border border-slate-300 py-1.5 px-2 ${grade === '7' ? 'bg-[#00B0F0]' : grade === '8' ? 'bg-[#FFFF00]' : 'bg-[#ED7D31]'}`}>{gradeL + gradeP}</td>
+                                                                </tr>
+                                                            );
+                                                        })()}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                <div className="flex justify-center mt-4">
+                                    <table className="text-center text-sm font-bold border-collapse shadow-sm">
+                                        <thead>
+                                            <tr className="bg-white">
+                                                <th className="border border-slate-300 py-2 px-8">KELAS</th>
+                                                <th className="border border-slate-300 py-2 px-6">L</th>
+                                                <th className="border border-slate-300 py-2 px-6">P</th>
+                                                <th className="border border-slate-300 py-2 px-10">JUMLAH</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {grades.map(grade => (
+                                                <tr key={`tot-${grade}`}>
+                                                    <td className={`border border-slate-300 py-1.5 px-8 text-left ${grade === '7' ? 'bg-[#00B0F0]' : grade === '8' ? 'bg-[#FFFF00]' : 'bg-[#ED7D31]'}`}>KELAS {grade}</td>
+                                                    <td className={`border border-slate-300 py-1.5 px-6 ${grade === '7' ? 'bg-[#00B0F0]' : grade === '8' ? 'bg-[#FFFF00]' : 'bg-[#ED7D31]'}`}>{totals[grade].L}</td>
+                                                    <td className={`border border-slate-300 py-1.5 px-6 ${grade === '7' ? 'bg-[#00B0F0]' : grade === '8' ? 'bg-[#FFFF00]' : 'bg-[#ED7D31]'}`}>{totals[grade].P}</td>
+                                                    <td className={`border border-slate-300 py-1.5 px-10 ${grade === '7' ? 'bg-[#00B0F0]' : grade === '8' ? 'bg-[#FFFF00]' : 'bg-[#ED7D31]'}`}>{totals[grade].L + totals[grade].P}</td>
+                                                </tr>
+                                            ))}
+                                            <tr className="bg-[#70AD47] text-xl">
+                                                <td className="border border-slate-300 py-2 px-8 text-left uppercase">JUMLAH</td>
+                                                <td className="border border-slate-300 py-2 px-6">{totals.All.L}</td>
+                                                <td className="border border-slate-300 py-2 px-6">{totals.All.P}</td>
+                                                <td className="border border-slate-300 py-2 px-10">{totals.All.L + totals.All.P}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        );
+                    })()}
+
+                    {/* Detailed List */}
+                    <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mt-8 print:mt-12">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                            <h3 className="font-bold text-slate-800 text-lg">Daftar Siswa Detail</h3>
+                            <div className="flex gap-2 items-center print:hidden">
+                                <select 
+                                    value={activeClass} 
+                                    onChange={(e) => setActiveClass(e.target.value)}
+                                    className="border border-slate-300 rounded px-3 py-1.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    <optgroup label="Kelas 7">
+                                        {['7A','7B','7C','7D','7E','7F','7G','7H'].map(c => <option key={c} value={c}>{c}</option>)}
+                                    </optgroup>
+                                    <optgroup label="Kelas 8">
+                                        {['8A','8B','8C','8D','8E','8F','8G','8H','8I','8J'].map(c => <option key={c} value={c}>{c}</option>)}
+                                    </optgroup>
+                                    <optgroup label="Kelas 9">
+                                        {['9A','9B','9C','9D','9E','9F','9G','9H','9I','9J','9K'].map(c => <option key={c} value={c}>{c}</option>)}
+                                    </optgroup>
+                                </select>
+                                <button onClick={() => {
+                                    const pwd = prompt('Masukkan password untuk menambah siswa:');
+                                    if (pwd === 'admin123') {
+                                        const nis = prompt('Masukkan NIS Siswa:');
+                                        if(!nis) return;
+                                        const nama = prompt('Masukkan Nama Siswa:');
+                                        if(!nama) return;
+                                        const gender = prompt('Masukkan L/P (Laki-laki / Perempuan):');
+                                        if(gender !== 'L' && gender !== 'P') { alert('Harus L atau P!'); return; }
+                                        
+                                        const newStudentsData = { ...studentsData };
+                                        if(!newStudentsData[activeClass]) newStudentsData[activeClass] = [];
+                                        newStudentsData[activeClass].push(nama);
+                                        
+                                        const newDetails = { ...studentDetails };
+                                        newDetails[`${activeClass}-${nama}`] = { nis, gender };
+                                        
+                                        setStudentDetails(newDetails);
+                                        setStudentsData(newStudentsData);
+                                        
+                                        setTimeout(() => {
+                                            window.dispatchEvent(new CustomEvent('firebaseSync', { 
+                                                detail: { jurnal_students: newStudentsData, jurnal_student_details: newDetails } 
+                                            }));
+                                        }, 500);
+                                        alert('Siswa berhasil ditambahkan!');
+                                    } else if (pwd !== null) {
+                                        alert('Password salah!');
+                                    }
+                                }} className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded text-sm font-bold shadow-sm transition-all flex gap-1 items-center">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                                    Tambah
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-100 text-slate-700 border-y border-slate-300">
+                                        <th className="py-2 px-3 font-bold border-x border-slate-300 w-12 text-center">No</th>
+                                        <th className="py-2 px-4 font-bold border-x border-slate-300 w-32">NIS</th>
+                                        <th className="py-2 px-4 font-bold border-x border-slate-300">Nama Siswa</th>
+                                        <th className="py-2 px-3 font-bold border-x border-slate-300 w-16 text-center">L/P</th>
+                                        <th className="py-2 px-3 font-bold border-x border-slate-300 w-24 text-center">Kelas</th>
+                                        <th className="py-2 px-3 font-bold border-x border-slate-300 w-20 text-center print:hidden">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(studentsData[activeClass] || []).map((student, idx) => {
+                                        const det = studentDetails[`${activeClass}-${student}`] || { nis: '-', gender: 'L' };
+                                        return (
+                                            <tr key={idx} className="border-b border-slate-200 hover:bg-slate-50">
+                                                <td className="py-1.5 px-3 border-x border-slate-200 text-center">{idx + 1}</td>
+                                                <td className="py-1.5 px-4 border-x border-slate-200">{det.nis}</td>
+                                                <td className="py-1.5 px-4 border-x border-slate-200 font-semibold">{student}</td>
+                                                <td className="py-1.5 px-3 border-x border-slate-200 text-center">{det.gender}</td>
+                                                <td className="py-1.5 px-3 border-x border-slate-200 text-center font-bold">{activeClass}</td>
+                                                <td className="py-1 px-3 border-x border-slate-200 text-center print:hidden">
+                                                    <button onClick={() => {
+                                                        const pwd = prompt(`Masukkan password untuk menghapus ${student}:`);
+                                                        if (pwd === 'admin123') {
+                                                            if (confirm(`Yakin hapus ${student} dari ${activeClass}?`)) {
+                                                                const newStudentsData = { ...studentsData };
+                                                                newStudentsData[activeClass] = newStudentsData[activeClass].filter(s => s !== student);
+                                                                
+                                                                const newDetails = { ...studentDetails };
+                                                                delete newDetails[`${activeClass}-${student}`];
+                                                                
+                                                                setStudentDetails(newDetails);
+                                                                setStudentsData(newStudentsData);
+                                                                
+                                                                setTimeout(() => {
+                                                                    window.dispatchEvent(new CustomEvent('firebaseSync', { 
+                                                                        detail: { jurnal_students: newStudentsData, jurnal_student_details: newDetails } 
+                                                                    }));
+                                                                }, 500);
+                                                            }
+                                                        } else if (pwd !== null) {
+                                                            alert('Password salah!');
+                                                        }
+                                                    }} className="text-red-500 hover:text-red-700 font-bold text-xs p-1">
+                                                        Hapus
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
+                                    {(!studentsData[activeClass] || studentsData[activeClass].length === 0) && (
+                                        <tr>
+                                            <td colSpan="6" className="py-4 text-center text-slate-500 border-x border-b border-slate-200">
+                                                Tidak ada data siswa di kelas ini.
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                  </div>
+                )}
                 {/* TAB: Jurnal Pelajaran Kelas */}
                 {activeTab === 'jurnal_pelajaran_kelas' && (
                   <div className="space-y-4">
@@ -4706,14 +6153,37 @@
                                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                               <div>
                                                   <label className="block text-xs font-bold text-slate-700 mb-1">Siswa Tidak Hadir</label>
-                                                  <input 
-                                                      type="text"
-                                                      value={record.absen}
-                                                      disabled={!isEditable}
-                                                      onChange={(e) => handleChange('absen', e.target.value)}
-                                                      className={`w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 ${!isEditable ? 'bg-slate-100 text-slate-500 cursor-not-allowed' : ''}`}
-                                                      placeholder="Contoh: Budi (S), Andi (I)..."
-                                                  />
+                                                    {!isEditable ? (
+                                                        <input type="text" value={record.absen || ''} disabled className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-slate-100 text-slate-500 cursor-not-allowed" />
+                                                    ) : (
+                                                        <details className="relative group w-full">
+                                                            <summary className="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white cursor-pointer list-none flex justify-between items-center focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500">
+                                                               <span className="truncate">{record.absen || 'Pilih Siswa...'}</span>
+                                                               <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                                            </summary>
+                                                            <div className="absolute z-50 left-0 right-0 mt-1 bg-white border border-slate-200 shadow-xl rounded-lg max-h-48 overflow-y-auto p-2 flex flex-col gap-1">
+                                                               <label className="flex items-center gap-2 p-1.5 hover:bg-slate-50 cursor-pointer rounded border-b border-slate-100 mb-1">
+                                                                   <input type="checkbox" checked={!record.absen} onChange={(e) => handleChange('absen', '')} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                                                                   <span className="text-xs font-bold italic text-slate-500">Hadir Semua (Kosongkan)</span>
+                                                               </label>
+                                                               {currentStudents.map(student => {
+                                                                   const isSelected = (record.absen || '').includes(student);
+                                                                   return (
+                                                                       <label key={student} className="flex items-center gap-2 p-1.5 hover:bg-slate-50 cursor-pointer rounded">
+                                                                           <input type="checkbox" checked={isSelected} onChange={(e) => {
+                                                                               let currentList = (record.absen || '').split(',').map(s=>s.trim()).filter(Boolean);
+                                                                               if (e.target.checked) currentList.push(student);
+                                                                               else currentList = currentList.filter(s => s !== student);
+                                                                               handleChange('absen', currentList.join(', '));
+                                                                           }} className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500" />
+                                                                           <span className="text-xs font-medium text-slate-700">{student}</span>
+                                                                       </label>
+                                                                   )
+                                                               })}
+                                                               {currentStudents.length === 0 && <span className="text-xs text-slate-400 p-2 text-center">Belum ada siswa di kelas ini</span>}
+                                                            </div>
+                                                        </details>
+                                                    )}
                                               </div>
                                               <div>
                                                   <label className="block text-xs font-bold text-slate-700 mb-1">Tugas / Catatan Tambahan</label>

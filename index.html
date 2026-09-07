@@ -6013,7 +6013,7 @@
                                 </select>
                                 <button onClick={() => {
                                     const pwd = prompt('Masukkan password untuk menambah siswa:');
-                                    if (pwd === 'admin123') {
+                                    if (pwd === 'F134nto') {
                                         const nis = prompt('Masukkan NIS Siswa:');
                                         if(!nis) return;
                                         const nama = prompt('Masukkan Nama Siswa:');
@@ -6084,7 +6084,7 @@
                                                     <td className="py-1 px-2 border-x border-emerald-200 text-center print:hidden space-x-1 whitespace-nowrap">
                                                         <button onClick={() => {
                                                             const pwd = prompt('Masukkan password admin untuk menyimpan perubahan:');
-                                                            if (pwd === 'admin123') {
+                                                            if (pwd === 'F134nto') {
                                                                 const { originalName, name, nis, gender } = editingStudentInfo;
                                                                 if (!name.trim()) { alert('Nama tidak boleh kosong!'); return; }
                                                                 
@@ -6160,7 +6160,7 @@
                                                     </button>
                                                     <button onClick={() => {
                                                         const pwd = prompt(`Masukkan password untuk menghapus ${student}:`);
-                                                        if (pwd === 'admin123') {
+                                                        if (pwd === 'F134nto') {
                                                             if (confirm(`Yakin hapus ${student} dari ${activeClass}?`)) {
                                                                 const newStudentsData = { ...studentsData };
                                                                 newStudentsData[activeClass] = newStudentsData[activeClass].filter(s => s !== student);

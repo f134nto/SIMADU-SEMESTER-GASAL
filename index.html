@@ -3418,6 +3418,7 @@
           const [activeMonth, setActiveMonth] = useState('Juli');
           const [selectedNilaiMapel, setSelectedNilaiMapel] = useState('');
           const [selectedReportNilaiMapelGuru, setSelectedReportNilaiMapelGuru] = useState('');
+          const [selectedAgendaTanggal, setSelectedAgendaTanggal] = useState('Semua Tanggal');
           const [globalReportMapel, globalReportGuru] = selectedReportNilaiMapelGuru ? selectedReportNilaiMapelGuru.split('|') : ['', ''];
 
           const getMapelsAndGurusForClass = (className) => {
@@ -4074,9 +4075,9 @@
                     idx + 1,
                     student,
                     data.s1||'', data.s2||'', data.s3||'', data.s4||'', data.s5||'',
-                    data.asts||'', calc.jml||'', calc.rata2 ? calc.rata2.toFixed(1) : '',
-                    calc.p80 ? calc.p80.toFixed(1) : '', data.asas||'',
-                    calc.p20 ? calc.p20.toFixed(1) : '', Math.round(calc.na)||''
+                    data.asts||'', calc.jml||'', calc.rata2 ? Math.round(calc.rata2) : '',
+                    calc.p80 ? Math.round(calc.p80) : '', data.asas||'',
+                    calc.p20 ? Math.round(calc.p20) : '', Math.round(calc.na)||''
                 ];
                 rows.push(row);
             });
@@ -4259,9 +4260,9 @@
                     idx + 1, 
                     `"${student}"`, 
                     data.s1||'', data.s2||'', data.s3||'', data.s4||'', data.s5||'', 
-                    data.asts||'', calc.jml||'', calc.rata2 ? calc.rata2.toFixed(1) : '', 
-                    calc.p80 ? calc.p80.toFixed(1) : '', data.asas||'', 
-                    calc.p20 ? calc.p20.toFixed(1) : '', Math.round(calc.na)||''
+                    data.asts||'', calc.jml||'', calc.rata2 ? Math.round(calc.rata2) : '', 
+                    calc.p80 ? Math.round(calc.p80) : '', data.asas||'', 
+                    calc.p20 ? Math.round(calc.p20) : '', Math.round(calc.na)||''
                 ];
                 csvContent += row.join(";") + "\n";
             });
@@ -4380,15 +4381,16 @@
               return entries;
           };
 
-          const handleExportAgendaKelasCSV = () => {
+                    const handleExportAgendaKelasCSV = () => {
               let csvContent = "\uFEFFREKAPITULASI JURNAL PELAJARAN KELAS " + activeClass + "\n\n";
               csvContent += "No;Tanggal;Jam;Mata Pelajaran;Guru Pengampu;Materi Pokok;Siswa Tidak Hadir;Tugas / Catatan\n";
-              const entries = getAgendaKelasEntries();
+              const allEntries = getAgendaKelasEntries();
+              const entries = selectedAgendaTanggal === 'Semua Tanggal' ? allEntries : allEntries.filter(e => e.tanggal === selectedAgendaTanggal);
               entries.forEach((e, idx) => {
                   const safeMateri = `"${(e.materi || '').replace(/"/g, '""')}"`; 
                   const safeAbsen = `"${(e.absen || '').replace(/"/g, '""')}"`;
                   const safeTugas = `"${(e.tugas || '').replace(/"/g, '""')}"`;
-                  csvContent += `${idx + 1};${e.tanggal};${e.jam};${e.mapel};${e.guru};${safeMateri};${safeAbsen};${safeTugas}\n`;
+                  csvContent += `${idx + 1};${e.tanggal};="${e.jam}";${e.mapel};${e.guru};${safeMateri};${safeAbsen};${safeTugas}\n`;
               });
               const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
               const url = URL.createObjectURL(blob);
@@ -5556,9 +5558,21 @@
                               <h2 className="text-lg font-black text-emerald-900 tracking-wide uppercase">REKAPITULASI Jurnal Pelajaran Kelas {activeClass}</h2>
                               <p className="text-sm font-semibold text-emerald-800">DATA JURNAL PELAJARAN KELAS • SEMESTER GANJIL TAHUN AJARAN 2026/2027</p>
                             </div>
-                            <button type="button" onClick={handleExportAgendaKelasCSV} className="px-4 py-2 bg-white/90 hover:bg-white text-emerald-900 font-bold rounded-lg text-xs shadow-sm transition-all border border-emerald-300">
-                                Unduh CSV
-                            </button>
+                                                        <div className="flex items-center gap-2">
+                                <select 
+                                    value={selectedAgendaTanggal} 
+                                    onChange={(e) => setSelectedAgendaTanggal(e.target.value)}
+                                    className="border border-emerald-300 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                >
+                                    <option value="Semua Tanggal">Semua Tanggal</option>
+                                    {Array.from(new Set(getAgendaKelasEntries().map(e => e.tanggal))).map(t => (
+                                        <option key={t} value={t}>{t}</option>
+                                    ))}
+                                </select>
+                                <button type="button" onClick={handleExportAgendaKelasCSV} className="px-4 py-2 bg-white/90 hover:bg-white text-emerald-900 font-bold rounded-lg text-xs shadow-sm transition-all border border-emerald-300">
+                                    Unduh CSV
+                                </button>
+                            </div>
                           </div>
                           <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '60vh' }}>
                             <table className="w-full text-xs text-left border-collapse min-w-max">
@@ -5576,7 +5590,8 @@
                               </thead>
                               <tbody>
                                 {(() => {
-                                      const entries = getAgendaKelasEntries();
+                                      const allEntries = getAgendaKelasEntries();
+                                      const entries = selectedAgendaTanggal === 'Semua Tanggal' ? allEntries : allEntries.filter(e => e.tanggal === selectedAgendaTanggal);
 
                                       if (entries.length === 0) {
                                         return (

@@ -3583,7 +3583,14 @@
           
           const [syncStatus, setSyncStatus] = useState('');
           const [isSyncing, setIsSyncing] = useState(false);
-          const [editingStudentInfo, setEditingStudentInfo] = useState(null);
+                    const [editingStudentInfo, setEditingStudentInfo] = useState(null);
+          
+          const [dataSiswaTab, setDataSiswaTab] = useState('daftar'); 
+          const [mutasiData, setMutasiData] = useState(() => {
+              try { return JSON.parse(localStorage.getItem('jurnal_mutasi')) || { masuk: [], keluar: [] }; } 
+              catch(e) { return { masuk: [], keluar: [] }; }
+          });
+          const [editingJurnal, setEditingJurnal] = useState(null);
 
           const scriptUrl = "https://script.google.com/macros/s/AKfycbxKrPzQ8o0XD6vlg1t0AIt8_-Y4fUAOgA-pwTdtPwqcpp2uDRo9IgPHFfJ_Sl0bsByg1Q/exec";
           const targetSpreadsheetId = "1jz6Vh1d2IFkSh_HZi6RhvNaervTWqx98Y_b7Pwfafcg";
@@ -5641,7 +5648,8 @@
                                   <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-48">Guru Pengampu</th>
                                   <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 min-w-[200px]">Materi Pokok</th>
                                   <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-48">Siswa Tidak Hadir</th>
-                                  <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 min-w-[150px]">Tugas / Catatan</th>
+                                                                    <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 min-w-[150px]">Tugas / Catatan</th>
+                                  <th className="py-2 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-32 text-center print:hidden">Aksi</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -5651,23 +5659,82 @@
 
                                       if (entries.length === 0) {
                                         return (
-                                            <tr><td colSpan="8" className="py-8 text-center text-slate-400">Belum ada Jurnal Pelajaran Kelas yang tercatat.</td></tr>
+                                            <tr><td colSpan="9" className="py-8 text-center text-slate-400">Belum ada Jurnal Pelajaran Kelas yang tercatat.</td></tr>
                                         );
                                     }
                                     
-                                    return entries.map((e, idx) => (
-                                        <tr key={idx} className="hover:bg-slate-50 transition-colors border-b border-slate-100">
-                                            <td className="py-2 px-3 border border-slate-100 text-center font-semibold">{idx + 1}</td>
-                                            <td className="py-2 px-3 border border-slate-100 font-bold text-emerald-800">{e.tanggal}</td>
-                                            <td className="py-2 px-3 border border-slate-100 text-center font-bold">{e.jam}</td>
-                                            <td className="py-2 px-3 border border-slate-100 font-semibold">{e.mapel}</td>
-                                            <td className="py-2 px-3 border border-slate-100 text-slate-700">{e.guru}</td>
-                                            <td className="py-2 px-3 border border-slate-100 whitespace-pre-wrap">{e.materi || '-'}</td>
-                                            <td className="py-2 px-3 border border-slate-100 text-red-600 font-medium">{e.absen || '-'}</td>
-                                            <td className="py-2 px-3 border border-slate-100 whitespace-pre-wrap text-blue-700">{e.tugas || '-'}</td>
-                                        </tr>
-                                    ));
-                                })()}                                </tbody>
+                                    return entries.map((e, idx) => {
+                                        const isEditing = editingJurnal && editingJurnal.id === e.id && e.id;
+                                        if (isEditing) {
+                                            return (
+                                                <tr key={idx} className="bg-emerald-50 border-b border-emerald-200">
+                                                    <td className="py-2 px-3 border border-emerald-200 text-center font-semibold">{idx + 1}</td>
+                                                    <td className="py-2 px-3 border border-emerald-200 font-bold text-emerald-800">{e.tanggal}</td>
+                                                    <td className="py-2 px-3 border border-emerald-200 text-center font-bold">{e.jam}</td>
+                                                    <td className="py-2 px-3 border border-emerald-200 font-semibold">{e.mapel}</td>
+                                                    <td className="py-2 px-3 border border-emerald-200 text-slate-700">{e.guru}</td>
+                                                    <td className="py-2 px-3 border border-emerald-200">
+                                                        <textarea className="w-full text-xs p-1 border border-emerald-400 rounded" rows="2" value={editingJurnal.materi} onChange={ev => setEditingJurnal({...editingJurnal, materi: ev.target.value})}></textarea>
+                                                    </td>
+                                                    <td className="py-2 px-3 border border-emerald-200">
+                                                        <textarea className="w-full text-xs p-1 border border-emerald-400 rounded" rows="2" value={editingJurnal.absen} onChange={ev => setEditingJurnal({...editingJurnal, absen: ev.target.value})} placeholder="NIHIL"></textarea>
+                                                    </td>
+                                                    <td className="py-2 px-3 border border-emerald-200">
+                                                        <textarea className="w-full text-xs p-1 border border-emerald-400 rounded" rows="2" value={editingJurnal.tugas} onChange={ev => setEditingJurnal({...editingJurnal, tugas: ev.target.value})}></textarea>
+                                                    </td>
+                                                    <td className="py-2 px-3 border border-emerald-200 text-center print:hidden space-y-1">
+                                                        <button onClick={() => {
+                                                            executeWithAdmin(() => {
+                                                                const newData = { ...agendaKelasData };
+                                                                newData[editingJurnal.id] = { ...newData[editingJurnal.id], materi: editingJurnal.materi, absen: editingJurnal.absen || 'NIHIL', tugas: editingJurnal.tugas };
+                                                                setAgendaKelasData(newData);
+                                                                setEditingJurnal(null);
+                                                                
+                                                                localStorage.setItem('jurnal_agendaKelasData', JSON.stringify(newData));
+                                                                setTimeout(() => { window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_agendaKelasData: newData } })); }, 500);
+                                                            });
+                                                        }} className="block w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] px-2 py-1 rounded shadow-sm">Simpan</button>
+                                                        <button onClick={() => setEditingJurnal(null)} className="block w-full bg-slate-400 hover:bg-slate-500 text-white font-bold text-[10px] px-2 py-1 rounded shadow-sm">Batal</button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        }
+
+                                        return (
+                                            <tr key={idx} className="hover:bg-slate-50 transition-colors border-b border-slate-100">
+                                                <td className="py-2 px-3 border border-slate-100 text-center font-semibold">{idx + 1}</td>
+                                                <td className="py-2 px-3 border border-slate-100 font-bold text-emerald-800">{e.tanggal}</td>
+                                                <td className="py-2 px-3 border border-slate-100 text-center font-bold">{e.jam}</td>
+                                                <td className="py-2 px-3 border border-slate-100 font-semibold">{e.mapel}</td>
+                                                <td className="py-2 px-3 border border-slate-100 text-slate-700">{e.guru}</td>
+                                                <td className="py-2 px-3 border border-slate-100 whitespace-pre-wrap">{e.materi || '-'}</td>
+                                                <td className="py-2 px-3 border border-slate-100 text-red-600 font-medium">{e.absen || 'NIHIL'}</td>
+                                                <td className="py-2 px-3 border border-slate-100 whitespace-pre-wrap text-blue-700">{e.tugas || '-'}</td>
+                                                <td className="py-2 px-3 border border-slate-100 text-center print:hidden space-x-1 whitespace-nowrap">
+                                                    {e.id ? (
+                                                        <>
+                                                            <button onClick={() => setEditingJurnal({ ...e, materi: e.materi==='-'?'':e.materi, absen: e.absen==='-'?'':e.absen, tugas: e.tugas==='-'?'':e.tugas })} className="text-blue-600 hover:text-blue-800 font-bold text-[10px] px-1.5 py-0.5 border border-blue-200 bg-blue-50 rounded">Edit</button>
+                                                            <button onClick={() => {
+                                                                executeWithAdmin(() => {
+                                                                    if(confirm(`Yakin hapus jurnal pelajaran ${e.mapel} ini?`)) {
+                                                                        const newData = { ...agendaKelasData };
+                                                                        delete newData[e.id];
+                                                                        setAgendaKelasData(newData);
+                                                                        localStorage.setItem('jurnal_agendaKelasData', JSON.stringify(newData));
+                                                                        setTimeout(() => { window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_agendaKelasData: newData } })); }, 500);
+                                                                    }
+                                                                });
+                                                            }} className="text-red-500 hover:text-red-700 font-bold text-[10px] px-1.5 py-0.5 border border-red-200 bg-red-50 rounded">Hapus</button>
+                                                        </>
+                                                    ) : (
+                                                        <span className="text-xs text-slate-400 italic">Kosong</span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    });
+                                })()}
+                                </tbody>
                             </table>
                         </div>
                     </div>

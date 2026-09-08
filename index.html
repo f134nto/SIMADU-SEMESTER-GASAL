@@ -3585,8 +3585,8 @@
           const [isSyncing, setIsSyncing] = useState(false);
                     const [editingStudentInfo, setEditingStudentInfo] = useState(null);
           
-          const [dataSiswaTab, setDataSiswaTab] = useState('daftar'); 
-          const [mutasiData, setMutasiData] = useState(() => {
+                    const [dataSiswaTab, setDataSiswaTab] = useState('daftar'); 
+          const [filterTanggalMateri, setFilterTanggalMateri] = useState('Semua Tanggal');const [mutasiData, setMutasiData] = useState(() => {
               try { return JSON.parse(localStorage.getItem('jurnal_mutasi')) || { masuk: [], keluar: [] }; } 
               catch(e) { return { masuk: [], keluar: [] }; }
           });
@@ -5212,7 +5212,7 @@
                               onClick={() => setActiveReportTab('jurnal_materi')}
                               className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 ${activeReportTab === 'jurnal_materi' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
                             >
-                              📝 Rekap Jurnal & Materi
+                              📝 Jurnal & Materi
                             </button>
                             <button 
                               onClick={() => setActiveReportTab('tabungan')}
@@ -5387,13 +5387,19 @@
                     {activeReportTab === 'jurnal_materi' && (
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
                           <div className="bg-[#A5C8E4] border-b border-[#8fb3ce] p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-                            <div className="text-center sm:text-left">
+                                                        <div className="text-center sm:text-left">
                               <h2 className="text-lg font-black text-slate-900 tracking-wide uppercase">REKAPITULASI MATERI JURNAL MENGAJAR KELAS {activeClass}</h2>
-                              <p className="text-sm font-semibold text-slate-800">DATA JURNAL MENGAJAR GURU • SEMESTER GANJIL TAHUN AJARAN 2026/2027</p>
+                              <p className="text-sm font-semibold text-slate-800">DATA JURNAL MENGAJAR GURU &bull; SEMESTER GANJIL TAHUN AJARAN 2026/2027</p>
                             </div>
-                            <button type="button" onClick={handleExportRekapJurnalCSV} className="px-4 py-2 bg-white/90 hover:bg-white text-slate-800 font-bold rounded-lg text-xs shadow-sm transition-all border border-[#8fb3ce]">
-                                Unduh CSV
-                            </button>
+                            <div className="flex gap-2 items-center">
+                                <select className="px-3 py-1.5 rounded-lg border border-[#8fb3ce] bg-white text-xs font-bold text-slate-700" value={filterTanggalMateri} onChange={(e) => setFilterTanggalMateri(e.target.value)}>
+                                    <option value="Semua Tanggal">Semua Tanggal</option>
+                                    {[...Array(31)].map((_, i) => <option key={i+1} value={i+1}>Tgl {i+1}</option>)}
+                                </select>
+                                <button type="button" onClick={handleExportRekapJurnalCSV} className="px-4 py-2 bg-white/90 hover:bg-white text-slate-800 font-bold rounded-lg text-xs shadow-sm transition-all border border-[#8fb3ce]">
+                                    Unduh CSV
+                                </button>
+                            </div>
                           </div>
                           <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '50vh' }}>
                             <table className="w-full text-sm text-left border-collapse min-w-max">
@@ -5402,6 +5408,7 @@
                                   <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-200 bg-slate-50 text-slate-700 w-10 text-center align-middle">No</th>
                                   <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-200 bg-slate-50 text-slate-700 w-28 align-middle">Bulan</th>
                                   <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-200 bg-slate-50 text-slate-700 w-24 align-middle">Tanggal</th>
+                                  <th rowSpan="2" className="py-2 px-4 font-bold border border-slate-200 bg-slate-50 text-slate-700 min-w-[200px] align-middle">Mata Pelajaran</th>
                                   <th rowSpan="2" className="py-2 px-4 font-bold border border-slate-200 bg-slate-50 text-slate-700 min-w-[250px] align-middle">Materi Pokok / Sub Pokok Bahasan</th>
                                   <th colSpan="4" className="py-1 px-2 font-bold border border-slate-200 bg-slate-100 text-slate-800 text-center border-b-0">Jml Kehadiran</th>
                                   <th rowSpan="2" className="py-2 px-4 font-bold border border-slate-200 bg-slate-50 text-slate-700 min-w-[200px] align-middle">Siswa Tidak Hadir (S, I, A)</th>
@@ -5425,7 +5432,8 @@
                                         <tr key={idx} className="hover:bg-slate-50 transition-colors border-b border-slate-100">
                                             <td className="py-2 px-3 border border-slate-100 text-center font-medium text-xs">{idx + 1}</td>
                                             <td className="py-2 px-3 border border-slate-100 font-bold text-[#4a728f] text-xs">{entry.month}</td>
-                                            <td className="py-2 px-3 border border-slate-100 font-semibold text-slate-800 text-xs">Tgl {entry.day}</td>
+                                                                                        <td className="py-2 px-3 border border-slate-100 font-semibold text-slate-800 text-xs">Tgl {entry.day}</td>
+                                            <td className="py-2 px-4 border border-slate-100 font-bold text-slate-800 text-xs">{entry.mapel}</td>
                                             <td className="py-2 px-4 border border-slate-100 whitespace-pre-wrap text-xs text-slate-700">{entry.note}</td>
                                             <td className="py-2 px-2 border border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/30 text-xs">{entry.counts.H || '-'}</td>
                                             <td className="py-2 px-2 border border-slate-100 text-center font-bold text-blue-600 bg-blue-50/30 text-xs">{entry.counts.I || '-'}</td>
@@ -6604,8 +6612,9 @@
                       <table className="w-full text-xs text-left border-collapse min-w-max relative z-0">
                         <thead className="sticky top-0 z-30 shadow-sm">
                           <tr>
-                            <th className="py-3 px-4 font-bold border-b border-r border-[#6c8e8c] sticky left-0 bg-[#7DA3A1] text-slate-900 z-30 min-w-[170px] md:min-w-[220px] max-w-[170px] md:max-w-[220px] shadow-[4px_0_10px_-2px_rgba(0,0,0,0.1)] uppercase tracking-wider text-[10px]">No. & Nama Siswa</th>
-                            <th className="py-3 px-4 font-bold border-b border-r border-slate-200 md:sticky md:left-[220px] bg-slate-100 text-slate-700 z-20 min-w-[200px] md:min-w-[280px] max-w-[200px] md:max-w-[280px] md:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.05)] uppercase tracking-wider text-[10px]">Materi Pokok Bahasan</th>
+                                                        <th className="py-3 px-4 font-bold border-b border-r border-[#6c8e8c] sticky left-0 bg-[#7DA3A1] text-slate-900 z-30 min-w-[170px] md:min-w-[220px] max-w-[170px] md:max-w-[220px] shadow-[4px_0_10px_-2px_rgba(0,0,0,0.1)] uppercase tracking-wider text-[10px]">No. & Nama Siswa</th>
+                            <th className="py-3 px-4 font-bold border-b border-r border-slate-200 md:sticky md:left-[220px] bg-slate-100 text-slate-700 z-20 min-w-[150px] md:min-w-[150px] md:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.05)] uppercase tracking-wider text-[10px]">Mata Pelajaran</th>
+                            <th className="py-3 px-4 font-bold border-b border-r border-slate-200 md:sticky md:left-[370px] bg-slate-100 text-slate-700 z-20 min-w-[200px] md:min-w-[280px] max-w-[200px] md:max-w-[280px] md:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.05)] uppercase tracking-wider text-[10px]">Materi Pokok Bahasan</th>
                             {daysInMonth.map(day => (
                               <th key={day} className="py-3 px-1 text-center font-bold border-b border-r border-slate-200 bg-slate-50 text-slate-500 w-12 min-w-[48px]">{day}</th>
                             ))}
@@ -6628,8 +6637,18 @@
                                   <span className="text-slate-800 font-semibold inline-block w-4 mr-1 text-right">{idx + 1}.</span> {student}
                                 </td>
                                 
+                                                                {idx === 0 && (
+                                  <td rowSpan={currentStudents.length} className="p-0 border-r border-slate-100 md:sticky md:left-[220px] bg-blue-50/20 z-10 min-w-[150px] md:min-w-[150px] align-top md:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.02)]">
+                                    <textarea 
+                                      value={classNotes[`${activeClass}-${activeMonth}-${actionDay}-mapel`] || ''}
+                                      onChange={(e) => handleNoteChange('mapel', e.target.value)}
+                                      className="w-full h-full min-h-[500px] p-3 text-xs bg-transparent outline-none resize-none text-slate-700 placeholder-slate-400 leading-relaxed font-semibold"
+                                      placeholder={`Mata Pelajaran (Tgl ${actionDay})...`}
+                                    />
+                                  </td>
+                                )}
                                 {idx === 0 && (
-                                  <td rowSpan={currentStudents.length} className="p-0 border-r border-slate-100 md:sticky md:left-[220px] bg-amber-50/20 z-10 min-w-[200px] md:min-w-[280px] max-w-[200px] md:max-w-[280px] align-top md:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.02)]">
+                                  <td rowSpan={currentStudents.length} className="p-0 border-r border-slate-100 md:sticky md:left-[370px] bg-amber-50/20 z-10 min-w-[200px] md:min-w-[280px] max-w-[200px] md:max-w-[280px] align-top md:shadow-[4px_0_10px_-2px_rgba(0,0,0,0.02)]">
                                     <textarea 
                                       value={classNotes[`${activeClass}-${activeMonth}-${actionDay}-materi`] || ''}
                                       onChange={(e) => handleNoteChange('materi', e.target.value)}

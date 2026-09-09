@@ -94,6 +94,8 @@
 <body class="text-slate-800 antialiased">
     <div id="root"></div>
 
+        <!-- SheetJS for Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-database-compat.js"></script>
@@ -3792,7 +3794,133 @@
               });
           };
 
-          const handleHapusSiswa = () => {
+                                  const handleBackupData = () => {
+                const backupData = {};
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.startsWith('jurnal_')) {
+                        backupData[key] = localStorage.getItem(key);
+                    }
+                }
+                const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                const dateStr = new Date().toLocaleDateString('id-ID').replace(/\//g, '-');
+                link.download = `Backup_SIMADU_${dateStr}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            };
+
+            const handleRestoreData = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                e.target.value = ''; 
+                
+                executeWithAdmin(() => {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        try {
+                            const data = JSON.parse(evt.target.result);
+                            let restoredCount = 0;
+                            // Disable firebase sync interceptor temporarily to avoid blasting firebase with individually restored keys
+                            // Actually, let it blast, it's fine, it has debounce. Or we can just reload and let it sync naturally.
+                            for (let key in data) {
+                                if (key.startsWith('jurnal_')) {
+                                    localStorage.setItem(key, data[key]);
+                                    restoredCount++;
+                                }
+                            }
+                            if (restoredCount > 0) {
+                                alert(`Berhasil merestore ${restoredCount} blok data. Halaman akan dimuat ulang untuk menerapkan perubahan.`);
+                                window.location.reload();
+                            } else {
+                                alert('Tidak ada data yang valid dalam file backup ini.');
+                            }
+                        } catch (err) {
+                            alert('Gagal merestore data. Pastikan file yang diunggah adalah file .json dari hasil Backup SIMADU.');
+                        }
+                    };
+                    reader.readAsText(file);
+                });
+            };
+
+            const handleImportExcel = (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Clear value to allow same file re-upload
+                e.target.value = '';
+
+                executeWithAdmin(() => {
+                    if (typeof XLSX === 'undefined') {
+                        alert('Error: Library Excel (SheetJS) belum dimuat. Periksa koneksi internet Anda atau refresh halaman.');
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        try {
+                            const data = evt.target.result;
+                            const workbook = XLSX.read(data, { type: 'binary' });
+                            const firstSheetName = workbook.SheetNames[0];
+                            const worksheet = workbook.Sheets[firstSheetName];
+                            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                            
+                            let newStudents = [];
+                            let newDetails = {};
+                            
+                            for (let i = 0; i < json.length; i++) {
+                                const row = json[i];
+                                if (!row || row.length < 2) continue;
+                                
+                                let offset = 0;
+                                if (String(row[0]).match(/^\d+$/) && row.length >= 4) {
+                                    offset = 1;
+                                }
+                                
+                                const val1 = String(row[offset] || '').trim();
+                                const val2 = String(row[offset+1] || '').trim();
+                                
+                                if (val1.toLowerCase().includes('nis') || val2.toLowerCase().includes('nama')) continue;
+                                
+                                const nisStr = val1;
+                                const nameStr = val2;
+                                let genderStr = String(row[offset+2] || '').trim().toUpperCase();
+                                
+                                if(!['L', 'P'].includes(genderStr)) genderStr = 'L';
+                                
+                                if (nameStr) {
+                                    newStudents.push(nameStr);
+                                    newDetails[`${activeClass}-${nameStr}`] = { nis: nisStr || '-', gender: genderStr };
+                                }
+                            }
+                            
+                            if (newStudents.length > 0) {
+                                setStudentsData(prev => {
+                                    const currentList = [...(prev[activeClass] || [])];
+                                    newStudents.forEach(st => {
+                                        if(!currentList.includes(st)) currentList.push(st);
+                                    });
+                                    currentList.sort((a, b) => a.localeCompare(b));
+                                    return { ...prev, [activeClass]: currentList };
+                                });
+                                setStudentDetails(prev => ({ ...prev, ...newDetails }));
+                                alert(`Berhasil mengimpor ${newStudents.length} siswa ke Kelas ${activeClass}. Sistem telah mengurutkan daftar nama secara otomatis.`);
+                            } else {
+                                alert('Tidak ada data siswa yang valid ditemukan dalam file Excel. Pastikan format kolom: NO, NIS, NAMA SISWA, L/P.');
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            alert('Terjadi kesalahan saat membaca file Excel. Pastikan format file adalah .xlsx atau .csv');
+                        }
+                    };
+                    reader.readAsBinaryString(file);
+                });
+            };
+
+            const handleHapusSiswa = () => {
               executeWithAdmin(() => {
                   const listSiswa = studentsData[activeClass] || [];
                   const previewList = listSiswa.slice(0, 10).join(', ') + (listSiswa.length > 10 ? '...' : '');
@@ -4969,11 +5097,17 @@
                     >
                       👩‍🏫 Data Guru
                     </button>
-                    <button 
+                                        <button 
                       onClick={() => setActiveTab('walikelas')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'walikelas' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
                     >
-                      👔 Wali Kelas
+                      ?? Wali Kelas
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('backup')}
+                      className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'backup' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
+                    >
+                      ?? Backup Data
                     </button>
                   </div>
               </div>
@@ -4982,6 +5116,36 @@
               {/* AREA KONTEN */}
               <div className="w-full mb-8">
                 
+                                {/* TAB: BACKUP DATA */}
+                {activeTab === 'backup' && (
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
+                    <div className="bg-blue-50 border-b border-blue-100 p-6 text-center relative overflow-hidden">
+                        <h2 className="text-xl font-black text-blue-900 tracking-wider uppercase mb-1 relative z-10">Pusat Backup & Restore</h2>
+                        <p className="text-sm font-semibold text-blue-800 relative z-10">Amankan dan pulihkan seluruh data aplikasi dengan mudah.</p>
+                    </div>
+                    <div className="p-8 max-w-4xl mx-auto w-full">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+                                <h3 className="text-lg font-black text-slate-800 mb-2">1. Download Backup</h3>
+                                <p className="text-sm text-slate-500 mb-6">Unduh seluruh data (Siswa, Absensi, Jurnal, Nilai) ke dalam satu file aman (.json) untuk disimpan.</p>
+                                <button onClick={handleBackupData} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm transition-colors">
+                                    Unduh File Backup
+                                </button>
+                            </div>
+                            
+                            <div className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow">
+                                <h3 className="text-lg font-black text-slate-800 mb-2">2. Restore Data</h3>
+                                <p className="text-sm text-slate-500 mb-6">Pulihkan aplikasi menggunakan file Backup (.json). Berguna jika terjadi error atau ganti perangkat.</p>
+                                <input type="file" id="restoreUpload" accept=".json" style={{display: 'none'}} onChange={handleRestoreData} />
+                                <button onClick={() => document.getElementById('restoreUpload').click()} className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg shadow-sm transition-colors">
+                                    Pilih File Backup
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* 0. TAB: ABSENSI SISWA */}
                 {activeTab === 'absensi' && (
                   <div className="space-y-6">
@@ -5938,6 +6102,11 @@
                             <p className="text-sm text-slate-600 mt-1">MTs MA'ARIF NU 1 WANGON TAHUN PELAJARAN 2026/2027</p>
                         </div>
                                                 <div className="flex gap-2 flex-wrap justify-end">
+                                                        <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv" style={{display: 'none'}} onChange={handleImportExcel} />
+                            <button onClick={() => document.getElementById('excelUpload').click()} className="px-3 py-1.5 bg-[#4285F4] text-white hover:bg-[#3367d6] rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                Import Excel
+                            </button>
                             <button onClick={handleTambahSiswa} className="px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                                 + Tambah Siswa
                             </button>

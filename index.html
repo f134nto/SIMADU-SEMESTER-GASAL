@@ -3824,12 +3824,42 @@
                               setDialog(null);
                           }
                       },
-                      onCancel: () => setDialog(null)
-                  });
-              });
-          };
+                                              onCancel: () => setDialog(null)
+                    });
+                });
+            };
 
-          const toggleAttendance = (student, day, isJurnal = false) => {
+                        const handleHapusMassal = () => {
+                executeWithAdmin(() => {
+                    setDialog({
+                        type: 'prompt',
+                        message: `HAPUS SEMUA SISWA KELAS ${activeClass}\n\nUntuk alasan keamanan, silakan ketik nama kelas "${activeClass}" untuk mengonfirmasi penghapusan seluruh siswa dari kelas ini.`,
+                        placeholder: `Ketik ${activeClass} di sini...`,
+                        onConfirm: (input) => {
+                            const target = (input || '').trim().toUpperCase();
+                            if(target === activeClass) {
+                                setDialog({
+                                    type: 'confirm',
+                                    message: `PERINGATAN KRITIS!\n\nAnda akan MENGHAPUS PERMANEN SEMUA SISWA pada Kelas ${activeClass}.\n\nData tidak dapat dikembalikan! Lanjutkan?`,
+                                    onConfirm: () => {
+                                        setStudentsData(prev => {
+                                            return { ...prev, [activeClass]: [] };
+                                        });
+                                        alert(`Berhasil mengosongkan semua siswa di Kelas ${activeClass}`);
+                                        setDialog(null);
+                                    }
+                                });
+                            } else {
+                                if(target) alert('Konfirmasi gagal. Teks yang diketik tidak cocok dengan nama kelas saat ini.');
+                                setDialog(null);
+                            }
+                        },
+                        onCancel: () => setDialog(null)
+                    });
+                });
+            };
+
+            const toggleAttendance = (student, day, isJurnal = false) => {
             const key = `${activeClass}-${activeMonth}-${student}-${day}`;
             const currentState = isJurnal ? attendanceJurnal : attendance;
             const current = currentState[key];
@@ -5911,8 +5941,11 @@
                             <button onClick={handleTambahSiswa} className="px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                                 + Tambah Siswa
                             </button>
-                            <button onClick={handleHapusSiswa} className="px-3 py-1.5 bg-red-500 text-white hover:bg-red-600 rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+                                                        <button onClick={handleHapusSiswa} className="px-3 py-1.5 bg-red-500 text-white hover:bg-red-600 rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                                 - Hapus Siswa
+                            </button>
+                                                        <button onClick={handleHapusMassal} className="px-3 py-1.5 bg-red-700 text-white hover:bg-red-800 rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2" title="Kosongkan semua siswa di kelas ini">
+                                Kosongkan Kelas
                             </button>
                             <button onClick={() => {
                                 let tableHtml = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"></head><body>`;

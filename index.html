@@ -5045,33 +5045,23 @@
                     <button 
                       onClick={() => setActiveTab('absensi')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'absensi' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                    >
-                      📋 Absensi Siswa
-                    </button>
+                    >Absensi Siswa</button>
                     <button 
                       onClick={() => setActiveTab('nilai')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'nilai' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                    >
-                      💯 Daftar Nilai
-                    </button>
+                    >Daftar Nilai</button>
                     <button 
                       onClick={() => setActiveTab('tabungan')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'tabungan' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                    >
-                      💰 Tabungan
-                    </button>
+                    >Tabungan</button>
                     <button 
                       onClick={() => setActiveTab('jadwal')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'jadwal' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                    >
-                      📅 Jadwal
-                    </button>
+                    >Jadwal</button>
                     <button 
                       onClick={() => setActiveTab('jurnal')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'jurnal' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                    >
-                      📝 Jurnal Mengajar
-                    </button>
+                    >Jurnal Mengajar</button>
                     <button 
                       onClick={() => setActiveTab('data_siswa')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 flex items-center gap-1.5 ${activeTab === 'data_siswa' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
@@ -5082,32 +5072,26 @@
                     <button 
                       onClick={() => setActiveTab('jurnal_pelajaran_kelas')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'jurnal_pelajaran_kelas' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                    >
-                      📚 Jurnal Pelajaran Kelas
-                    </button>
+                    >Jurnal Pelajaran Kelas</button>
                     <button 
                       onClick={() => setActiveTab('laporan')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'laporan' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                    >
-                      📊 Laporan
-                    </button>
+                    >Laporan</button>
                     <button 
                       onClick={() => setActiveTab('guru')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'guru' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                    >
-                      👩‍🏫 Data Guru
-                    </button>
+                    >Data Guru</button>
                                         <button 
                       onClick={() => setActiveTab('walikelas')}
                       className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'walikelas' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
                     >
-                      ?? Wali Kelas
+                      Wali Kelas
                     </button>
                     <button 
                       onClick={() => setActiveTab('backup')}
-                      className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'backup' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
+                      className={`px-4 py-2 rounded-full text-xs sm:text-sm font-bold transition-all duration-200 ${activeTab === 'backup' ? 'bg-gradient-to-r from-amber-400 to-yellow-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-100'}`}
                     >
-                      ?? Backup Data
+                      Backup Data
                     </button>
                   </div>
               </div>
@@ -5116,28 +5100,37 @@
               {/* AREA KONTEN */}
               <div className="w-full mb-8">
                 
-                                {/* TAB: BACKUP DATA */}
+                                                {/* TAB: BACKUP DATA */}
                 {activeTab === 'backup' && (
-                  <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
-                    <div className="bg-blue-50 border-b border-blue-100 p-6 text-center relative overflow-hidden">
-                        <h2 className="text-xl font-black text-blue-900 tracking-wider uppercase mb-1 relative z-10">Pusat Backup & Restore</h2>
-                        <p className="text-sm font-semibold text-blue-800 relative z-10">Amankan dan pulihkan seluruh data aplikasi dengan mudah.</p>
+                  <div className="bg-white rounded-2xl shadow-sm border border-amber-200 overflow-hidden flex flex-col relative z-0">
+                    <div className="bg-gradient-to-r from-amber-100 via-yellow-100 to-amber-200 border-b border-amber-300 p-6 text-center relative overflow-hidden">
+                        <div className="absolute inset-0 opacity-20" style={{backgroundImage: 'radial-gradient(#d97706 1px, transparent 1px)', backgroundSize: '20px 20px'}}></div>
+                        <h2 className="text-xl font-black text-amber-900 tracking-wider uppercase mb-1 relative z-10 drop-shadow-sm">Pusat Backup & Restore</h2>
+                        <p className="text-sm font-bold text-amber-700 relative z-10">Amankan dan pulihkan seluruh data aplikasi dengan mudah.</p>
                     </div>
                     <div className="p-8 max-w-4xl mx-auto w-full">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            <div className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow">
-                                <h3 className="text-lg font-black text-slate-800 mb-2">1. Download Backup</h3>
-                                <p className="text-sm text-slate-500 mb-6">Unduh seluruh data (Siswa, Absensi, Jurnal, Nilai) ke dalam satu file aman (.json) untuk disimpan.</p>
-                                <button onClick={handleBackupData} className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm transition-colors">
+                            <div className="bg-gradient-to-br from-white to-amber-50 border border-amber-200 rounded-xl p-6 hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden">
+                                <div className="absolute -right-4 -top-4 w-24 h-24 bg-amber-200/50 rounded-full blur-2xl"></div>
+                                <h3 className="text-lg font-black text-amber-900 mb-2 relative z-10 flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    1. Download Backup
+                                </h3>
+                                <p className="text-sm text-slate-600 mb-6 font-medium relative z-10">Unduh seluruh data (Siswa, Absensi, Jurnal, Nilai) ke dalam satu file aman (.json) untuk disimpan.</p>
+                                <button onClick={handleBackupData} className="w-full py-3 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-black rounded-lg shadow-md transition-all border border-amber-700/20 relative z-10">
                                     Unduh File Backup
                                 </button>
                             </div>
                             
-                            <div className="bg-white border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow">
-                                <h3 className="text-lg font-black text-slate-800 mb-2">2. Restore Data</h3>
-                                <p className="text-sm text-slate-500 mb-6">Pulihkan aplikasi menggunakan file Backup (.json). Berguna jika terjadi error atau ganti perangkat.</p>
+                            <div className="bg-gradient-to-br from-white to-yellow-50 border border-yellow-200 rounded-xl p-6 hover:shadow-lg transition-all transform hover:-translate-y-1 relative overflow-hidden">
+                                <div className="absolute -right-4 -top-4 w-24 h-24 bg-yellow-200/50 rounded-full blur-2xl"></div>
+                                <h3 className="text-lg font-black text-yellow-900 mb-2 relative z-10 flex items-center gap-2">
+                                    <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                    2. Restore Data
+                                </h3>
+                                <p className="text-sm text-slate-600 mb-6 font-medium relative z-10">Pulihkan aplikasi menggunakan file Backup (.json). Berguna jika terjadi error atau ganti perangkat.</p>
                                 <input type="file" id="restoreUpload" accept=".json" style={{display: 'none'}} onChange={handleRestoreData} />
-                                <button onClick={() => document.getElementById('restoreUpload').click()} className="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-lg shadow-sm transition-colors">
+                                <button onClick={() => document.getElementById('restoreUpload').click()} className="w-full py-3 bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-black rounded-lg shadow-md transition-all border border-yellow-700/20 relative z-10">
                                     Pilih File Backup
                                 </button>
                             </div>
@@ -5405,22 +5398,16 @@
                             <button 
                               onClick={() => setActiveReportTab('tabungan')}
                               className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 ${activeReportTab === 'tabungan' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                            >
-                              💰 Tabungan
-                            </button>
+                            >Tabungan</button>
                             <button 
                               onClick={() => setActiveReportTab('nilai')}
                               className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 ${activeReportTab === 'nilai' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                            >
-                              💯 Daftar Nilai
-                            </button>
+                            >Daftar Nilai</button>
                               
                                   <button 
                                     onClick={() => setActiveReportTab('jurnal_pelajaran_kelas')}
                                     className={`px-4 py-2 rounded-lg text-xs sm:text-sm font-bold transition-all duration-200 ${activeReportTab === 'jurnal_pelajaran_kelas' ? 'bg-slate-800 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'}`}
-                                  >
-                                    📚 Jurnal Pelajaran Kelas
-                                  </button>
+                                  >Jurnal Pelajaran Kelas</button>
                               
                         </div>
                     </div>

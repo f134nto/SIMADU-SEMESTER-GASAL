@@ -117,6 +117,7 @@
   // Firebase Sync Logic (with Debounce and Key Sanitization)
     const oldSetItem = localStorage.setItem.bind(localStorage);
   window.localUpdateInProgress = false;
+  window.firebaseInitialSyncDone = false;
   const syncTimeouts = {};
 
   const sanitizeForFirebase = (obj) => {
@@ -132,7 +133,7 @@
 
   localStorage.setItem = function(key, value) {
       oldSetItem(key, value);
-      if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase) {
+      if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
           if (key.startsWith('jurnal_')) {
               window.localUpdateInProgress = true;
               clearTimeout(syncTimeouts[key]);
@@ -147,6 +148,7 @@
   };
 
   window.db.ref('simadu_data_v2').on('value', snap => {
+      window.firebaseInitialSyncDone = true;
       if (window.localUpdateInProgress) return; // Ignore incoming if typing!
       const data = snap.val();
       if (data) {

@@ -6661,10 +6661,11 @@
                                                 <th className="py-2 px-3 font-bold border-x border-emerald-200">Tanggal</th>
                                                 <th className="py-2 px-3 font-bold border-x border-emerald-200">Asal Sekolah</th>
                                                 <th className="py-2 px-3 font-bold border-x border-emerald-200">Keterangan</th>
+                                                <th className="py-2 px-3 font-bold border-x border-emerald-200 text-center">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {mutasiData.masuk.length === 0 ? <tr><td colSpan="7" className="text-center py-4 text-slate-400">Belum ada data siswa masuk</td></tr> : mutasiData.masuk.map((m, idx) => (
+                                            {mutasiData.masuk.length === 0 ? <tr><td colSpan="8" className="text-center py-4 text-slate-400">Belum ada data siswa masuk</td></tr> : mutasiData.masuk.map((m, idx) => (
                                                 <tr key={m.id} className="border-b border-emerald-100 hover:bg-emerald-50/50">
                                                     <td className="py-1.5 px-3 border-x border-emerald-100 text-center">{idx + 1}</td>
                                                     <td className="py-1.5 px-3 border-x border-emerald-100">{m.nis}</td>
@@ -6673,6 +6674,36 @@
                                                     <td className="py-1.5 px-3 border-x border-emerald-100">{m.tanggal}</td>
                                                     <td className="py-1.5 px-3 border-x border-emerald-100 font-medium text-emerald-800">{m.asalSekolah || '-'}</td>
                                                     <td className="py-1.5 px-3 border-x border-emerald-100 text-xs">{m.keterangan}</td>
+                                                    <td className="py-1.5 px-3 border-x border-emerald-100 text-center whitespace-nowrap">
+                                                        <button onClick={() => {
+                                                            executeWithAdmin(() => {
+                                                                const newNama = prompt('Edit Nama:', m.nama || m.name);
+                                                                if (!newNama) return;
+                                                                const newNis = prompt('Edit NIS:', m.nis);
+                                                                const newKelas = prompt('Edit Kelas:', m.kelas);
+                                                                const newTanggal = prompt('Edit Tanggal:', m.tanggal);
+                                                                const newAsal = prompt('Edit Asal Sekolah:', m.asalSekolah);
+                                                                const newKet = prompt('Edit Keterangan:', m.keterangan);
+                                                                
+                                                                const newMutasi = {...mutasiData};
+                                                                newMutasi.masuk = newMutasi.masuk.map(x => x.id === m.id ? {...x, nama: newNama, nis: newNis, kelas: newKelas, tanggal: newTanggal, asalSekolah: newAsal, keterangan: newKet} : x);
+                                                                setMutasiData(newMutasi);
+                                                                localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
+                                                                window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_mutasi: newMutasi } }));
+                                                            });
+                                                        }} className="text-xs bg-blue-500 text-white px-2 py-1 rounded mr-1">Edit</button>
+                                                        <button onClick={() => {
+                                                            executeWithAdmin(() => {
+                                                                if(confirm('Yakin hapus data masuk ini?')) {
+                                                                    const newMutasi = {...mutasiData};
+                                                                    newMutasi.masuk = newMutasi.masuk.filter(x => x.id !== m.id);
+                                                                    setMutasiData(newMutasi);
+                                                                    localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
+                                                                    window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_mutasi: newMutasi } }));
+                                                                }
+                                                            });
+                                                        }} className="text-xs bg-red-500 text-white px-2 py-1 rounded">Hapus</button>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>
@@ -6685,9 +6716,9 @@
                                 <div className="flex justify-between items-center mb-3">
                                     <h3 className="text-md font-bold text-red-800">Siswa Keluar</h3>
                                     <select className="px-3 py-1 bg-red-600 text-white hover:bg-red-700 rounded text-xs font-bold shadow-sm transition-colors outline-none cursor-pointer" value="" onChange={(e) => {
-                                        if (!e.target.value) return;
+                                        const studentName = e.target.value;
+                                        if (!studentName) return;
                                         executeWithAdmin(() => {
-                                            const studentName = e.target.value;
                                             const studentData = studentDetails[`${activeClass}-${studentName}`];
                                             const nis = studentData ? studentData.nis : prompt(`Masukkan NIS untuk ${studentName}:`);
                                             const tanggal = prompt(`Masukkan Tanggal Keluar untuk ${studentName} (misal: 10 Sep 2026):`, currentDateStr);
@@ -6733,10 +6764,11 @@
                                                 <th className="py-2 px-3 font-bold border-x border-red-200">Kelas</th>
                                                 <th className="py-2 px-3 font-bold border-x border-red-200">Tanggal</th>
                                                 <th className="py-2 px-3 font-bold border-x border-red-200">Keterangan</th>
+                                                <th className="py-2 px-3 font-bold border-x border-red-200 text-center">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {mutasiData.keluar.length === 0 ? <tr><td colSpan="6" className="text-center py-4 text-slate-400">Belum ada data siswa keluar</td></tr> : mutasiData.keluar.map((m, idx) => (
+                                            {mutasiData.keluar.length === 0 ? <tr><td colSpan="7" className="text-center py-4 text-slate-400">Belum ada data siswa keluar</td></tr> : mutasiData.keluar.map((m, idx) => (
                                                 <tr key={m.id} className="border-b border-red-100 hover:bg-red-50/50">
                                                     <td className="py-1.5 px-3 border-x border-red-100 text-center">{idx + 1}</td>
                                                     <td className="py-1.5 px-3 border-x border-red-100">{m.nis}</td>
@@ -6744,6 +6776,35 @@
                                                     <td className="py-1.5 px-3 border-x border-red-100 font-bold">{m.kelas}</td>
                                                     <td className="py-1.5 px-3 border-x border-red-100">{m.tanggal}</td>
                                                     <td className="py-1.5 px-3 border-x border-red-100 text-xs">{m.keterangan}</td>
+                                                    <td className="py-1.5 px-3 border-x border-red-100 text-center whitespace-nowrap">
+                                                        <button onClick={() => {
+                                                            executeWithAdmin(() => {
+                                                                const newNama = prompt('Edit Nama:', m.nama || m.name);
+                                                                if (!newNama) return;
+                                                                const newNis = prompt('Edit NIS:', m.nis);
+                                                                const newKelas = prompt('Edit Kelas:', m.kelas);
+                                                                const newTanggal = prompt('Edit Tanggal:', m.tanggal);
+                                                                const newKet = prompt('Edit Keterangan:', m.keterangan);
+                                                                
+                                                                const newMutasi = {...mutasiData};
+                                                                newMutasi.keluar = newMutasi.keluar.map(x => x.id === m.id ? {...x, nama: newNama, nis: newNis, kelas: newKelas, tanggal: newTanggal, keterangan: newKet} : x);
+                                                                setMutasiData(newMutasi);
+                                                                localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
+                                                                window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_mutasi: newMutasi } }));
+                                                            });
+                                                        }} className="text-xs bg-blue-500 text-white px-2 py-1 rounded mr-1">Edit</button>
+                                                        <button onClick={() => {
+                                                            executeWithAdmin(() => {
+                                                                if(confirm('Yakin hapus data keluar ini?')) {
+                                                                    const newMutasi = {...mutasiData};
+                                                                    newMutasi.keluar = newMutasi.keluar.filter(x => x.id !== m.id);
+                                                                    setMutasiData(newMutasi);
+                                                                    localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
+                                                                    window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_mutasi: newMutasi } }));
+                                                                }
+                                                            });
+                                                        }} className="text-xs bg-red-500 text-white px-2 py-1 rounded">Hapus</button>
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>

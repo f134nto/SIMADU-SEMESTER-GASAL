@@ -180,6 +180,114 @@
         const { useState, useEffect, useRef } = React;
 
         const STUDENTS_DETAIL_DATA = {
+    '7G': [
+      { name: 'Afiza Ifra Farzana', nis: '260000', gender: 'P' },
+      { name: 'Afnan Atma Purnama', nis: '260001', gender: 'P' },
+      { name: 'Ainun Cahya Oktafiani', nis: '260002', gender: 'P' },
+      { name: 'Albert Desta Anugrah', nis: '260003', gender: 'L' },
+      { name: 'Ardanu Gusti Kusuma', nis: '260004', gender: 'P' },
+      { name: 'Artha Karunia Nur Zaky', nis: '260005', gender: 'L' },
+      { name: 'Athifa Nur Inaya', nis: '260006', gender: 'P' },
+      { name: 'Briliant Syafi Qois', nis: '260007', gender: 'L' },
+      { name: 'Delita Zalfa Abidah', nis: '260008', gender: 'L' },
+      { name: 'Desta Pandu Pratama', nis: '260009', gender: 'P' },
+      { name: 'Dika Nagata Faishal', nis: '260010', gender: 'L' },
+      { name: 'Dina Azahra', nis: '260011', gender: 'P' },
+      { name: 'Erbina Yoan', nis: '260012', gender: 'L' },
+      { name: 'Fabian Damar P.', nis: '260013', gender: 'L' },
+      { name: 'Fadil Rizki Bahtiar', nis: '260014', gender: 'L' },
+      { name: 'Fattah Ilham Alfarizi', nis: '260015', gender: 'L' },
+      { name: 'Juan Adipati Pranata', nis: '260016', gender: 'L' },
+      { name: 'Kaka Riski Pratama', nis: '260017', gender: 'L' },
+      { name: 'Keisya Adha Maulana', nis: '260018', gender: 'P' },
+      { name: 'M.Faqi Nur Hidayat', nis: '260019', gender: 'L' },
+      { name: 'Marchella Angelica Bintoro', nis: '260020', gender: 'L' },
+      { name: 'Meynanda Karunia Putri', nis: '260021', gender: 'P' },
+      { name: 'Moza Pramono', nis: '260022', gender: 'L' },
+      { name: 'Muhammad Rasyid Aprillio', nis: '260023', gender: 'L' },
+      { name: 'Muhammad Revano Ardiansyah', nis: '260024', gender: 'L' },
+      { name: 'Nadhifa Marwaha', nis: '260025', gender: 'P' },
+      { name: 'Riffai Fajar Maulana', nis: '260026', gender: 'L' },
+      { name: 'Rizky Ardiansyah', nis: '260027', gender: 'L' },
+      { name: 'Syakila Aiko Radela', nis: '260028', gender: 'P' }
+    ],
+    '8G': [
+      { name: 'Adiba Safa Khoerul', nis: '260100', gender: 'L' },
+      { name: 'Adryan Gian Alamsyah', nis: '260101', gender: 'L' },
+      { name: 'Askha Alfatun Nisa', nis: '260102', gender: 'P' },
+      { name: 'Asyilla Fitri Ramadhani', nis: '260103', gender: 'P' },
+      { name: 'Ayu Dya Handayani', nis: '260104', gender: 'P' },
+      { name: 'Azril Dwi Setyawan', nis: '260105', gender: 'L' },
+      { name: 'Azzahra Diah Mahasetia', nis: '260106', gender: 'P' },
+      { name: 'Bagas Fikri Amannulloh', nis: '260107', gender: 'L' },
+      { name: 'Daylen Afandi', nis: '260108', gender: 'L' },
+      { name: 'Dhixria Nur Fitriana', nis: '260109', gender: 'P' },
+      { name: 'Disa Alviano Ananta', nis: '260110', gender: 'P' },
+      { name: 'Faeezah Nadira Putri', nis: '260111', gender: 'P' },
+      { name: 'Fani Ainum Maharani', nis: '260112', gender: 'P' },
+      { name: 'Farel Ibni Fawzan', nis: '260113', gender: 'L' },
+      { name: 'Fathimah Azahra', nis: '260114', gender: 'P' },
+      { name: 'Kafa Nizam Fahri', nis: '260115', gender: 'L' },
+      { name: 'Kaisha Lanang Adriansah', nis: '260116', gender: 'L' },
+      { name: 'Kavka Aditiya Arava', nis: '260117', gender: 'L' },
+      { name: 'Kevin Khoirul Azam', nis: '260118', gender: 'L' },
+      { name: 'Khansa Qonitah Hanania', nis: '260119', gender: 'P' },
+      { name: 'Marsya Sailla Anggraeni', nis: '260120', gender: 'P' },
+      { name: 'Merry Febriana Ratna Sari', nis: '260121', gender: 'P' },
+      { name: 'Muhamad Denis El Amin', nis: '260122', gender: 'L' },
+      { name: 'Muhammad Ali Almu\'Is', nis: '260123', gender: 'L' },
+      { name: 'Naufal Kurniawan', nis: '260124', gender: 'L' },
+      { name: 'Novara Dinda Wibawa', nis: '260125', gender: 'P' },
+      { name: 'Nur Firda Maulina', nis: '260126', gender: 'P' },
+      { name: 'Puguh Dwi Ridho Setia Nur Hidayat', nis: '260127', gender: 'L' },
+      { name: 'Putri Zakiyyah Sari', nis: '260128', gender: 'P' },
+      { name: 'Ravel Arva Aditya', nis: '260129', gender: 'L' },
+      { name: 'Relif Revano Putra', nis: '260130', gender: 'L' },
+      { name: 'Rizky Ramdhani', nis: '260131', gender: 'L' },
+      { name: 'Rizky Yuda Arkana', nis: '260132', gender: 'L' },
+      { name: 'Sarif Asman', nis: '260133', gender: 'L' },
+      { name: 'Xavi Exca Putra Cassami', nis: '260134', gender: 'L' },
+      { name: 'Zidan Akbar Saputra', nis: '260135', gender: 'L' }
+    ],
+    '9G': [
+      { name: 'Ahmad Rizky Waluyo', nis: '260200', gender: 'L' },
+      { name: 'Ahnaf Fadhli Ruliansyah', nis: '260201', gender: 'L' },
+      { name: 'Almira Zaza Aulia', nis: '260202', gender: 'P' },
+      { name: 'Anjali Helga Kayana', nis: '260203', gender: 'P' },
+      { name: 'Aqila Putri Amora', nis: '260204', gender: 'P' },
+      { name: 'Arfi Ariyanto', nis: '260205', gender: 'L' },
+      { name: 'Arif Ferdiansah', nis: '260206', gender: 'L' },
+      { name: 'Asyamsani Nibras', nis: '260207', gender: 'L' },
+      { name: 'Asysyifa Aulia Kurnia Mega', nis: '260208', gender: 'P' },
+      { name: 'Aynal Abdan Pratama', nis: '260209', gender: 'L' },
+      { name: 'Balqis Imanda Lovely', nis: '260210', gender: 'P' },
+      { name: 'Berlian Vanda Ladyska', nis: '260211', gender: 'P' },
+      { name: 'Bhanu Mu\'ammar', nis: '260212', gender: 'L' },
+      { name: 'Cahyani Putri Fatimah', nis: '260213', gender: 'P' },
+      { name: 'Cinta Calista', nis: '260214', gender: 'P' },
+      { name: 'Denita Alinzkia Putri', nis: '260215', gender: 'P' },
+      { name: 'Fadil Bayu Dwi Nugroho', nis: '260216', gender: 'L' },
+      { name: 'Fahri Khoirul Muzaki', nis: '260217', gender: 'L' },
+      { name: 'Fajri Khoerul Amri', nis: '260218', gender: 'L' },
+      { name: 'Fitri Anggraini', nis: '260219', gender: 'P' },
+      { name: 'Hadaya Lutvia Amalia', nis: '260220', gender: 'P' },
+      { name: 'Haikal Satria Syahputra', nis: '260221', gender: 'L' },
+      { name: 'Ikhsan Afandi', nis: '260222', gender: 'L' },
+      { name: 'Iqbal Nouval Zacky', nis: '260223', gender: 'L' },
+      { name: 'Isnaeni Wahyu Nurjanati', nis: '260224', gender: 'P' },
+      { name: 'Jeni Gustina', nis: '260225', gender: 'P' },
+      { name: 'Lita Egi Triana', nis: '260226', gender: 'P' },
+      { name: 'Muhamad Faizul Akbar', nis: '260227', gender: 'L' },
+      { name: 'Muhamad Hamid Kholilurrakhman', nis: '260228', gender: 'L' },
+      { name: 'Muhamad Wahyu Zulfikar', nis: '260229', gender: 'L' },
+      { name: 'Nadia Dinar Salsabila', nis: '260230', gender: 'P' },
+      { name: 'Nasywa Ramadan', nis: '260231', gender: 'L' },
+      { name: 'Nayla Claresta Putri', nis: '260232', gender: 'P' },
+      { name: 'Prasya Allif Firmansyah', nis: '260233', gender: 'L' },
+      { name: 'Rafael Arya Dwi Saputra', nis: '260234', gender: 'L' },
+      { name: 'Salsa Aprilia Suryani', nis: '260235', gender: 'P' },
+      { name: 'Vello Feronika Meysha Lovian', nis: '260236', gender: 'L' }
+    ],
   '9H': [
     { name: 'Akmalu Rifky', nis: '260257', gender: 'L' },
     { name: 'Aldian Putra Ramadhan', nis: '240291', gender: 'L' },
@@ -6511,11 +6619,34 @@
                                             if (!tanggal) return;
                                             const asalSekolah = prompt('Masukkan Asal Sekolah (misal: SDN 1 Wangon):');
                                             const keterangan = prompt('Masukkan Keterangan (Alasan pindah, dsb):');
+                                            const gender = prompt('Masukkan L/P:', 'L');
                                             
                                             const newMutasi = { ...mutasiData };
                                             newMutasi.masuk.push({ id: Date.now(), nis, nama, kelas, tanggal, asalSekolah: asalSekolah || '-', keterangan: keterangan || '-' });
+                                            
+                                            const newStudentsData = { ...studentsData };
+                                            if (!newStudentsData[kelas]) newStudentsData[kelas] = [];
+                                            if (!newStudentsData[kelas].includes(nama)) {
+                                                newStudentsData[kelas].push(nama);
+                                                newStudentsData[kelas].sort((a,b) => a.localeCompare(b));
+                                            }
+                                            
+                                            const newDetails = { ...studentDetails };
+                                            newDetails[`${kelas}-${nama}`] = { nis: nis || '-', gender: gender || 'L' };
+                                            
                                             setMutasiData(newMutasi);
+                                            setStudentsData(newStudentsData);
+                                            setStudentDetails(newDetails);
+                                            
                                             localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
+                                            
+                                            window.dispatchEvent(new CustomEvent('firebaseSync', { 
+                                                detail: { 
+                                                    jurnal_mutasi: newMutasi,
+                                                    jurnal_students: newStudentsData,
+                                                    jurnal_student_details: newDetails
+                                                } 
+                                            }));
                                         });
                                     }} className="px-3 py-1 bg-emerald-600 text-white hover:bg-emerald-700 rounded text-xs font-bold shadow-sm transition-colors">+ Siswa Masuk</button>
                                 </div>
@@ -6537,7 +6668,7 @@
                                                 <tr key={m.id} className="border-b border-emerald-100 hover:bg-emerald-50/50">
                                                     <td className="py-1.5 px-3 border-x border-emerald-100 text-center">{idx + 1}</td>
                                                     <td className="py-1.5 px-3 border-x border-emerald-100">{m.nis}</td>
-                                                    <td className="py-1.5 px-3 border-x border-emerald-100 font-semibold">{m.nama}</td>
+                                                    <td className="py-1.5 px-3 border-x border-emerald-100 font-semibold">{m.nama || m.name}</td>
                                                     <td className="py-1.5 px-3 border-x border-emerald-100 font-bold">{m.kelas}</td>
                                                     <td className="py-1.5 px-3 border-x border-emerald-100">{m.tanggal}</td>
                                                     <td className="py-1.5 px-3 border-x border-emerald-100 font-medium text-emerald-800">{m.asalSekolah || '-'}</td>
@@ -6565,8 +6696,27 @@
                                             
                                             const newMutasi = { ...mutasiData };
                                             newMutasi.keluar.push({ id: Date.now(), nis: nis || '-', nama: studentName, kelas: activeClass, tanggal, keterangan: keterangan || '-' });
+                                            
+                                            const newStudentsData = { ...studentsData };
+                                            if (newStudentsData[activeClass]) {
+                                                newStudentsData[activeClass] = newStudentsData[activeClass].filter(s => s !== studentName);
+                                            }
+                                            const newDetails = { ...studentDetails };
+                                            delete newDetails[`${activeClass}-${studentName}`];
+                                            
                                             setMutasiData(newMutasi);
+                                            setStudentsData(newStudentsData);
+                                            setStudentDetails(newDetails);
+                                            
                                             localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
+                                            
+                                            window.dispatchEvent(new CustomEvent('firebaseSync', { 
+                                                detail: { 
+                                                    jurnal_mutasi: newMutasi,
+                                                    jurnal_students: newStudentsData,
+                                                    jurnal_student_details: newDetails
+                                                } 
+                                            }));
                                         });
                                     }}>
                                         <option value="">+ Siswa Keluar</option>
@@ -6590,7 +6740,7 @@
                                                 <tr key={m.id} className="border-b border-red-100 hover:bg-red-50/50">
                                                     <td className="py-1.5 px-3 border-x border-red-100 text-center">{idx + 1}</td>
                                                     <td className="py-1.5 px-3 border-x border-red-100">{m.nis}</td>
-                                                    <td className="py-1.5 px-3 border-x border-red-100 font-semibold">{m.nama}</td>
+                                                    <td className="py-1.5 px-3 border-x border-red-100 font-semibold">{m.nama || m.name}</td>
                                                     <td className="py-1.5 px-3 border-x border-red-100 font-bold">{m.kelas}</td>
                                                     <td className="py-1.5 px-3 border-x border-red-100">{m.tanggal}</td>
                                                     <td className="py-1.5 px-3 border-x border-red-100 text-xs">{m.keterangan}</td>

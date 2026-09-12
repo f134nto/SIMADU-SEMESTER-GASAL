@@ -3787,7 +3787,7 @@
           const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
           const currentDateStr = today.toLocaleDateString('id-ID', options);
 
-          const currentStudents = studentsData[activeClass] || [];
+          const currentStudents = [...(studentsData[activeClass] || [])].sort((a, b) => a.localeCompare(b));
 
           const convertRomanClassToStandard = (roman) => {
               if (!roman) return '';
@@ -4032,7 +4032,7 @@
 
             const handleHapusSiswa = () => {
               executeWithAdmin(() => {
-                  const listSiswa = studentsData[activeClass] || [];
+                  const listSiswa = [...(studentsData[activeClass] || [])].sort((a, b) => a.localeCompare(b));
                   const previewList = listSiswa.slice(0, 10).join(', ') + (listSiswa.length > 10 ? '...' : '');
                   
                   setDialog({
@@ -6237,7 +6237,7 @@
                                 tableHtml += `<th style="padding: 8px; text-align: center;">L/P</th>`;
                                 tableHtml += `<th style="padding: 8px; text-align: center;">Kelas</th>`;
                                 tableHtml += `</tr></thead><tbody>`;
-                                (studentsData[activeClass] || []).forEach((student, idx) => {
+                                [...(studentsData[activeClass] || [])].sort((a, b) => a.localeCompare(b)).forEach((student, idx) => {
                                     const det = studentDetails[activeClass + '-' + student] || { nis: '-', gender: 'L' };
                                     tableHtml += `<tr>`;
                                     tableHtml += `<td style="padding: 4px 8px; text-align: center;">${idx + 1}</td>`;
@@ -6453,7 +6453,7 @@
                                     </tr>
                                 </thead>
                                                                                                 <tbody>
-                                    {(studentsData[activeClass] || []).map((student, idx) => {
+                                    {[...(studentsData[activeClass] || [])].sort((a, b) => a.localeCompare(b)).map((student, idx) => {
                                         const det = studentDetails[`${activeClass}-${student}`] || { nis: '-', gender: 'L' };
                                         const isEditing = editingStudentInfo && editingStudentInfo.originalName === student;
                                         
@@ -6490,30 +6490,46 @@
                                                                     newStudentsData[activeClass].sort((a,b) => a.localeCompare(b));
                                                                     delete newDetails[`${activeClass}-${originalName}`];
                                                                     
-                                                                    const newAttendance = { ...attendance };
-                                                                    Object.keys(newAttendance).forEach(k => {
-                                                                        if (k.includes(activeClass) && newAttendance[k][originalName] !== undefined) {
-                                                                            newAttendance[k][name.trim()] = newAttendance[k][originalName];
-                                                                            delete newAttendance[k][originalName];
-                                                                        }
-                                                                    });
+                                                                    const replaceKey = (obj, oldN, newN) => {
+                                                                        const newObj = {};
+                                                                        Object.keys(obj).forEach(k => {
+                                                                            if (k.startsWith(activeClass + '-')) {
+                                                                                if (k.endsWith('-' + oldN)) {
+                                                                                    newObj[k.slice(0, -(oldN.length)) + newN] = obj[k];
+                                                                                } else if (k.includes('-' + oldN + '-')) {
+                                                                                    newObj[k.replace('-' + oldN + '-', '-' + newN + '-')] = obj[k];
+                                                                                } else {
+                                                                                    newObj[k] = obj[k];
+                                                                                }
+                                                                            } else {
+                                                                                newObj[k] = obj[k];
+                                                                            }
+                                                                        });
+                                                                        return newObj;
+                                                                    };
+                                                                    
+                                                                    const newAttendance = replaceKey(attendance, originalName, name.trim());
                                                                     setAttendance(newAttendance);
                                                                     
-                                                                    const newGrades = { ...gradesData };
-                                                                    Object.keys(newGrades).forEach(k => {
-                                                                        if (k.startsWith(activeClass) && newGrades[k][originalName] !== undefined) {
-                                                                            newGrades[k][name.trim()] = newGrades[k][originalName];
-                                                                            delete newGrades[k][originalName];
-                                                                        }
-                                                                    });
+                                                                    const newAttendanceJurnal = replaceKey(attendanceJurnal, originalName, name.trim());
+                                                                    setAttendanceJurnal(newAttendanceJurnal);
+                                                                    
+                                                                    const newGrades = replaceKey(gradesData, originalName, name.trim());
                                                                     setGradesData(newGrades);
                                                                     
-                                                                    const newSavings = { ...savingsData };
-                                                                    if (newSavings[activeClass] && newSavings[activeClass][originalName] !== undefined) {
-                                                                        newSavings[activeClass][name.trim()] = newSavings[activeClass][originalName];
-                                                                        delete newSavings[activeClass][originalName];
-                                                                    }
+                                                                    const newSavings = replaceKey(savingsData, originalName, name.trim());
                                                                     setSavingsData(newSavings);
+                                                                    
+                                                                    setTimeout(() => {
+                                                                        window.dispatchEvent(new CustomEvent('firebaseSync', { 
+                                                                            detail: { 
+                                                                                jurnal_attendance: newAttendance,
+                                                                                jurnal_attendance_mengajar: newAttendanceJurnal,
+                                                                                jurnal_grades: newGrades,
+                                                                                jurnal_savings: newSavings
+                                                                            } 
+                                                                        }));
+                                                                    }, 500);
                                                                 }
                                                                 
                                                                 newDetails[`${activeClass}-${name.trim()}`] = { nis, gender };
@@ -6751,7 +6767,7 @@
                                         });
                                     }}>
                                         <option value="">+ Siswa Keluar</option>
-                                        {(studentsData[activeClass] || []).map(s => <option key={s} value={s}>{s}</option>)}
+                                        {[...(studentsData[activeClass] || [])].sort((a, b) => a.localeCompare(b)).map(s => <option key={s} value={s}>{s}</option>)}
                                     </select>
                                 </div>
                                 <div className="overflow-x-auto">
@@ -7393,3 +7409,4 @@
 </script>
 </body>
 </html>
+

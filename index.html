@@ -3691,7 +3691,7 @@
                     const [editingStudentInfo, setEditingStudentInfo] = useState(null);
           
                     const [dataSiswaTab, setDataSiswaTab] = useState('daftar'); 
-          const [filterTanggalMateri, setFilterTanggalMateri] = useState('Semua Tanggal');const [mutasiData, setMutasiData] = useState(() => {
+          const [filterTanggalMateri, setFilterTanggalMateri] = useState('Semua Tanggal');const [nisTerakhirData, setNisTerakhirData] = useState(() => { try { return JSON.parse(localStorage.getItem('jurnal_nis_terakhir')) || {}; } catch(e) { return {}; } }); const [mutasiData, setMutasiData] = useState(() => {
               try { return JSON.parse(localStorage.getItem('jurnal_mutasi')) || { masuk: [], keluar: [] }; } 
               catch(e) { return { masuk: [], keluar: [] }; }
           });
@@ -3769,7 +3769,7 @@
                   if (data.jurnal_savingsData) updateStateIfChanged(setSavingsData, data.jurnal_savingsData);
                   if (data.jurnal_agendaKelasData) updateStateIfChanged(setAgendaKelasData, data.jurnal_agendaKelasData);
                   if (data.jurnal_gradesData) updateStateIfChanged(setGradesData, data.jurnal_gradesData);
-                  if (data.jurnal_mutasi) updateStateIfChanged(setMutasiData, data.jurnal_mutasi);
+                  if (data.jurnal_mutasi) updateStateIfChanged(setMutasiData, data.jurnal_mutasi); if (data.jurnal_nis_terakhir) updateStateIfChanged(setNisTerakhirData, data.jurnal_nis_terakhir);
               };
               window.addEventListener('firebaseSync', handleSync);
               return () => window.removeEventListener('firebaseSync', handleSync);
@@ -6188,6 +6188,7 @@
                     <div className="flex gap-2 border-b border-slate-200 pb-2 print:hidden">
                         <button onClick={() => setDataSiswaTab('daftar')} className={`px-4 py-2 rounded-t-lg font-bold text-sm transition-all ${dataSiswaTab === 'daftar' ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Daftar Siswa</button>
                         <button onClick={() => setDataSiswaTab('mutasi')} className={`px-4 py-2 rounded-t-lg font-bold text-sm transition-all ${dataSiswaTab === 'mutasi' ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Mutasi Siswa</button>
+                        <button onClick={() => setDataSiswaTab('nis')} className={`px-4 py-2 rounded-t-lg font-bold text-sm transition-all ${dataSiswaTab === 'nis' ? 'bg-emerald-600 text-white shadow' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>Rekap NIS</button>
                     </div>
                     {dataSiswaTab === 'daftar' && (
                       <>
@@ -6829,6 +6830,92 @@
                             </div>
                         </div>
                     )}
+
+                    {dataSiswaTab === 'nis' && (
+                        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 space-y-6">
+                            <div className="flex justify-between items-center">
+                                <h2 className="text-lg font-black text-slate-800">Rekap NIS Terakhir</h2>
+                                <div className="flex gap-2">
+                                    <button onClick={() => {
+                                        executeWithAdmin(() => {
+                                            const kls = prompt('Masukkan Nama Kelas (misal: 7A):');
+                                            if (!kls) return;
+                                            const n = prompt('Masukkan NIS Terakhir:');
+                                            if (!n) return;
+                                            
+                                            let currentData = Array.isArray(nisTerakhirData) ? [...nisTerakhirData] : [];
+                                            currentData.push({ id: Date.now(), kelas: kls, nis: n });
+                                            setNisTerakhirData(currentData);
+                                            localStorage.setItem('jurnal_nis_terakhir', JSON.stringify(currentData));
+                                            window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_nis_terakhir: currentData } }));
+                                        });
+                                    }} className="px-3 py-1.5 bg-emerald-600 text-white hover:bg-emerald-700 rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+                                        + Tambah Data
+                                    </button>
+                                    <button onClick={() => {
+                                        executeWithAdmin(() => {
+                                            localStorage.setItem('jurnal_nis_terakhir', JSON.stringify(nisTerakhirData));
+                                            window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_nis_terakhir: nisTerakhirData } }));
+                                            alert('Data NIS Terakhir berhasil disimpan ke server!');
+                                        });
+                                    }} className="px-3 py-1.5 bg-yellow-500 text-white hover:bg-yellow-600 rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                                        Simpan
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-sm text-left border-collapse">
+                                    <thead>
+                                        <tr className="bg-emerald-50 text-emerald-900 border-y border-emerald-200">
+                                            <th className="py-2 px-3 font-bold border-x border-emerald-200 w-16 text-center">No</th>
+                                            <th className="py-2 px-3 font-bold border-x border-emerald-200">Nama Kelas</th>
+                                            <th className="py-2 px-3 font-bold border-x border-emerald-200">NIS Terakhir</th>
+                                            <th className="py-2 px-3 font-bold border-x border-emerald-200 w-32 text-center">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(!Array.isArray(nisTerakhirData) || nisTerakhirData.length === 0) ? (
+                                            <tr>
+                                                <td colSpan="4" className="text-center py-4 text-slate-400 font-medium">Belum ada data. Silakan + Tambah Data.</td>
+                                            </tr>
+                                        ) : nisTerakhirData.map((item, idx) => (
+                                            <tr key={item.id} className="border-b border-emerald-100 hover:bg-emerald-50/50">
+                                                <td className="py-1.5 px-3 border-x border-emerald-100 text-center font-medium">{idx + 1}</td>
+                                                <td className="py-1.5 px-3 border-x border-emerald-100 font-bold">{item.kelas}</td>
+                                                <td className="py-1.5 px-3 border-x border-emerald-100 font-semibold text-emerald-700">{item.nis}</td>
+                                                <td className="py-1.5 px-3 border-x border-emerald-100 text-center whitespace-nowrap">
+                                                    <button onClick={() => {
+                                                        executeWithAdmin(() => {
+                                                            const newKls = prompt('Edit Nama Kelas:', item.kelas);
+                                                            if (!newKls) return;
+                                                            const newNis = prompt('Edit NIS Terakhir:', item.nis);
+                                                            if (!newNis) return;
+                                                            
+                                                            const newData = nisTerakhirData.map(x => x.id === item.id ? { ...x, kelas: newKls, nis: newNis } : x);
+                                                            setNisTerakhirData(newData);
+                                                            localStorage.setItem('jurnal_nis_terakhir', JSON.stringify(newData));
+                                                            window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_nis_terakhir: newData } }));
+                                                        });
+                                                    }} className="text-xs bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded shadow-sm font-bold mr-1">Edit</button>
+                                                    <button onClick={() => {
+                                                        executeWithAdmin(() => {
+                                                            if (confirm('Yakin ingin menghapus data kelas ini?')) {
+                                                                const newData = nisTerakhirData.filter(x => x.id !== item.id);
+                                                                setNisTerakhirData(newData);
+                                                                localStorage.setItem('jurnal_nis_terakhir', JSON.stringify(newData));
+                                                                window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_nis_terakhir: newData } }));
+                                                            }
+                                                        });
+                                                    }} className="text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded shadow-sm font-bold">Hapus</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
                   </div>
                 )}
 
@@ -7409,4 +7496,5 @@
 </script>
 </body>
 </html>
+
 

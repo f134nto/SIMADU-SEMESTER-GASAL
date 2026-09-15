@@ -2483,23 +2483,7 @@
                 });
             };
 
-            const toggleAttendance = (student, day, isJurnal = false) => {
-            const key = `${activeClass}-${activeMonth}-${student}-${day}`;
-            const currentState = isJurnal ? attendanceJurnal : attendance;
-            const current = currentState[key];
-            let nextStatus = '';
-            if (!current) nextStatus = 'H';
-            else if (current === 'H') nextStatus = 'I';
-            else if (current === 'I') nextStatus = 'S';
-            else if (current === 'S') nextStatus = 'A';
-            else nextStatus = '';
-
-            if (isJurnal) {
-                setAttendanceJurnal(prev => ({ ...prev, [key]: nextStatus }));
-            } else {
-                setAttendance(prev => ({ ...prev, [key]: nextStatus }));
-            }
-          };
+            const toggleAttendance = (student, day, isJurnal = false) => { const key = `${activeClass}-${activeMonth}-${student}-${day}`; const updateStatus = (prev) => { const current = prev[key]; let nextStatus = ''; if (!current) nextStatus = 'H'; else if (current === 'H') nextStatus = 'I'; else if (current === 'I') nextStatus = 'S'; else if (current === 'S') nextStatus = 'A'; else nextStatus = ''; return { ...prev, [key]: nextStatus }; }; if (isJurnal) { setAttendanceJurnal(updateStatus); } else { setAttendance(updateStatus); } };
 
           const getRekap = (student, month = activeMonth, isJurnal = false) => {
             let rekap = { H: 0, I: 0, S: 0, A: 0 };
@@ -3710,7 +3694,7 @@
                                           }}
                                           className={`w-full h-10 sm:h-8 flex items-center justify-center text-xs transition-colors cursor-pointer select-none touch-manipulation ${bgClass} ${textClass}`}
                                         >
-                                          {status || '·'}
+                                          {status || '-'}
                                         </button>
                                       </td>
                                     );
@@ -5439,20 +5423,29 @@
                                                                           const val = e.target.value.trim();
                                                                           if(!val) return;
                                                                           let currentList = (record.absen || '').replace('NIHIL', '').split(',').map(s=>s.trim()).filter(Boolean);
-                                                                          if(!currentList.includes(val) && currentStudents.includes(val)) {
-                                                                              currentList.push(val);
-                                                                              handleChange('absen', currentList.join(', '));
+                                                                          
+                                                                          const studentName = currentStudents.find(s => s.toLowerCase() === val.toLowerCase());
+                                                                          if(studentName && !currentList.some(item => item.startsWith(studentName))) {
+                                                                              const ket = prompt(`Masukkan Keterangan untuk ${studentName} (S/I/A):`, 'A');
+                                                                              if (ket) {
+                                                                                  currentList.push(`${studentName} (${ket.toUpperCase()})`);
+                                                                                  handleChange('absen', currentList.join(', '));
+                                                                              }
                                                                           }
                                                                           e.target.value = '';
                                                                       }
                                                                   }}
                                                                   onChange={(e) => {
                                                                       const val = e.target.value.trim();
-                                                                      if(currentStudents.includes(val)) {
+                                                                      const studentName = currentStudents.find(s => s === val);
+                                                                      if(studentName) {
                                                                           let currentList = (record.absen || '').replace('NIHIL', '').split(',').map(s=>s.trim()).filter(Boolean);
-                                                                          if(!currentList.includes(val)) {
-                                                                              currentList.push(val);
-                                                                              handleChange('absen', currentList.join(', '));
+                                                                          if(!currentList.some(item => item.startsWith(studentName))) {
+                                                                              const ket = prompt(`Masukkan Keterangan untuk ${studentName} (S/I/A):`, 'A');
+                                                                              if (ket) {
+                                                                                  currentList.push(`${studentName} (${ket.toUpperCase()})`);
+                                                                                  handleChange('absen', currentList.join(', '));
+                                                                              }
                                                                           }
                                                                           e.target.value = '';
                                                                       }
@@ -5586,7 +5579,7 @@
                                         onClick={() => toggleAttendance(student, day, true)} 
                                         className={`w-full h-10 sm:h-8 flex items-center justify-center text-xs transition-colors cursor-pointer select-none touch-manipulation ${bgClass} ${textClass}`}
                                       >
-                                        {status || '·'}
+                                        {status || '-'}
                                       </button>
                                     </td>
                                   );
@@ -5882,6 +5875,11 @@
 </script>
 </body>
 </html>
+
+
+
+
+
 
 
 

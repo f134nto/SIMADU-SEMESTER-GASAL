@@ -4793,10 +4793,15 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                   </button>
                               </div>
                           </form>
-                      </div>
-                  </div>
-              );
-          };
+                        <datalist id="jadwal-guru-list">
+                    {TEACHERS_DATA.map(g => <option key={g.id} value={g.name} />)}
+                </datalist>
+                <datalist id="jadwal-mapel-list">
+                    {[...new Set(TEACHERS_DATA.map(t => t.subject).filter(Boolean))].map((m, idx) => <option key={idx} value={m} />)}
+                </datalist>              </div>
+            </div>
+          );
+        };
 
           if (!isAuthenticated) {
               const handleLoginSubmit = (e) => {
@@ -6392,10 +6397,15 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                             </tr>
                                         </tbody>
                                     </table>
-                                </div>
-                            </div>
-                        );
-                    })()}
+                                  <datalist id="jadwal-guru-list">
+                    {TEACHERS_DATA.map(g => <option key={g.id} value={g.name} />)}
+                </datalist>
+                <datalist id="jadwal-mapel-list">
+                    {[...new Set(TEACHERS_DATA.map(t => t.subject).filter(Boolean))].map((m, idx) => <option key={idx} value={m} />)}
+                </datalist>              </div>
+            </div>
+          );
+        })()}
 
                     {/* Detailed List */}
                     <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mt-8 print:mt-12">
@@ -7133,10 +7143,15 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
                                               Simpan Data
                                           </button>
-                                      </div>
-                                  </div>
-                              );
-                          });
+                                        <datalist id="jadwal-guru-list">
+                    {TEACHERS_DATA.map(g => <option key={g.id} value={g.name} />)}
+                </datalist>
+                <datalist id="jadwal-mapel-list">
+                    {[...new Set(TEACHERS_DATA.map(t => t.subject).filter(Boolean))].map((m, idx) => <option key={idx} value={m} />)}
+                </datalist>              </div>
+            </div>
+          );
+        });
                       })()}
                   </div>
                 )}
@@ -7374,9 +7389,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                         onChange={(e) => setSelectedJadwalTeacher(e.target.value)}
                                         className="w-full pl-9 pr-4 py-2 text-sm font-semibold rounded-lg border border-slate-300 bg-white text-slate-800 placeholder-slate-400 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all shadow-sm"
                                     />
-                                    <datalist id="jadwal-guru-list">
-                                        {TEACHERS_DATA.map(g => <option key={g.id} value={g.name} />)}
-                                    </datalist>
+                                    
                                 </div>
                             </div>
                         )}
@@ -7435,7 +7448,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                 
                                                 <td className="py-2 px-3">
                                                     {isEditingTeacherSchedule && !isBreak && viewJadwalMode === 'guru' ? (
-                                                        <input type="text" value={editingTeacherScheduleData[dayData.day] && editingTeacherScheduleData[dayData.day][row.mapelIndex] ? editingTeacherScheduleData[dayData.day][row.mapelIndex].mapel : ''} onChange={(e) => {
+                                                        <input type="text" list="jadwal-mapel-list" value={editingTeacherScheduleData[dayData.day] && editingTeacherScheduleData[dayData.day][row.mapelIndex] ? editingTeacherScheduleData[dayData.day][row.mapelIndex].mapel : ''} onChange={(e) => {
                                                             const newData = { ...editingTeacherScheduleData };
                                                             if (!newData[dayData.day]) newData[dayData.day] = [];
                                                             if (!newData[dayData.day][row.mapelIndex]) newData[dayData.day][row.mapelIndex] = {kelas: '-', mapel: '-'};
@@ -7444,22 +7457,30 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                         }} className="w-full border border-emerald-300 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold" placeholder="Mapel" />
                                                     ) : isEditingSchedule && !isBreak && viewJadwalMode === 'kelas' ? (
                                                         <div className="flex flex-col gap-1">
-                                                            <input type="text" value={editingScheduleData[dayData.day] && editingScheduleData[dayData.day][row.mapelIndex] ? editingScheduleData[dayData.day][row.mapelIndex].split('|')[0] : ''} onChange={(e) => {
+                                                            <select value={editingScheduleData[dayData.day] && editingScheduleData[dayData.day][row.mapelIndex] ? editingScheduleData[dayData.day][row.mapelIndex].split('|')[0] || '-' : '-'} onChange={(e) => {
                                                                 const newData = { ...editingScheduleData };
                                                                 if (!newData[dayData.day]) newData[dayData.day] = [];
                                                                 const currentStr = newData[dayData.day][row.mapelIndex] || '-|-';
                                                                 const parts = currentStr.split('|');
-                                                                newData[dayData.day][row.mapelIndex] = `${e.target.value}|${parts[1] || '-'}`;
+                                                                const newVal = e.target.value === '-' ? '' : e.target.value;
+                                                                newData[dayData.day][row.mapelIndex] = `${newVal}|${parts[1] || '-'}`;
                                                                 setEditingScheduleData(newData);
-                                                            }} className="w-full border border-emerald-300 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold" placeholder="Mapel" />
-                                                            <input type="text" list="jadwal-guru-list" value={editingScheduleData[dayData.day] && editingScheduleData[dayData.day][row.mapelIndex] ? editingScheduleData[dayData.day][row.mapelIndex].split('|')[1] : ''} onChange={(e) => {
+                                                            }} className="w-full border border-emerald-300 rounded px-1 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold bg-white text-slate-800">
+                                                                <option value="-">-Pilih Mapel-</option>
+                                                                {[...new Set(TEACHERS_DATA.map(t => t.subject).filter(Boolean))].map((m, idx) => <option key={idx} value={m}>{m}</option>)}
+                                                            </select>
+                                                            <select value={editingScheduleData[dayData.day] && editingScheduleData[dayData.day][row.mapelIndex] ? editingScheduleData[dayData.day][row.mapelIndex].split('|')[1] || '-' : '-'} onChange={(e) => {
                                                                 const newData = { ...editingScheduleData };
                                                                 if (!newData[dayData.day]) newData[dayData.day] = [];
                                                                 const currentStr = newData[dayData.day][row.mapelIndex] || '-|-';
                                                                 const parts = currentStr.split('|');
-                                                                newData[dayData.day][row.mapelIndex] = `${parts[0] || '-'}|${e.target.value}`;
+                                                                const newVal = e.target.value === '-' ? '' : e.target.value;
+                                                                newData[dayData.day][row.mapelIndex] = `${parts[0] || '-'}|${newVal}`;
                                                                 setEditingScheduleData(newData);
-                                                            }} className="w-full border border-emerald-200 rounded px-1.5 py-0.5 text-[10px] focus:outline-none focus:ring-1 focus:ring-emerald-500 text-emerald-700" placeholder="Guru" />
+                                                            }} className="w-full border border-emerald-200 rounded px-1 py-1 text-[10px] focus:outline-none focus:ring-1 focus:ring-emerald-500 text-emerald-700 bg-emerald-50">
+                                                                <option value="-">-Pilih Guru-</option>
+                                                                {TEACHERS_DATA.map(g => <option key={g.id} value={g.name}>{g.name}</option>)}
+                                                            </select>
                                                         </div>
                                                     ) : viewJadwalMode === 'kelas' ? (
                                                         <div className="flex flex-col">
@@ -7586,7 +7607,12 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                    </div>
                 )}
 
-              </div>
+                <datalist id="jadwal-guru-list">
+                    {TEACHERS_DATA.map(g => <option key={g.id} value={g.name} />)}
+                </datalist>
+                <datalist id="jadwal-mapel-list">
+                    {[...new Set(TEACHERS_DATA.map(t => t.subject).filter(Boolean))].map((m, idx) => <option key={idx} value={m} />)}
+                </datalist>              </div>
             </div>
           );
         }
@@ -7598,6 +7624,17 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
 
 
 

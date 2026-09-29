@@ -3423,8 +3423,14 @@
   }
 };
 
+        let EDITABLE_CLASS_SCHEDULES;
+        try {
+            let local = localStorage.getItem('jadwal_kelas');
+            EDITABLE_CLASS_SCHEDULES = local ? JSON.parse(local) : RAW_CLASS_SCHEDULES;
+        } catch(e) { EDITABLE_CLASS_SCHEDULES = RAW_CLASS_SCHEDULES; }
+
         const getScheduleForClass = (className) => {
-            const raw = RAW_CLASS_SCHEDULES[className];
+            const raw = EDITABLE_CLASS_SCHEDULES[className];
             if (!raw) return null; 
             
             const days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -3437,17 +3443,17 @@
                     if (['Break', 'MBG', 'Dhuhur', 'Pembiasaan', 'Literasi', 'Upc'].includes(slot.jam)) {
                         return { ...slot, mapel: '', guru: '' };
                     }
-                    if (raw[day] && mapelIndex < raw[day].length) {
-                        const cellData = raw[day][mapelIndex];
-                        mapelIndex++;
+                    const mIdx = mapelIndex; mapelIndex++;
+                    if (raw[day] && mIdx < raw[day].length) {
+                        const cellData = raw[day][mIdx];
                         if (cellData && cellData.includes('|')) {
                             const [mapel, guru] = cellData.split('|');
-                            return { ...slot, mapel, guru };
+                            return { ...slot, mapel, guru, mapelIndex: mIdx };
                         } else {
-                            return { ...slot, mapel: cellData || '-', guru: '-' };
+                            return { ...slot, mapel: cellData || '-', guru: '-', mapelIndex: mIdx };
                         }
                     }
-                    return { ...slot, mapel: '-', guru: '-' };
+                    return { ...slot, mapel: '-', guru: '-', mapelIndex: mIdx };
                 });
                 return { day, rows };
             });
@@ -3474,33 +3480,34 @@
                 const slots = TIME_SLOTS[day];
                 let mapelIndexCounter = 0;
                 
-                const teacherDayRows = slots.map((slot) => {
-                    if (['Break', 'MBG', 'Dhuhur', 'Pembiasaan', 'Literasi', 'Upc'].includes(slot.jam)) {
-                        return { ...slot, kelas: '', mapel: '' };
-                    }
-                    
-                    let foundKelas = '';
-                    let foundMapel = '';
-                    
-                    Object.keys(RAW_CLASS_SCHEDULES).forEach(cls => {
-                        const rawDay = RAW_CLASS_SCHEDULES[cls][day];
-                        if (rawDay && mapelIndexCounter < rawDay.length) {
-                            const cellData = rawDay[mapelIndexCounter];
-                            if (cellData && cellData.includes('|')) {
-                                const [mapel, guru] = cellData.split('|');
-                                // Pengecekan dinamis nama guru dengan ejaan bebas dan tanpa gelar
-                                if (guru && cleanName(guru) !== '' && (cleanName(guru) === targetClean || ( (cleanName(guru).includes(targetClean) || targetClean.includes(cleanName(guru))) && !(cleanName(guru) === 'ahlan' && targetClean.includes('ramadhenty')) && !(targetClean === 'ahlan' && cleanName(guru).includes('ramadhenty')) ))) {
-                                    foundKelas = cls;
-                                    foundMapel = mapel;
-                                }
-                            }
-                        }
-                    });
-                    
-                    mapelIndexCounter++; 
-                    
-                    return { ...slot, kelas: foundKelas || '-', mapel: foundMapel || '-' };
-                });
+                                  const teacherDayRows = slots.map((slot) => {
+                      if (['Break', 'MBG', 'Dhuhur', 'Pembiasaan', 'Literasi', 'Upc'].includes(slot.jam)) {
+                          return { ...slot, kelas: '', mapel: '' };
+                      }
+                      
+                      const mIdx = mapelIndexCounter;
+                      
+                      let foundKelas = '';
+                      let foundMapel = '';
+                      
+                      Object.keys(EDITABLE_CLASS_SCHEDULES).forEach(cls => {
+                          const rawDay = EDITABLE_CLASS_SCHEDULES[cls][day];
+                          if (rawDay && mIdx < rawDay.length) {
+                              const cellData = rawDay[mIdx];
+                              if (cellData && cellData.includes('|')) {
+                                  const [mapel, guru] = cellData.split('|');
+                                  if (guru && cleanName(guru) !== '' && (cleanName(guru) === targetClean || ( (cleanName(guru).includes(targetClean) || targetClean.includes(cleanName(guru))) && !(cleanName(guru) === 'ahlan' && targetClean.includes('ramadhenty')) && !(targetClean === 'ahlan' && cleanName(guru).includes('ramadhenty')) ))) {
+                                      foundKelas = cls;
+                                      foundMapel = mapel;
+                                  }
+                              }
+                          }
+                      });
+                      
+                      mapelIndexCounter++; 
+                      
+                      return { ...slot, kelas: foundKelas || '-', mapel: foundMapel || '-', mapelIndex: mIdx };
+                  });
                 
                 return { day, rows: teacherDayRows };
             });
@@ -3629,6 +3636,11 @@
           });
           const [currentClassSchedule, setCurrentClassSchedule] = useState([]);
           const [currentTeacherSchedule, setCurrentTeacherSchedule] = useState([]);
+          
+          const [isEditingSchedule, setIsEditingSchedule] = useState(false);
+const [isEditingTeacherSchedule, setIsEditingTeacherSchedule] = useState(false);
+const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({});
+          const [editingScheduleData, setEditingScheduleData] = useState({});
 
           const [searchQuery, setSearchQuery] = useState('');
           const [searchGuruQuery, setSearchGuruQuery] = useState(''); 
@@ -6987,7 +6999,7 @@
                                   const now = new Date();
                                   const currentMins = (now.getHours() * 60) + now.getMinutes();
                                   // Can only fill if current time is >= start time, and <= end time + 45 mins
-                                  return currentMins >= startMins && currentMins <= (endMins + 45);
+                                  return currentMins >= startMins && currentMins <= (endMins + 80);
                               } catch(e) {
                                   return true;
                               }
@@ -7021,7 +7033,7 @@
                                       <div className="p-4 flex flex-col gap-4">
                                           {!isEditable && (
                                               <div className="bg-amber-50 text-amber-800 text-xs font-bold p-3 rounded-lg border border-amber-200">
-                                                  🔒 Belum / Bukan Waktunya Mengisi. Formulir jurnal hanya bisa diisi dari saat jam pelajaran dimulai hingga 45 menit setelah jam selesai.
+                                                  🔒 Belum / Bukan Waktunya Mengisi. Formulir jurnal hanya bisa diisi dari saat jam pelajaran dimulai hingga 80 menit (2x40m) setelah jam selesai.
                                               </div>
                                           )}
                                           <div>
@@ -7256,7 +7268,58 @@
 
                         {viewJadwalMode === 'kelas' && (
                             <div className="w-full pt-3 border-t border-slate-100 flex flex-col gap-3">
-                                <span className="text-xs font-bold text-slate-700">Tampilkan Kelas:</span>
+                                <div className="flex justify-between items-center w-full mb-2">
+                                    <span className="text-xs font-bold text-slate-700">Tampilkan Kelas:</span>
+                                    <div>
+                                        {isEditingSchedule ? (
+                                            <div className="flex gap-2">
+                                                <button onClick={() => {
+                                                    setDialog({
+                                                        type: 'confirm',
+                                                        message: 'Simpan perubahan jadwal kelas ' + selectedJadwalClass + '?',
+                                                        onConfirm: () => {
+                                                            EDITABLE_CLASS_SCHEDULES[selectedJadwalClass] = editingScheduleData;
+                                                            localStorage.setItem('jadwal_kelas', JSON.stringify(EDITABLE_CLASS_SCHEDULES));
+                                                            setCurrentClassSchedule(getScheduleForClass(selectedJadwalClass));
+                                                            setIsEditingSchedule(false);
+                                                            setDialog(null);
+                                                            setTimeout(() => {
+                                                                window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jadwal_kelas: EDITABLE_CLASS_SCHEDULES } }));
+                                                            }, 500);
+                                                            alert('Jadwal berhasil disimpan!');
+                                                        },
+                                                        onCancel: () => setDialog(null)
+                                                    });
+                                                }} className="px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all bg-emerald-600 text-white hover:bg-emerald-700">Simpan Jadwal</button>
+                                                <button onClick={() => {
+                                                    setDialog({
+                                                        type: 'confirm',
+                                                        message: 'Batalkan perubahan dan keluar dari mode edit?',
+                                                        onConfirm: () => {
+                                                            setIsEditingSchedule(false);
+                                                            setEditingScheduleData({});
+                                                            setDialog(null);
+                                                        },
+                                                        onCancel: () => setDialog(null)
+                                                    });
+                                                }} className="px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all bg-slate-500 text-white hover:bg-slate-600">Batal</button>
+                                            </div>
+                                        ) : (
+                                            <button onClick={() => {
+                                                executeWithAdmin(() => {
+                                                    setIsEditingSchedule(true);
+                                                    const initial = {};
+                                                    if (EDITABLE_CLASS_SCHEDULES[selectedJadwalClass]) {
+                                                        Object.keys(EDITABLE_CLASS_SCHEDULES[selectedJadwalClass]).forEach(day => {
+                                                            initial[day] = [...EDITABLE_CLASS_SCHEDULES[selectedJadwalClass][day]];
+                                                        });
+                                                    }
+                                                    setEditingScheduleData(initial);
+                                                });
+                                            }} className="px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm transition-all bg-amber-500 text-white hover:bg-amber-600">Edit Jadwal</button>
+                                        )}
+                                    </div>
+                                </div>
                                 
                                 <div className="flex flex-col gap-2 w-full">
                                     <div className="flex flex-wrap gap-1.5">
@@ -7354,13 +7417,52 @@
                                               <td className="py-2 px-3 font-medium text-center">{row.jam}</td>
                                               <td className="py-2 px-2 text-center tracking-wider text-[10px]">{row.waktu}</td>
                                               
-                                              {viewJadwalMode === 'guru' && (
-                                                <td className="py-2 px-2 font-bold text-blue-600 text-center">{row.kelas === '-' ? '' : row.kelas}</td>
-                                              )}
-                                              
-                                              <td className="py-2 px-3">
-                                                  {viewJadwalMode === 'kelas' ? (
-                                                      <div className="flex flex-col">
+                                                                                              {viewJadwalMode === 'guru' && (
+                                                  <td className="py-2 px-2 font-bold text-blue-600 text-center">
+                                                    {isEditingTeacherSchedule && !isBreak ? (
+                                                        <input type="text" value={editingTeacherScheduleData[dayData.day] && editingTeacherScheduleData[dayData.day][row.mapelIndex] ? editingTeacherScheduleData[dayData.day][row.mapelIndex].kelas : ''} onChange={(e) => {
+                                                            const newData = { ...editingTeacherScheduleData };
+                                                            if (!newData[dayData.day]) newData[dayData.day] = [];
+                                                            if (!newData[dayData.day][row.mapelIndex]) newData[dayData.day][row.mapelIndex] = {kelas: '-', mapel: '-'};
+                                                            newData[dayData.day][row.mapelIndex].kelas = e.target.value;
+                                                            setEditingTeacherScheduleData(newData);
+                                                        }} className="w-full border border-blue-300 rounded px-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 text-center" placeholder="Kls" />
+                                                    ) : (
+                                                        row.kelas === '-' ? '' : row.kelas
+                                                    )}
+                                                  </td>
+                                                )}
+                                                
+                                                <td className="py-2 px-3">
+                                                    {isEditingTeacherSchedule && !isBreak && viewJadwalMode === 'guru' ? (
+                                                        <input type="text" value={editingTeacherScheduleData[dayData.day] && editingTeacherScheduleData[dayData.day][row.mapelIndex] ? editingTeacherScheduleData[dayData.day][row.mapelIndex].mapel : ''} onChange={(e) => {
+                                                            const newData = { ...editingTeacherScheduleData };
+                                                            if (!newData[dayData.day]) newData[dayData.day] = [];
+                                                            if (!newData[dayData.day][row.mapelIndex]) newData[dayData.day][row.mapelIndex] = {kelas: '-', mapel: '-'};
+                                                            newData[dayData.day][row.mapelIndex].mapel = e.target.value;
+                                                            setEditingTeacherScheduleData(newData);
+                                                        }} className="w-full border border-emerald-300 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold" placeholder="Mapel" />
+                                                    ) : isEditingSchedule && !isBreak && viewJadwalMode === 'kelas' ? (
+                                                        <div className="flex flex-col gap-1">
+                                                            <input type="text" value={editingScheduleData[dayData.day] && editingScheduleData[dayData.day][row.mapelIndex] ? editingScheduleData[dayData.day][row.mapelIndex].split('|')[0] : ''} onChange={(e) => {
+                                                                const newData = { ...editingScheduleData };
+                                                                if (!newData[dayData.day]) newData[dayData.day] = [];
+                                                                const currentStr = newData[dayData.day][row.mapelIndex] || '-|-';
+                                                                const parts = currentStr.split('|');
+                                                                newData[dayData.day][row.mapelIndex] = `${e.target.value}|${parts[1] || '-'}`;
+                                                                setEditingScheduleData(newData);
+                                                            }} className="w-full border border-emerald-300 rounded px-1.5 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 font-bold" placeholder="Mapel" />
+                                                            <input type="text" list="jadwal-guru-list" value={editingScheduleData[dayData.day] && editingScheduleData[dayData.day][row.mapelIndex] ? editingScheduleData[dayData.day][row.mapelIndex].split('|')[1] : ''} onChange={(e) => {
+                                                                const newData = { ...editingScheduleData };
+                                                                if (!newData[dayData.day]) newData[dayData.day] = [];
+                                                                const currentStr = newData[dayData.day][row.mapelIndex] || '-|-';
+                                                                const parts = currentStr.split('|');
+                                                                newData[dayData.day][row.mapelIndex] = `${parts[0] || '-'}|${e.target.value}`;
+                                                                setEditingScheduleData(newData);
+                                                            }} className="w-full border border-emerald-200 rounded px-1.5 py-0.5 text-[10px] focus:outline-none focus:ring-1 focus:ring-emerald-500 text-emerald-700" placeholder="Guru" />
+                                                        </div>
+                                                    ) : viewJadwalMode === 'kelas' ? (
+                                                        <div className="flex flex-col">
                                                           <span className={`font-bold ${hasData ? 'text-slate-800' : 'text-slate-300'}`}>{row.mapel === '-' ? '' : row.mapel}</span>
                                                           {hasData && <span className="text-[10px] text-emerald-600 font-medium">{row.guru}</span>}
                                                       </div>
@@ -7496,5 +7598,16 @@
 </script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
 
 

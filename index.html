@@ -132,7 +132,7 @@
   };
 
   localStorage.setItem = function(key, value) {
-      oldSetItem(key, value);
+      try { oldSetItem(key, value); } catch(e) { console.warn('LocalStorage limit reached', e); }
       if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
           if (key.startsWith('jurnal_')) {
               window.localUpdateInProgress = true;
@@ -7676,6 +7676,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
 </script>
 </body>
 </html>
+
 
 
 

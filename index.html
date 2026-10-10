@@ -3761,7 +3761,17 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
           useEffect(() => { localStorage.setItem('jurnal_classNotes', JSON.stringify(classNotes)); }, [classNotes]);
           useEffect(() => { localStorage.setItem('jurnal_savingsData', JSON.stringify(savingsData)); }, [savingsData]);
           useEffect(() => { localStorage.setItem('jurnal_agendaKelasData', JSON.stringify(agendaKelasData)); }, [agendaKelasData]);
-          useEffect(() => { localStorage.setItem('jurnal_gradesData', JSON.stringify(gradesData)); }, [gradesData]);
+          useEffect(() => { 
+    localStorage.setItem('jurnal_gradesData', JSON.stringify(gradesData));
+    if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
+        window.localUpdateInProgress = true;
+        clearTimeout(window.gradesSyncTimeout);
+        window.gradesSyncTimeout = setTimeout(() => {
+            try { window.db.ref('simadu_data_v2/jurnal_gradesData').set(JSON.stringify(gradesData)); } catch(e) {}
+            setTimeout(() => { window.localUpdateInProgress = false; }, 500);
+        }, 800);
+    }
+}, [gradesData]);
 
                     useEffect(() => {
               const handleSync = (e) => {
@@ -4243,6 +4253,33 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
               });
           };
 
+          const handleGradeKeyDown = (e, rowIdx, colIdx) => {
+              let nextRow = rowIdx;
+              let nextCol = colIdx;
+
+              if (e.key === 'ArrowUp') {
+                  nextRow = Math.max(0, rowIdx - 1);
+                  e.preventDefault();
+              } else if (e.key === 'ArrowDown' || e.key === 'Enter') {
+                  nextRow = Math.min(currentStudents.length - 1, rowIdx + 1);
+                  e.preventDefault();
+              } else if (e.key === 'ArrowLeft') {
+                  nextCol = Math.max(0, colIdx - 1);
+                  e.preventDefault();
+              } else if (e.key === 'ArrowRight') {
+                  nextCol = Math.min(6, colIdx + 1);
+                  e.preventDefault();
+              } else {
+                  return;
+              }
+
+              const nextInput = document.querySelector(`input[data-grade-row="${nextRow}"][data-grade-col="${nextCol}"]`);
+              if (nextInput) {
+                  nextInput.focus();
+                  setTimeout(() => nextInput.select(), 0);
+              }
+          };
+
           const calculateGrades = (student, customKey = null) => {
               const key = customKey || `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
               const data = gradesData[key] || {};
@@ -4404,6 +4441,11 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
             if (isSyncing) return;
             setIsSyncing(true);
             setSyncStatus('Sabar Kirim Data Nilai......');
+            
+            // Force save to Firebase immediately
+            if (window.firebaseLoaded && window.db) {
+                try { await window.db.ref('simadu_data_v2/jurnal_gradesData').set(JSON.stringify(gradesData)); } catch(e) {}
+            }
 
             let headers = ["No", "Nama Siswa", "S1", "S2", "S3", "S4", "S5", "ASTS", "Jml", "Rata2", "80%", "ASAS", "20%", "Nilai Akhir"];
             let rows = [];
@@ -5462,12 +5504,15 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                               <td className="py-2 px-3 text-center font-semibold text-slate-800 bg-white">{idx + 1}</td>
                                               <td className="py-2 px-3 font-bold text-slate-900 bg-white text-left">{student}</td>
                                               
-                                              {['s1', 's2', 's3', 's4', 's5'].map(field => (
+                                              {['s1', 's2', 's3', 's4', 's5'].map((field, fieldIdx) => (
                                                   <td key={field} className="py-1 px-1 border border-slate-300">
                                                       <input 
                                                           type="number"
                                                           defaultValue={data[field] || ''} 
                                                           onBlur={(e) => handleGradeChange(student, field, e.target.value)}
+                                                          onKeyDown={(e) => handleGradeKeyDown(e, idx, fieldIdx)}
+                                                          data-grade-row={idx}
+                                                          data-grade-col={fieldIdx}
                                                           className="w-full px-1 py-1.5 border border-slate-200 rounded text-center text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs font-semibold"
                                                       />
                                                   </td>
@@ -5477,6 +5522,9 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                       type="number"
                                                       defaultValue={data.asts || ''} 
                                                       onBlur={(e) => handleGradeChange(student, 'asts', e.target.value)}
+                                                      onKeyDown={(e) => handleGradeKeyDown(e, idx, 5)}
+                                                      data-grade-row={idx}
+                                                      data-grade-col={5}
                                                       className="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-slate-800 font-bold focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 text-xs bg-white"
                                                   />
                                               </td>
@@ -5485,6 +5533,9 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                       type="number"
                                                       defaultValue={data.asas || ''} 
                                                       onBlur={(e) => handleGradeChange(student, 'asas', e.target.value)}
+                                                      onKeyDown={(e) => handleGradeKeyDown(e, idx, 6)}
+                                                      data-grade-row={idx}
+                                                      data-grade-col={6}
                                                       className="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-slate-800 font-bold focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 text-xs bg-white"
                                                   />
                                               </td>
@@ -7625,6 +7676,10 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
 </script>
 </body>
 </html>
+
+
+
+
 
 
 

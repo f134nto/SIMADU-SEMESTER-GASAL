@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -132,7 +132,7 @@
   };
 
   localStorage.setItem = function(key, value) {
-      oldSetItem(key, value);
+      try { oldSetItem(key, value); } catch(e) { console.warn('LocalStorage limit reached', e); }
       if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
           if (key.startsWith('jurnal_')) {
               window.localUpdateInProgress = true;
@@ -3704,10 +3704,26 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                     const [editingStudentInfo, setEditingStudentInfo] = useState(null);
           
                     const [dataSiswaTab, setDataSiswaTab] = useState('daftar'); 
-          const [filterTanggalMateri, setFilterTanggalMateri] = useState('Semua Tanggal');const [nisTerakhirData, setNisTerakhirData] = useState(() => { try { return JSON.parse(localStorage.getItem('jurnal_nis_terakhir')) || {}; } catch(e) { return {}; } }); const [mutasiData, setMutasiData] = useState(() => {
+          const [filterTanggalMateri, setFilterTanggalMateri] = useState('Semua Tanggal');
+          const [nisTerakhirData, setNisTerakhirData] = useState(() => { try { return JSON.parse(localStorage.getItem('jurnal_nis_terakhir')) || {}; } catch(e) { return {}; } }); 
+          const [mutasiData, setMutasiData] = useState(() => {
               try { return JSON.parse(localStorage.getItem('jurnal_mutasi')) || { masuk: [], keluar: [] }; } 
               catch(e) { return { masuk: [], keluar: [] }; }
           });
+          
+          useEffect(() => { 
+              localStorage.setItem('jurnal_nis_terakhir', JSON.stringify(nisTerakhirData));
+              if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
+                  try { window.db.ref('simadu_data_v2/jurnal_nis_terakhir').set(JSON.stringify(nisTerakhirData)); } catch(e) {}
+              }
+          }, [nisTerakhirData]);
+
+          useEffect(() => { 
+              localStorage.setItem('jurnal_mutasi', JSON.stringify(mutasiData));
+              if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
+                  try { window.db.ref('simadu_data_v2/jurnal_mutasi').set(JSON.stringify(mutasiData)); } catch(e) {}
+              }
+          }, [mutasiData]);
           const [editingJurnal, setEditingJurnal] = useState(null);
 
           const scriptUrl = "https://script.google.com/macros/s/AKfycbxKrPzQ8o0XD6vlg1t0AIt8_-Y4fUAOgA-pwTdtPwqcpp2uDRo9IgPHFfJ_Sl0bsByg1Q/exec";
@@ -3962,6 +3978,9 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                             for (let key in data) {
                                 if (key.startsWith('jurnal_')) {
                                     localStorage.setItem(key, data[key]);
+                                    if (window.firebaseLoaded && window.db) {
+                                        try { window.db.ref('simadu_data_v2/' + key).set(data[key]); } catch(e) {}
+                                    }
                                     restoredCount++;
                                 }
                             }
@@ -7676,6 +7695,10 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
 </script>
 </body>
 </html>
+
+
+
+
 
 
 

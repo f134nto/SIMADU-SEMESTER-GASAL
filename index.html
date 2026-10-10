@@ -5508,8 +5508,8 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                   <td key={field} className="py-1 px-1 border border-slate-300">
                                                       <input 
                                                           type="number"
-                                                          defaultValue={data[field] || ''} 
-                                                          onBlur={(e) => handleGradeChange(student, field, e.target.value)}
+                                                          value={data[field] || ''} 
+                                                          onChange={(e) => handleGradeChange(student, field, e.target.value)}
                                                           onKeyDown={(e) => handleGradeKeyDown(e, idx, fieldIdx)}
                                                           data-grade-row={idx}
                                                           data-grade-col={fieldIdx}
@@ -5520,8 +5520,8 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                               <td className="py-1 px-1 border border-slate-300 bg-[#f1f8eb]">
                                                   <input 
                                                       type="number"
-                                                      defaultValue={data.asts || ''} 
-                                                      onBlur={(e) => handleGradeChange(student, 'asts', e.target.value)}
+                                                      value={data.asts || ''} 
+                                                      onChange={(e) => handleGradeChange(student, 'asts', e.target.value)}
                                                       onKeyDown={(e) => handleGradeKeyDown(e, idx, 5)}
                                                       data-grade-row={idx}
                                                       data-grade-col={5}
@@ -5531,8 +5531,8 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                               <td className="py-1 px-1 border border-slate-300 bg-[#f1f8eb]">
                                                   <input 
                                                       type="number"
-                                                      defaultValue={data.asas || ''} 
-                                                      onBlur={(e) => handleGradeChange(student, 'asas', e.target.value)}
+                                                      value={data.asas || ''} 
+                                                      onChange={(e) => handleGradeChange(student, 'asas', e.target.value)}
                                                       onKeyDown={(e) => handleGradeKeyDown(e, idx, 6)}
                                                       data-grade-row={idx}
                                                       data-grade-col={6}
@@ -7676,6 +7676,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
 </script>
 </body>
 </html>
+
 
 
 

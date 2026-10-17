@@ -107,6 +107,25 @@
           border: none !important;
           z-index: 9999999 !important;
       }
+      body.printing-jurnal-materi-doc * {
+          visibility: hidden !important;
+      }
+      body.printing-jurnal-materi-doc #jurnal-materi-print-area,
+      body.printing-jurnal-materi-doc #jurnal-materi-print-area * {
+          visibility: visible !important;
+      }
+      body.printing-jurnal-materi-doc #jurnal-materi-print-area {
+          position: fixed !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 10mm 15mm !important;
+          background: white !important;
+          box-shadow: none !important;
+          border: none !important;
+          z-index: 9999999 !important;
+      }
   }
 </style>
 </head>
@@ -4068,6 +4087,9 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
           
                     const [dataSiswaTab, setDataSiswaTab] = useState('daftar'); 
           const [filterTanggalMateri, setFilterTanggalMateri] = useState('Semua Tanggal');
+          const [filterBulanMateri, setFilterBulanMateri] = useState('Semua Bulan');
+          const [searchMateriQuery, setSearchMateriQuery] = useState('');
+          const [isPrintingJurnalMateri, setIsPrintingJurnalMateri] = useState(false);
           const [nisTerakhirData, setNisTerakhirData] = useState(() => { try { return JSON.parse(localStorage.getItem('jurnal_nis_terakhir')) || {}; } catch(e) { return {}; } }); 
           const [mutasiData, setMutasiData] = useState(() => {
               try { return JSON.parse(localStorage.getItem('jurnal_mutasi')) || { masuk: [], keluar: [] }; } 
@@ -5840,28 +5862,93 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
             document.body.removeChild(link);
           };
 
-          const getJurnalEntries = () => {
+          const getSessionCountsByMonth = () => {
+              const counts = {};
+              REKAP_MONTHS.forEach(m => {
+                  counts[m] = 0;
+                  const days = getDaysInMonth(m);
+                  days.forEach(d => {
+                      const note = classNotes[`${activeClass}-${m}-${d}-materi`];
+                      const mapel = classNotes[`${activeClass}-${m}-${d}-mapel`];
+                      let hasAtt = false;
+                      for (let s of currentStudents) {
+                          if (attendanceJurnal[`${activeClass}-${m}-${s}-${d}`]) {
+                              hasAtt = true;
+                              break;
+                          }
+                      }
+                      if ((note && note.trim() !== '') || (mapel && mapel.trim() !== '') || hasAtt) {
+                          counts[m]++;
+                      }
+                  });
+              });
+              return counts;
+          };
+
+          const getJurnalEntries = (filterMonth = filterBulanMateri, filterDay = filterTanggalMateri, searchQuery = searchMateriQuery) => {
               let entries = [];
-              REKAP_MONTHS.forEach(month => {
+              const monthsToScan = (filterMonth && filterMonth !== 'Semua Bulan') ? [filterMonth] : REKAP_MONTHS;
+              
+              const teacherMapels = typeof getTeacherMapelsForClass === 'function' ? getTeacherMapelsForClass(loggedInUser, activeClass) : [];
+              const defaultMapel = teacherMapels.length > 0 ? teacherMapels[0] : 'INFORMATIKA';
+
+              monthsToScan.forEach(month => {
                   const days = getDaysInMonth(month);
-                  days.forEach(day => {
-                      const note = classNotes[`${activeClass}-${month}-${day}-materi`];
-                      if (note && note.trim() !== '') {
-                          let absentees = [];
-                          let counts = { H: 0, I: 0, S: 0, A: 0 };
+                  const daysToScan = (filterDay && filterDay !== 'Semua Tanggal') 
+                      ? days.filter(d => String(d) === String(filterDay))
+                      : days;
 
-                          currentStudents.forEach(student => {
-                              const status = attendanceJurnal[`${activeClass}-${month}-${student}-${day}`];
-                              if (status) {
-                                  counts[status]++;
-                              }
-                              if (status === 'S' || status === 'I' || status === 'A') {
-                                  absentees.push(`${student} (${status})`);
-                              }
-                          });
+                  daysToScan.forEach(day => {
+                      const note = classNotes[`${activeClass}-${month}-${day}-materi`] || '';
+                      const mapelVal = classNotes[`${activeClass}-${month}-${day}-mapel`] || '';
+                      
+                      let absentees = [];
+                      let counts = { H: 0, I: 0, S: 0, A: 0 };
+
+                      currentStudents.forEach(student => {
+                          const status = attendanceJurnal[`${activeClass}-${month}-${student}-${day}`];
+                          if (status && counts[status] !== undefined) {
+                              counts[status]++;
+                          }
+                          if (status === 'S' || status === 'I' || status === 'A') {
+                              absentees.push(`${student} (${status})`);
+                          }
+                      });
+
+                      const hasMateri = note && note.trim() !== '';
+                      const hasMapel = mapelVal && mapelVal.trim() !== '';
+                      const hasAttendance = (counts.H + counts.I + counts.S + counts.A) > 0;
+
+                      if (hasMateri || hasMapel || hasAttendance) {
                           const absenteesText = absentees.length > 0 ? absentees.join(', ') : '-';
+                          const finalMapel = hasMapel ? mapelVal.trim() : defaultMapel;
+                          const finalNote = hasMateri ? note.trim() : '(Belum ada catatan materi)';
 
-                          entries.push({ month, day, note, absentees: absenteesText, counts });
+                          const entry = {
+                              month,
+                              day,
+                              mapel: finalMapel,
+                              note: finalNote,
+                              absentees: absenteesText,
+                              counts,
+                              hasAttendance,
+                              hasMateri,
+                              hasMapel
+                          };
+
+                          if (searchQuery && searchQuery.trim() !== '') {
+                              const q = searchQuery.toLowerCase().trim();
+                              const match = (
+                                  entry.mapel.toLowerCase().includes(q) ||
+                                  entry.note.toLowerCase().includes(q) ||
+                                  entry.month.toLowerCase().includes(q) ||
+                                  `tgl ${entry.day}`.toLowerCase().includes(q) ||
+                                  entry.absentees.toLowerCase().includes(q)
+                              );
+                              if (match) entries.push(entry);
+                          } else {
+                              entries.push(entry);
+                          }
                       }
                   });
               });
@@ -5869,24 +5956,42 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
           };
 
           const handleExportRekapJurnalCSV = () => {
-              let csvContent = "\uFEFFREKAPITULASI JURNAL MENGAJAR SEMESTER GANJIL KELAS " + activeClass + "\n\n";
-              csvContent += "No;Bulan;Tanggal;Materi Pokok / Sub Pokok Bahasan;H;I;S;A;Siswa Tidak Hadir Keterangan\n";
+              let csvContent = "\uFEFFREKAPITULASI JURNAL MENGAJAR SEMESTER GANJIL KELAS " + activeClass + "\n";
+              if (filterBulanMateri !== 'Semua Bulan') {
+                  csvContent += `Filter Bulan: ${filterBulanMateri}\n`;
+              }
+              if (filterTanggalMateri !== 'Semua Tanggal') {
+                  csvContent += `Filter Tanggal: Tgl ${filterTanggalMateri}\n`;
+              }
+              csvContent += "\n";
+              csvContent += "No;Bulan;Tanggal;Mata Pelajaran;Materi Pokok / Sub Pokok Bahasan;H;I;S;A;Siswa Tidak Hadir Keterangan\n";
 
-              const entries = getJurnalEntries();
+              const entries = getJurnalEntries(filterBulanMateri, filterTanggalMateri, searchMateriQuery);
               entries.forEach((entry, idx) => {
-                  const safeNote = `"${entry.note.replace(/"/g, '""')}"`; 
-                  const safeAbsentees = `"${entry.absentees.replace(/"/g, '""')}"`;
-                  csvContent += `${idx + 1};${entry.month};Tgl ${entry.day};${safeNote};${entry.counts.H};${entry.counts.I};${entry.counts.S};${entry.counts.A};${safeAbsentees}\n`;
+                  const safeMapel = `"${(entry.mapel || '').replace(/"/g, '""')}"`;
+                  const safeNote = `"${(entry.note || '').replace(/"/g, '""')}"`; 
+                  const safeAbsentees = `"${(entry.absentees || '').replace(/"/g, '""')}"`;
+                  csvContent += `${idx + 1};${entry.month};Tgl ${entry.day};${safeMapel};${safeNote};${entry.counts.H};${entry.counts.I};${entry.counts.S};${entry.counts.A};${safeAbsentees}\n`;
               });
 
               const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
               const url = URL.createObjectURL(blob);
               const link = document.createElement('a');
               link.setAttribute('href', url);
-              link.setAttribute('download', `Rekap_Jurnal_Mengajar_Kelas_${activeClass}.csv`);
+              const suffixMonth = filterBulanMateri !== 'Semua Bulan' ? `_${filterBulanMateri}` : '';
+              const suffixDay = filterTanggalMateri !== 'Semua Tanggal' ? `_Tgl${filterTanggalMateri}` : '';
+              link.setAttribute('download', `Rekap_Jurnal_Mengajar_Kelas_${activeClass}${suffixMonth}${suffixDay}.csv`);
               document.body.appendChild(link);
               link.click();
               document.body.removeChild(link);
+          };
+
+          const handlePrintJurnalMateri = () => {
+              document.body.classList.add('printing-jurnal-materi-doc');
+              window.print();
+              setTimeout(() => {
+                  document.body.classList.remove('printing-jurnal-materi-doc');
+              }, 1500);
           };
 
           const getAgendaKelasEntries = () => {
@@ -6943,71 +7048,457 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                     )}
 
                     {/* 3. Rekap Materi Jurnal Mengajar Card */}
-                    {activeReportTab === 'jurnal_materi' && (
+                    {activeReportTab === 'jurnal_materi' && (() => {
+                        const monthSessionCounts = getSessionCountsByMonth();
+                        const totalSemesterSessions = Object.values(monthSessionCounts).reduce((acc, c) => acc + c, 0);
+                        const displayedEntries = getJurnalEntries(filterBulanMateri, filterTanggalMateri, searchMateriQuery);
+                        
+                        let sumH = 0, sumI = 0, sumS = 0, sumA = 0;
+                        displayedEntries.forEach(e => {
+                            sumH += (e.counts.H || 0);
+                            sumI += (e.counts.I || 0);
+                            sumS += (e.counts.S || 0);
+                            sumA += (e.counts.A || 0);
+                        });
+
+                        const ALL_CLASSES_LIST = ['7A', '7B', '7C', '7D', '7E', '7F', '7G', '7H', '8A', '8B', '8C', '8D', '8E', '8F', '8G', '8H', '8I', '8J', '9A', '9B', '9C', '9D', '9E', '9F', '9G', '9H', '9I', '9J', '9K'];
+
+                        return (
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
-                          <div className="bg-[#A5C8E4] border-b border-[#8fb3ce] p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-                                                        <div className="text-center sm:text-left">
-                              <h2 className="text-lg font-black text-slate-900 tracking-wide uppercase">REKAPITULASI MATERI JURNAL MENGAJAR KELAS {activeClass}</h2>
-                              <p className="text-sm font-semibold text-slate-800">DATA JURNAL MENGAJAR GURU &bull; SEMESTER GANJIL TAHUN AJARAN 2026/2027</p>
+                          {/* Card Header */}
+                          <div className="bg-[#A5C8E4] border-b border-[#8fb3ce] p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="p-1.5 bg-white/80 rounded-lg text-slate-800 shadow-2xs">📝</span>
+                                <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-wide uppercase">REKAPITULASI JURNAL &amp; MATERI MENGAJAR</h2>
+                                <span className="bg-[#4a728f] text-white text-xs font-black px-2.5 py-0.5 rounded-full shadow-xs">
+                                  Kelas {activeClass}
+                                </span>
+                              </div>
+                              <p className="text-xs sm:text-sm font-semibold text-slate-800 mt-1">
+                                DATA JURNAL MENGAJAR GURU &bull; SEMESTER GANJIL TAHUN AJARAN 2026/2027
+                              </p>
                             </div>
-                            <div className="flex gap-2 items-center">
-                                <select className="px-3 py-1.5 rounded-lg border border-[#8fb3ce] bg-white text-xs font-bold text-slate-700" value={filterTanggalMateri} onChange={(e) => setFilterTanggalMateri(e.target.value)}>
-                                    <option value="Semua Tanggal">Semua Tanggal</option>
-                                    {[...Array(31)].map((_, i) => <option key={i+1} value={i+1}>Tgl {i+1}</option>)}
-                                </select>
-                                <button type="button" onClick={handleExportRekapJurnalCSV} className="px-4 py-2 bg-white/90 hover:bg-white text-slate-800 font-bold rounded-lg text-xs shadow-sm transition-all border border-[#8fb3ce]">
+
+                            {/* Top Bar Action Controls */}
+                            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+                                {/* Ganti Kelas Dropdown */}
+                                <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-lg border border-[#8fb3ce] shadow-2xs">
+                                    <span className="text-[11px] font-bold text-slate-600">Kelas:</span>
+                                    <select 
+                                        className="bg-transparent text-xs font-black text-slate-900 outline-none cursor-pointer"
+                                        value={activeClass}
+                                        onChange={(e) => setActiveClass(e.target.value)}
+                                    >
+                                        {ALL_CLASSES_LIST.map(cls => (
+                                            <option key={cls} value={cls}>Kelas {cls}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Unduh CSV */}
+                                <button 
+                                    type="button" 
+                                    onClick={handleExportRekapJurnalCSV} 
+                                    className="px-3.5 py-1.5 bg-white hover:bg-slate-50 text-slate-800 font-bold rounded-lg text-xs shadow-2xs transition-all border border-[#8fb3ce] flex items-center gap-1.5 cursor-pointer"
+                                    title="Unduh data sesuai filter ke format CSV"
+                                >
+                                    <svg className="w-3.5 h-3.5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                                     Unduh CSV
+                                </button>
+
+                                {/* Cetak / Print PDF */}
+                                <button 
+                                    type="button" 
+                                    onClick={() => setIsPrintingJurnalMateri(true)} 
+                                    className="px-3.5 py-1.5 bg-[#365975] hover:bg-[#2b475e] text-white font-bold rounded-lg text-xs shadow-2xs transition-all flex items-center gap-1.5 cursor-pointer"
+                                    title="Buka pratinjau cetak resmi dan unduh PDF"
+                                >
+                                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                    Cetak PDF
                                 </button>
                             </div>
                           </div>
-                          <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '50vh' }}>
+
+                          {/* Interactive Filter Subbar (Bulan & Tanggal) */}
+                          <div className="bg-[#f0f6fa] border-b border-slate-200 p-3 sm:px-4 flex flex-col gap-3">
+                            {/* Baris 1: Filter Bulan Cepat (Pill Buttons) */}
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="text-[11px] font-black text-slate-700 uppercase tracking-wide mr-1 flex items-center gap-1">
+                                    <svg className="w-3.5 h-3.5 text-[#4a728f]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                    Bulan:
+                                </span>
+                                <button
+                                    type="button"
+                                    onClick={() => { setFilterBulanMateri('Semua Bulan'); setFilterTanggalMateri('Semua Tanggal'); }}
+                                    className={`px-3 py-1 rounded-full text-xs font-bold transition-all border ${filterBulanMateri === 'Semua Bulan' ? 'bg-[#365975] text-white border-[#365975] shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400 hover:bg-slate-50'}`}
+                                >
+                                    Semua Bulan ({totalSemesterSessions})
+                                </button>
+                                {REKAP_MONTHS.map(m => {
+                                    const cnt = monthSessionCounts[m] || 0;
+                                    const isActive = filterBulanMateri === m;
+                                    return (
+                                        <button
+                                            key={m}
+                                            type="button"
+                                            onClick={() => {
+                                                setFilterBulanMateri(m);
+                                                setFilterTanggalMateri('Semua Tanggal');
+                                            }}
+                                            className={`px-3 py-1 rounded-full text-xs font-bold transition-all border flex items-center gap-1.5 ${isActive ? 'bg-[#365975] text-white border-[#365975] shadow-sm' : 'bg-white text-slate-700 border-slate-200 hover:border-slate-400 hover:bg-slate-50'}`}
+                                        >
+                                            <span>{m}</span>
+                                            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-black ${isActive ? 'bg-white/20 text-white' : (cnt > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-500')}`}>
+                                                {cnt}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Baris 2: Filter Tanggal, Search Query & Reset */}
+                            <div className="flex flex-wrap items-center justify-between gap-2.5 pt-1 border-t border-slate-200/60">
+                                <div className="flex flex-wrap items-center gap-2">
+                                    {/* Dropdown Bulan Mobile / Alternatif */}
+                                    <div className="flex items-center gap-1 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs sm:hidden">
+                                        <span className="text-[11px] font-bold text-slate-500">Bln:</span>
+                                        <select 
+                                            value={filterBulanMateri} 
+                                            onChange={(e) => { setFilterBulanMateri(e.target.value); setFilterTanggalMateri('Semua Tanggal'); }}
+                                            className="bg-transparent text-xs font-bold text-slate-800 outline-none"
+                                        >
+                                            <option value="Semua Bulan">Semua Bulan</option>
+                                            {REKAP_MONTHS.map(m => <option key={m} value={m}>{m} ({monthSessionCounts[m] || 0} sesi)</option>)}
+                                        </select>
+                                    </div>
+
+                                    {/* Dropdown Tanggal */}
+                                    <div className="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs">
+                                        <span className="text-[11px] font-bold text-slate-500">Tanggal:</span>
+                                        <select 
+                                            className="bg-transparent text-xs font-bold text-slate-800 outline-none cursor-pointer" 
+                                            value={filterTanggalMateri} 
+                                            onChange={(e) => setFilterTanggalMateri(e.target.value)}
+                                        >
+                                            <option value="Semua Tanggal">🗓️ Semua Tanggal</option>
+                                            {(filterBulanMateri !== 'Semua Bulan' ? getDaysInMonth(filterBulanMateri) : [...Array(31)].map((_, i) => i + 1)).map(d => {
+                                                const hasSession = (filterBulanMateri !== 'Semua Bulan')
+                                                    ? (Boolean(classNotes[`${activeClass}-${filterBulanMateri}-${d}-materi`]) || Boolean(classNotes[`${activeClass}-${filterBulanMateri}-${d}-mapel`]))
+                                                    : false;
+                                                return (
+                                                    <option key={d} value={d}>
+                                                        Tgl {d}{hasSession ? ' ✓' : ''}
+                                                    </option>
+                                                );
+                                            })}
+                                        </select>
+                                    </div>
+
+                                    {/* Input Pencarian */}
+                                    <div className="relative">
+                                        <input 
+                                            type="text"
+                                            value={searchMateriQuery}
+                                            onChange={(e) => setSearchMateriQuery(e.target.value)}
+                                            placeholder="Cari materi / mapel..."
+                                            className="pl-7 pr-6 py-1 bg-white border border-slate-200 rounded-lg text-xs font-medium text-slate-700 outline-none focus:border-[#4a728f] focus:ring-1 focus:ring-[#4a728f] w-44 sm:w-56 shadow-2xs transition-all"
+                                        />
+                                        <svg className="w-3.5 h-3.5 text-slate-400 absolute left-2 top-2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                                        {searchMateriQuery && (
+                                            <button 
+                                                type="button" 
+                                                onClick={() => setSearchMateriQuery('')} 
+                                                className="absolute right-2 top-1.5 text-slate-400 hover:text-red-500 font-bold text-xs"
+                                            >
+                                                ✕
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Tombol Reset Filter jika aktif */}
+                                    {(filterBulanMateri !== 'Semua Bulan' || filterTanggalMateri !== 'Semua Tanggal' || searchMateriQuery) && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setFilterBulanMateri('Semua Bulan');
+                                                setFilterTanggalMateri('Semua Tanggal');
+                                                setSearchMateriQuery('');
+                                            }}
+                                            className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-[11px] font-bold transition-colors flex items-center gap-1"
+                                        >
+                                            ✕ Reset Filter
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Informasi Rekap Sesi Terpilih */}
+                                <div className="text-xs font-semibold text-slate-600 flex items-center gap-2">
+                                    <span className="bg-white px-2 py-0.5 rounded border border-slate-200 font-bold text-slate-800">
+                                        Menampilkan: {displayedEntries.length} sesi
+                                    </span>
+                                </div>
+                            </div>
+                          </div>
+
+                          {/* Ringkasan Kehadiran Sesi Ditampilkan */}
+                          <div className="bg-slate-50/80 px-4 py-2 border-b border-slate-200 text-xs flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-3 text-slate-700 font-medium">
+                                <span className="font-bold text-slate-900">Total Kehadiran:</span>
+                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500"></span> Hadir: <strong className="text-emerald-700">{sumH}</strong></span>
+                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500"></span> Izin: <strong className="text-blue-700">{sumI}</strong></span>
+                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500"></span> Sakit: <strong className="text-amber-700">{sumS}</strong></span>
+                                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500"></span> Alpha: <strong className="text-red-700">{sumA}</strong></span>
+                            </div>
+                            <div className="text-[11px] text-slate-500 italic">
+                                * Klik tombol "Edit" untuk membuka langsung lembar Jurnal Mengajar pada tanggal tersebut.
+                            </div>
+                          </div>
+
+                          <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '55vh' }}>
                             <table className="w-full text-sm text-left border-collapse min-w-max">
                               <thead className="sticky top-0 z-20 shadow-sm">
                                 <tr>
-                                  <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-200 bg-slate-50 text-slate-700 w-10 text-center align-middle">No</th>
-                                  <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-200 bg-slate-50 text-slate-700 w-28 align-middle">Bulan</th>
-                                  <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-200 bg-slate-50 text-slate-700 w-24 align-middle">Tanggal</th>
-                                  <th rowSpan="2" className="py-2 px-4 font-bold border border-slate-200 bg-slate-50 text-slate-700 min-w-[200px] align-middle">Mata Pelajaran</th>
-                                  <th rowSpan="2" className="py-2 px-4 font-bold border border-slate-200 bg-slate-50 text-slate-700 min-w-[250px] align-middle">Materi Pokok / Sub Pokok Bahasan</th>
-                                  <th colSpan="4" className="py-1 px-2 font-bold border border-slate-200 bg-slate-100 text-slate-800 text-center border-b-0">Jml Kehadiran</th>
-                                  <th rowSpan="2" className="py-2 px-4 font-bold border border-slate-200 bg-slate-50 text-slate-700 min-w-[200px] align-middle">Siswa Tidak Hadir (S, I, A)</th>
+                                  <th rowSpan="2" className="py-2.5 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-12 text-center align-middle">No</th>
+                                  <th rowSpan="2" className="py-2.5 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-28 align-middle">Bulan</th>
+                                  <th rowSpan="2" className="py-2.5 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 w-24 text-center align-middle">Tanggal</th>
+                                  <th rowSpan="2" className="py-2.5 px-4 font-bold border border-slate-200 bg-slate-100 text-slate-700 min-w-[180px] align-middle">Mata Pelajaran</th>
+                                  <th rowSpan="2" className="py-2.5 px-4 font-bold border border-slate-200 bg-slate-100 text-slate-700 min-w-[280px] align-middle">Materi Pokok / Sub Pokok Bahasan</th>
+                                  <th colSpan="4" className="py-1 px-2 font-bold border border-slate-200 bg-slate-200 text-slate-800 text-center border-b-0">Jml Kehadiran</th>
+                                  <th rowSpan="2" className="py-2.5 px-4 font-bold border border-slate-200 bg-slate-100 text-slate-700 min-w-[200px] align-middle">Siswa Tidak Hadir (S, I, A)</th>
+                                  <th rowSpan="2" className="py-2.5 px-3 font-bold border border-slate-200 bg-slate-100 text-slate-700 text-center w-28 align-middle">Aksi</th>
                                 </tr>
                                 <tr>
-                                  <th className="py-1 px-2 font-bold border border-slate-200 bg-emerald-50 text-emerald-700 w-10 text-center text-xs">H</th>
-                                  <th className="py-1 px-2 font-bold border border-slate-200 bg-blue-50 text-blue-700 w-10 text-center text-xs">I</th>
-                                  <th className="py-1 px-2 font-bold border border-slate-200 bg-amber-50 text-amber-700 w-10 text-center text-xs">S</th>
-                                  <th className="py-1 px-2 font-bold border border-slate-200 bg-red-50 text-red-700 w-10 text-center text-xs">A</th>
+                                  <th className="py-1 px-2 font-bold border border-slate-200 bg-emerald-100 text-emerald-800 w-10 text-center text-xs">H</th>
+                                  <th className="py-1 px-2 font-bold border border-slate-200 bg-blue-100 text-blue-800 w-10 text-center text-xs">I</th>
+                                  <th className="py-1 px-2 font-bold border border-slate-200 bg-amber-100 text-amber-800 w-10 text-center text-xs">S</th>
+                                  <th className="py-1 px-2 border border-slate-200 bg-red-100 text-red-800 w-10 text-center text-xs">A</th>
                                 </tr>
                               </thead>
                               <tbody>
-                                {(() => {
-                                    const entries = getJurnalEntries();
-                                    if (entries.length === 0) {
-                                        return (
-                                            <tr><td colSpan="9" className="py-8 text-center text-slate-400 font-medium">Belum ada catatan jurnal mengajar yang diisi pada semester ini.</td></tr>
-                                        );
-                                    }
-                                    return entries.map((entry, idx) => (
-                                        <tr key={idx} className="hover:bg-slate-50 transition-colors border-b border-slate-100">
-                                            <td className="py-2 px-3 border border-slate-100 text-center font-medium text-xs">{idx + 1}</td>
-                                            <td className="py-2 px-3 border border-slate-100 font-bold text-[#4a728f] text-xs">{entry.month}</td>
-                                                                                        <td className="py-2 px-3 border border-slate-100 font-semibold text-slate-800 text-xs">Tgl {entry.day}</td>
-                                            <td className="py-2 px-4 border border-slate-100 font-bold text-slate-800 text-xs">{entry.mapel}</td>
-                                            <td className="py-2 px-4 border border-slate-100 whitespace-pre-wrap text-xs text-slate-700">{entry.note}</td>
-                                            <td className="py-2 px-2 border border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/30 text-xs">{entry.counts.H || '-'}</td>
-                                            <td className="py-2 px-2 border border-slate-100 text-center font-bold text-blue-600 bg-blue-50/30 text-xs">{entry.counts.I || '-'}</td>
-                                            <td className="py-2 px-2 border border-slate-100 text-center font-bold text-amber-600 bg-amber-50/30 text-xs">{entry.counts.S || '-'}</td>
-                                            <td className="py-2 px-2 border border-slate-100 text-center font-bold text-red-600 bg-red-50/30 text-xs">{entry.counts.A || '-'}</td>
-                                            <td className={`py-2 px-4 border border-slate-100 text-[11px] font-medium leading-relaxed ${entry.absentees === '-' ? 'text-emerald-600/70 italic' : 'text-red-700'}`}>
-                                                {entry.absentees}
+                                {displayedEntries.length === 0 ? (
+                                    <tr>
+                                        <td colSpan="11" className="py-12 text-center">
+                                            <div className="max-w-md mx-auto flex flex-col items-center">
+                                                <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-3">
+                                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                                                </div>
+                                                <p className="text-slate-800 font-bold text-sm mb-1">
+                                                    Belum ada catatan jurnal mengajar yang sesuai filter
+                                                </p>
+                                                <p className="text-slate-500 text-xs mb-4">
+                                                    {filterBulanMateri !== 'Semua Bulan' || filterTanggalMateri !== 'Semua Tanggal'
+                                                        ? `Tidak ditemukan pengisian jurnal untuk ${filterBulanMateri} ${filterTanggalMateri !== 'Semua Tanggal' ? 'Tgl ' + filterTanggalMateri : ''} di Kelas ${activeClass}.`
+                                                        : `Belum ada sesi jurnal yang dicatat untuk Kelas ${activeClass} pada semester ini.`}
+                                                </p>
+                                                <div className="flex gap-2">
+                                                    {(filterBulanMateri !== 'Semua Bulan' || filterTanggalMateri !== 'Semua Tanggal' || searchMateriQuery) && (
+                                                        <button 
+                                                            type="button"
+                                                            onClick={() => { setFilterBulanMateri('Semua Bulan'); setFilterTanggalMateri('Semua Tanggal'); setSearchMateriQuery(''); }}
+                                                            className="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-all"
+                                                        >
+                                                            Reset Filter
+                                                        </button>
+                                                    )}
+                                                    <button 
+                                                        type="button"
+                                                        onClick={() => {
+                                                            if (filterBulanMateri !== 'Semua Bulan') setActiveMonth(filterBulanMateri);
+                                                            if (filterTanggalMateri !== 'Semua Tanggal') setActionDay(parseInt(filterTanggalMateri));
+                                                            setActiveTab('jurnal');
+                                                        }}
+                                                        className="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow transition-all flex items-center gap-1.5"
+                                                    >
+                                                        📝 Isi Jurnal Sekarang
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    displayedEntries.map((entry, idx) => (
+                                        <tr key={idx} className="hover:bg-blue-50/40 transition-colors border-b border-slate-100">
+                                            <td className="py-2 px-3 border border-slate-100 text-center font-medium text-xs text-slate-600">{idx + 1}</td>
+                                            <td className="py-2 px-3 border border-slate-100 text-xs">
+                                                <span className="font-bold text-[#365975] bg-[#A5C8E4]/30 px-2 py-0.5 rounded">
+                                                    {entry.month}
+                                                </span>
+                                            </td>
+                                            <td className="py-2 px-3 border border-slate-100 font-bold text-slate-800 text-xs text-center">
+                                                Tgl {entry.day}
+                                            </td>
+                                            <td className="py-2 px-4 border border-slate-100 font-bold text-slate-800 text-xs">
+                                                {entry.mapel}
+                                            </td>
+                                            <td className="py-2 px-4 border border-slate-100 whitespace-pre-wrap text-xs text-slate-700 leading-relaxed">
+                                                {entry.note}
+                                            </td>
+                                            <td className="py-2 px-2 border border-slate-100 text-center font-bold text-emerald-600 bg-emerald-50/30 text-xs">
+                                                {entry.counts.H || '-'}
+                                            </td>
+                                            <td className="py-2 px-2 border border-slate-100 text-center font-bold text-blue-600 bg-blue-50/30 text-xs">
+                                                {entry.counts.I || '-'}
+                                            </td>
+                                            <td className="py-2 px-2 border border-slate-100 text-center font-bold text-amber-600 bg-amber-50/30 text-xs">
+                                                {entry.counts.S || '-'}
+                                            </td>
+                                            <td className="py-2 px-2 border border-slate-100 text-center font-bold text-red-600 bg-red-50/30 text-xs">
+                                                {entry.counts.A || '-'}
+                                            </td>
+                                            <td className={`py-2 px-4 border border-slate-100 text-[11px] font-medium leading-relaxed ${entry.absentees === '-' ? 'text-emerald-700 font-semibold' : 'text-red-700 font-semibold'}`}>
+                                                {entry.absentees === '-' ? '✓ Hadir Semua' : entry.absentees}
+                                            </td>
+                                            <td className="py-2 px-3 border border-slate-100 text-center">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setActiveMonth(entry.month);
+                                                        setActionDay(entry.day);
+                                                        setActiveTab('jurnal');
+                                                    }}
+                                                    className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 rounded text-[11px] font-bold shadow-2xs transition-all flex items-center justify-center gap-1 mx-auto whitespace-nowrap cursor-pointer"
+                                                    title={`Buka lembar Jurnal Mengajar untuk Tgl ${entry.day} ${entry.month}`}
+                                                >
+                                                    ✏️ Edit
+                                                </button>
                                             </td>
                                         </tr>
-                                    ));
-                                })()}                                </tbody>
+                                    ))
+                                )}
+                              </tbody>
                             </table>
+                          </div>
+
+                          {/* Print Preview Modal */}
+                          {isPrintingJurnalMateri && (
+                              <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+                                  <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden">
+                                      {/* Modal Header */}
+                                      <div className="p-4 bg-slate-800 text-white flex justify-between items-center print:hidden">
+                                          <div className="flex items-center gap-2">
+                                              <span className="text-lg">🖨️</span>
+                                              <h3 className="font-bold text-sm sm:text-base">Pratinjau Cetak Rekapitulasi Jurnal &amp; Materi Mengajar</h3>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                              <button 
+                                                  type="button"
+                                                  onClick={handlePrintJurnalMateri}
+                                                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-lg shadow flex items-center gap-1.5 transition-all cursor-pointer"
+                                              >
+                                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                                  Cetak Dokumen
+                                              </button>
+                                              <button 
+                                                  type="button"
+                                                  onClick={() => setIsPrintingJurnalMateri(false)}
+                                                  className="px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-xs rounded-lg transition-all cursor-pointer"
+                                              >
+                                                  ✕ Tutup
+                                              </button>
+                                          </div>
+                                      </div>
+
+                                      {/* Modal Body / Print Sheet */}
+                                      <div className="overflow-y-auto p-4 sm:p-8 bg-slate-100 flex justify-center">
+                                          <div id="jurnal-materi-print-area" className="p-6 sm:p-10 bg-white text-slate-900 leading-relaxed max-w-[210mm] w-full mx-auto border border-slate-200 print:border-none shadow-sm print:shadow-none text-xs">
+                                              {/* Kop Madrasah */}
+                                              <div className="flex items-center justify-between pb-3 border-b-[3px] border-black">
+                                                  <div className="w-20 h-20 flex-shrink-0 flex items-center justify-center">
+                                                      <img src={FALLBACK_LOGO_BASE64} alt="Logo" className="w-20 h-20 object-contain" />
+                                                  </div>
+                                                  <div className="flex-1 text-center px-2">
+                                                      <h2 className="text-xs sm:text-sm font-bold tracking-wider uppercase text-slate-900">KEMENTERIAN AGAMA REPUBLIK INDONESIA</h2>
+                                                      <h1 className="text-base sm:text-xl font-black uppercase text-slate-900 tracking-wide mt-0.5">MTSS MA&#39;ARIF NU 1 WANGON</h1>
+                                                      <p className="text-[11px] sm:text-xs italic text-slate-800 mt-0.5">JL. RAYA TIMUR WANGON</p>
+                                                      <p className="text-[11px] sm:text-xs italic text-slate-800">Kecamatan Wangon, Kabupaten Banyumas - Jawa Tengah</p>
+                                                  </div>
+                                                  <div className="w-20 flex-shrink-0"></div>
+                                              </div>
+
+                                              {/* Judul Dokumen */}
+                                              <div className="text-center my-4">
+                                                  <h2 className="text-sm sm:text-base font-black uppercase tracking-wider underline">REKAPITULASI JURNAL &amp; MATERI MENGAJAR</h2>
+                                                  <p className="text-xs font-semibold text-slate-700 uppercase mt-0.5">SEMESTER GANJIL TAHUN AJARAN 2026/2027</p>
+                                              </div>
+
+                                              {/* Info Metadata */}
+                                              <div className="grid grid-cols-2 gap-2 mb-4 text-xs font-semibold border-b border-slate-200 pb-3">
+                                                  <div>
+                                                      <p><span className="inline-block w-28 text-slate-600">Kelas</span>: <strong className="text-slate-900">Kelas {activeClass}</strong></p>
+                                                      <p><span className="inline-block w-28 text-slate-600">Bulan</span>: <strong className="text-slate-900">{filterBulanMateri}</strong></p>
+                                                      <p><span className="inline-block w-28 text-slate-600">Tanggal</span>: <strong className="text-slate-900">{filterTanggalMateri}</strong></p>
+                                                  </div>
+                                                  <div>
+                                                      <p><span className="inline-block w-28 text-slate-600">Guru Pengampu</span>: <strong className="text-slate-900">{loggedInUser || '-'}</strong></p>
+                                                      <p><span className="inline-block w-28 text-slate-600">Total Pertemuan</span>: <strong className="text-slate-900">{displayedEntries.length} Sesi</strong></p>
+                                                  </div>
+                                              </div>
+
+                                              {/* Printable Table */}
+                                              <table className="w-full text-xs text-left border-collapse border border-black mb-6">
+                                                  <thead>
+                                                      <tr className="bg-slate-100 text-slate-900 font-bold">
+                                                          <th className="py-1.5 px-2 border border-black text-center w-8">No</th>
+                                                          <th className="py-1.5 px-2 border border-black w-20">Bulan</th>
+                                                          <th className="py-1.5 px-2 border border-black w-16 text-center">Tanggal</th>
+                                                          <th className="py-1.5 px-2 border border-black w-32">Mata Pelajaran</th>
+                                                          <th className="py-1.5 px-2 border border-black">Materi Pokok / Sub Pokok Bahasan</th>
+                                                          <th className="py-1.5 px-1 border border-black text-center w-6">H</th>
+                                                          <th className="py-1.5 px-1 border border-black text-center w-6">I</th>
+                                                          <th className="py-1.5 px-1 border border-black text-center w-6">S</th>
+                                                          <th className="py-1.5 px-1 border border-black text-center w-6">A</th>
+                                                          <th className="py-1.5 px-2 border border-black w-36">Ket. Tidak Hadir</th>
+                                                      </tr>
+                                                  </thead>
+                                                  <tbody>
+                                                      {displayedEntries.map((entry, idx) => (
+                                                          <tr key={idx} className="border border-black">
+                                                              <td className="py-1.5 px-2 border border-black text-center">{idx + 1}</td>
+                                                              <td className="py-1.5 px-2 border border-black font-semibold">{entry.month}</td>
+                                                              <td className="py-1.5 px-2 border border-black text-center">Tgl {entry.day}</td>
+                                                              <td className="py-1.5 px-2 border border-black font-semibold">{entry.mapel}</td>
+                                                              <td className="py-1.5 px-2 border border-black whitespace-pre-wrap">{entry.note}</td>
+                                                              <td className="py-1.5 px-1 border border-black text-center">{entry.counts.H || '-'}</td>
+                                                              <td className="py-1.5 px-1 border border-black text-center">{entry.counts.I || '-'}</td>
+                                                              <td className="py-1.5 px-1 border border-black text-center">{entry.counts.S || '-'}</td>
+                                                              <td className="py-1.5 px-1 border border-black text-center">{entry.counts.A || '-'}</td>
+                                                              <td className="py-1.5 px-2 border border-black text-[10px]">{entry.absentees}</td>
+                                                          </tr>
+                                                      ))}
+                                                      {displayedEntries.length === 0 && (
+                                                          <tr>
+                                                              <td colSpan="10" className="py-6 text-center text-slate-500 italic border border-black">
+                                                                  Tidak ada catatan jurnal mengajar pada periode ini.
+                                                              </td>
+                                                          </tr>
+                                                      )}
+                                                  </tbody>
+                                              </table>
+
+                                              {/* Signatures */}
+                                              <div className="grid grid-cols-2 gap-4 mt-8 pt-4 text-xs text-center font-medium">
+                                                  <div>
+                                                      <p className="mb-1">Mengetahui,</p>
+                                                      <p className="font-bold mb-16">Kepala MTs Ma&#39;arif NU 1 Wangon</p>
+                                                      <p className="font-bold underline text-slate-900">H. Warno, S.Ag., M.Pd.I.</p>
+                                                      <p className="text-[11px] text-slate-700">NIP. 19700512 199803 1 004</p>
+                                                  </div>
+                                                  <div>
+                                                      <p className="mb-1">Wangon, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                                                      <p className="font-bold mb-16">Guru Mata Pelajaran,</p>
+                                                      <p className="font-bold underline text-slate-900">{loggedInUser || '........................................'}</p>
+                                                      <p className="text-[11px] text-slate-700">NIP. -</p>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  </div>
+                              </div>
+                          )}
                         </div>
-                    </div>
-                    )}
+                        );
+                    })()}
 
                     {/* 4. Rekap Tabungan Card */}
                     {activeReportTab === 'tabungan' && (

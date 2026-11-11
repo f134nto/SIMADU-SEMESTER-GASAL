@@ -152,10 +152,15 @@
   window.firebaseLoaded = true;
   window.isSyncingFromFirebase = false;
 
-  // Firebase Sync Logic (with Debounce and Key Sanitization)
-    const oldSetItem = localStorage.setItem.bind(localStorage);
+  // Firebase Sync Logic (with Debounce, Atomic Multi-Key Push, and Deleted-Student Protection)
+  const oldSetItem = localStorage.setItem.bind(localStorage);
+  const oldGetItem = localStorage.getItem.bind(localStorage);
+  const oldRemoveItem = localStorage.removeItem.bind(localStorage);
   window.localUpdateInProgress = false;
+  window.localUpdateUntil = 0;
   window.firebaseInitialSyncDone = false;
+  window._pendingFirebaseKeys = new Set();
+  window._atomicSyncedValues = {};
   const syncTimeouts = {};
 
   const sanitizeForFirebase = (obj) => {
@@ -169,46 +174,188 @@
       return newObj;
   };
 
+  window._normalizeStudentNameForSync = (n) => String(n || '').trim().replace(/\s+/g, ' ').toLowerCase();
+  window._makeStudentKeyForSync = (cls, n) => String(cls || '').trim().toUpperCase() + '::' + window._normalizeStudentNameForSync(n);
+  window._mergeDeletedMapsForSync = (localMap, remoteMap) => {
+      const merged = {};
+      const applyObj = (src) => {
+          if (!src || typeof src !== 'object') return;
+          Object.keys(src).forEach(k => {
+              const raw = src[k];
+              const norm = (raw && typeof raw === 'object')
+                  ? { del: !!raw.del, ts: Number(raw.ts) || 0 }
+                  : { del: !!raw, ts: 0 };
+              const prev = merged[k];
+              if (!prev || norm.ts > prev.ts || (norm.ts === prev.ts && norm.del && !prev.del)) {
+                  merged[k] = norm;
+              }
+          });
+      };
+      applyObj(remoteMap);
+      applyObj(localMap);
+      return merged;
+  };
+
+  window.pushSimaduDataAtomic = function(updatesMap) {
+      if (!updatesMap || typeof updatesMap !== 'object') return Promise.resolve({ localOnly: true });
+      const firebaseUpdates = {};
+      const keys = Object.keys(updatesMap);
+      let touchesStudentSync = false;
+
+      keys.forEach(key => {
+          const val = updatesMap[key];
+          const strVal = (typeof val === 'string') ? val : JSON.stringify(val);
+          if (syncTimeouts[key]) {
+              clearTimeout(syncTimeouts[key]);
+              delete syncTimeouts[key];
+          }
+          window._atomicSyncedValues[key] = strVal;
+          try { oldSetItem(key, strVal); } catch (e) { console.warn('LocalStorage limit reached', e); }
+          if (key.startsWith('jurnal_')) {
+              firebaseUpdates[key] = strVal;
+              if (key === 'jurnal_students' || key === 'jurnal_student_details' || key === 'jurnal_mutasi' || key === 'jurnal_deleted_students') {
+                  touchesStudentSync = true;
+              }
+          }
+      });
+
+      const fKeys = Object.keys(firebaseUpdates);
+      if (fKeys.length === 0) return Promise.resolve({ localOnly: true });
+
+      window.localUpdateInProgress = true;
+      window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 3000);
+
+      if (window.firebaseLoaded && window.db && window.firebaseInitialSyncDone) {
+          fKeys.forEach(k => window._pendingFirebaseKeys.add(k));
+          try {
+              return window.db.ref('simadu_data_v2').update(firebaseUpdates).then(() => {
+                  if (touchesStudentSync) {
+                      try { oldRemoveItem('simadu_pending_student_sync'); } catch (e) {}
+                  }
+                  fKeys.forEach(k => window._pendingFirebaseKeys.delete(k));
+                  window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 1200);
+                  if (window._pendingFirebaseKeys.size === 0) window.localUpdateInProgress = false;
+                  return { synced: true };
+              }).catch(err => {
+                  if (touchesStudentSync) {
+                      try { oldSetItem('simadu_pending_student_sync', '1'); } catch (e) {}
+                  }
+                  fKeys.forEach(k => window._pendingFirebaseKeys.delete(k));
+                  window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 800);
+                  if (window._pendingFirebaseKeys.size === 0) window.localUpdateInProgress = false;
+                  throw err;
+              });
+          } catch (e) {
+              if (touchesStudentSync) {
+                  try { oldSetItem('simadu_pending_student_sync', '1'); } catch (ex) {}
+              }
+              fKeys.forEach(k => window._pendingFirebaseKeys.delete(k));
+              if (window._pendingFirebaseKeys.size === 0) window.localUpdateInProgress = false;
+              return Promise.reject(e);
+          }
+      } else {
+          if (touchesStudentSync) {
+              try { oldSetItem('simadu_pending_student_sync', '1'); } catch (e) {}
+          }
+          window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 800);
+          if (window._pendingFirebaseKeys.size === 0) window.localUpdateInProgress = false;
+          return Promise.resolve({ queuedLocal: true });
+      }
+  };
+
   localStorage.setItem = function(key, value) {
+      if (window._atomicSyncedValues && window._atomicSyncedValues[key] === value && oldGetItem(key) === value) {
+          return;
+      }
+      if (window._atomicSyncedValues) delete window._atomicSyncedValues[key];
       try { oldSetItem(key, value); } catch(e) { console.warn('LocalStorage limit reached', e); }
       if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
           if (key.startsWith('jurnal_')) {
+              window._pendingFirebaseKeys.add(key);
               window.localUpdateInProgress = true;
+              window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 2500);
               clearTimeout(syncTimeouts[key]);
               syncTimeouts[key] = setTimeout(() => {
                   try {
-                      window.db.ref('simadu_data_v2/' + key).set(value);
+                      const req = window.db.ref('simadu_data_v2/' + key).set(value);
+                      if (req && typeof req.finally === 'function') {
+                          req.finally(() => {
+                              window._pendingFirebaseKeys.delete(key);
+                              window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 1000);
+                              if (window._pendingFirebaseKeys.size === 0) {
+                                  window.localUpdateInProgress = false;
+                              }
+                          });
+                          return;
+                      }
                   } catch(e) {}
-                  setTimeout(() => { window.localUpdateInProgress = false; }, 500);
+                  window._pendingFirebaseKeys.delete(key);
+                  window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 1000);
+                  if (window._pendingFirebaseKeys.size === 0) {
+                      window.localUpdateInProgress = false;
+                  }
               }, 800);
           }
       }
   };
 
   window.db.ref('simadu_data_v2').on('value', snap => {
+      const wasInitialDone = window.firebaseInitialSyncDone;
       window.firebaseInitialSyncDone = true;
-      if (window.localUpdateInProgress) return; // Ignore incoming if typing!
+      if (window.localUpdateInProgress || (window.localUpdateUntil && Date.now() < window.localUpdateUntil)) return;
       const data = snap.val();
       if (data) {
-          window.isSyncingFromFirebase = true;
-          // data contains strings now, parse them back
           const parsedData = {};
           for(let k in data) {
               try { parsedData[k] = JSON.parse(data[k]); } catch(e) { parsedData[k] = data[k]; }
           }
+          if (!wasInitialDone && oldGetItem('simadu_pending_student_sync') === '1') {
+              try {
+                  const localDeleted = JSON.parse(oldGetItem('jurnal_deleted_students') || '{}');
+                  const mergedDeleted = window._mergeDeletedMapsForSync(localDeleted, parsedData.jurnal_deleted_students);
+                  const localMutasi = JSON.parse(oldGetItem('jurnal_mutasi') || '{"masuk":[],"keluar":[]}');
+                  const localStudents = JSON.parse(oldGetItem('jurnal_students') || 'null');
+                  const localDetails = JSON.parse(oldGetItem('jurnal_student_details') || 'null');
+                  if (localStudents) parsedData.jurnal_students = localStudents;
+                  if (localDetails) parsedData.jurnal_student_details = localDetails;
+                  parsedData.jurnal_mutasi = localMutasi;
+                  parsedData.jurnal_deleted_students = mergedDeleted;
+                  const flushPayload = {
+                      jurnal_deleted_students: mergedDeleted,
+                      jurnal_mutasi: localMutasi
+                  };
+                  if (localStudents) flushPayload.jurnal_students = localStudents;
+                  if (localDetails) flushPayload.jurnal_student_details = localDetails;
+                  window.pushSimaduDataAtomic(flushPayload);
+              } catch (e) {}
+          }
+          window.isSyncingFromFirebase = true;
           window.dispatchEvent(new CustomEvent('firebaseSync', { detail: parsedData }));
           setTimeout(() => { window.isSyncingFromFirebase = false; }, 500);
+      } else if (!wasInitialDone && oldGetItem('simadu_pending_student_sync') === '1') {
+          try {
+              const flushPayload = {};
+              ['jurnal_students', 'jurnal_student_details', 'jurnal_mutasi', 'jurnal_deleted_students'].forEach(k => {
+                  const v = oldGetItem(k);
+                  if (v) flushPayload[k] = v;
+              });
+              if (Object.keys(flushPayload).length > 0) window.pushSimaduDataAtomic(flushPayload);
+          } catch (e) {}
       }
   });
 
   // Initial migration: If Firebase is empty, upload local data
   window.db.ref('simadu_data_v2').once('value').then(snap => {
       if (!snap.val()) {
-          const keys = ['jurnal_students', 'jurnal_student_details', 'jurnal_attendance', 'jurnal_attendance_mengajar', 'jurnal_classNotes', 'jurnal_savingsData', 'jurnal_agendaKelasData', 'jurnal_gradesData'];
+          const keys = ['jurnal_students', 'jurnal_student_details', 'jurnal_mutasi', 'jurnal_deleted_students', 'jurnal_nis_terakhir', 'jurnal_attendance', 'jurnal_attendance_mengajar', 'jurnal_classNotes', 'jurnal_savingsData', 'jurnal_agendaKelasData', 'jurnal_gradesData'];
+          const initUpdates = {};
           keys.forEach(k => {
-              const val = localStorage.getItem(k);
-              if (val) window.db.ref('simadu_data_v2/' + k).set(val);
+              const val = oldGetItem(k);
+              if (val) initUpdates[k] = val;
           });
+          if (Object.keys(initUpdates).length > 0) {
+              window.db.ref('simadu_data_v2').update(initUpdates).catch(() => {});
+          }
       }
   });
 </script>
@@ -3935,10 +4082,170 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
           const [searchWaliQuery, setSearchWaliQuery] = useState(''); 
           const [searchResults, setSearchResults] = useState([]);
 
-          const mergeWithClass8Details = (target) => {
+          const normalizeStudentName = (n) => String(n || '').trim().replace(/\s+/g, ' ').toLowerCase();
+          const makeStudentExclusionKey = (cls, n) => `${String(cls || '').trim().toUpperCase()}::${normalizeStudentName(n)}`;
+          const parseDeletedEntry = (val) => (val && typeof val === 'object') ? { del: !!val.del, ts: Number(val.ts) || 0 } : { del: !!val, ts: 0 };
+
+          const mergeDeletedMaps = (localMap, remoteMap) => {
+              if (typeof window._mergeDeletedMapsForSync === 'function') {
+                  return window._mergeDeletedMapsForSync(localMap, remoteMap);
+              }
+              const merged = {};
+              const apply = (src) => {
+                  if (!src || typeof src !== 'object') return;
+                  Object.keys(src).forEach(k => {
+                      const entry = parseDeletedEntry(src[k]);
+                      const prev = merged[k];
+                      if (!prev || entry.ts > prev.ts || (entry.ts === prev.ts && entry.del && !prev.del)) {
+                          merged[k] = entry;
+                      }
+                  });
+              };
+              apply(remoteMap);
+              apply(localMap);
+              return merged;
+          };
+
+          const markStudentsDeletedInMap = (prevMap, cls, names, ts) => {
+              const next = { ...(prevMap || {}) };
+              const stamp = ts || Date.now();
+              (Array.isArray(names) ? names : [names]).forEach(n => {
+                  const nameStr = String(n || '').trim();
+                  if (!nameStr) return;
+                  next[makeStudentExclusionKey(cls, nameStr)] = { del: true, ts: stamp };
+              });
+              return next;
+          };
+
+          const markStudentsRestoredInMap = (prevMap, cls, names, ts) => {
+              const next = { ...(prevMap || {}) };
+              const stamp = ts || Date.now();
+              (Array.isArray(names) ? names : [names]).forEach(n => {
+                  const nameStr = String(n || '').trim();
+                  if (!nameStr) return;
+                  next[makeStudentExclusionKey(cls, nameStr)] = { del: false, ts: stamp };
+              });
+              return next;
+          };
+
+          const getExcludedStudentKeys = (mutasiObj, deletedMap) => {
+              const excluded = new Set();
+              const normDeleted = {};
+              if (deletedMap && typeof deletedMap === 'object') {
+                  Object.keys(deletedMap).forEach(k => {
+                      const entry = parseDeletedEntry(deletedMap[k]);
+                      normDeleted[k] = entry;
+                      if (entry.del) excluded.add(k);
+                  });
+              }
+              const keluarList = (mutasiObj && Array.isArray(mutasiObj.keluar)) ? mutasiObj.keluar : [];
+              keluarList.forEach(m => {
+                  const mCls = m.kelas || '';
+                  const mName = m.nama || m.name || '';
+                  if (!mName) return;
+                  const exKey = makeStudentExclusionKey(mCls, mName);
+                  const dEntry = normDeleted[exKey];
+                  const mTs = Number(m.id) || 0;
+                  if (dEntry && !dEntry.del && dEntry.ts > mTs) return;
+                  excluded.add(exKey);
+              });
+              return excluded;
+          };
+
+          const removeStudentsFromList = (list, namesToRemove) => {
+              const removeNorms = new Set((Array.isArray(namesToRemove) ? namesToRemove : [namesToRemove]).map(normalizeStudentName).filter(Boolean));
+              const seen = new Set();
+              const result = [];
+              (Array.isArray(list) ? list : []).forEach(st => {
+                  const s = String(st || '').trim();
+                  if (!s) return;
+                  const norm = normalizeStudentName(s);
+                  if (removeNorms.has(norm) || seen.has(norm)) return;
+                  seen.add(norm);
+                  result.push(s);
+              });
+              return result.sort((a, b) => a.localeCompare(b));
+          };
+
+          const filterStudentsMap = (studentsMap, excludedKeys) => {
+              const out = {};
+              if (!studentsMap || typeof studentsMap !== 'object') return out;
+              Object.keys(studentsMap).forEach(cls => {
+                  const arr = Array.isArray(studentsMap[cls]) ? studentsMap[cls] : [];
+                  const seen = new Set();
+                  const cleaned = [];
+                  arr.forEach(st => {
+                      const s = String(st || '').trim();
+                      if (!s) return;
+                      const norm = normalizeStudentName(s);
+                      const exKey = makeStudentExclusionKey(cls, s);
+                      if (excludedKeys && excludedKeys.has(exKey)) return;
+                      if (seen.has(norm)) return;
+                      seen.add(norm);
+                      cleaned.push(s);
+                  });
+                  cleaned.sort((a, b) => a.localeCompare(b));
+                  out[cls] = cleaned;
+              });
+              return out;
+          };
+
+          const removeDetailsForClassStudents = (detailsMap, cls, namesToRemove) => {
+              const next = { ...(detailsMap || {}) };
+              const prefix = `${cls}-`;
+              const removeNorms = new Set((Array.isArray(namesToRemove) ? namesToRemove : [namesToRemove]).map(normalizeStudentName).filter(Boolean));
+              (Array.isArray(namesToRemove) ? namesToRemove : [namesToRemove]).forEach(n => {
+                  if (n) delete next[`${cls}-${n}`];
+              });
+              Object.keys(next).forEach(k => {
+                  if (k.startsWith(prefix)) {
+                      const kName = normalizeStudentName(k.slice(prefix.length));
+                      if (removeNorms.has(kName)) delete next[k];
+                  }
+              });
+              return next;
+          };
+
+          const filterDetailsMap = (detailsMap, excludedKeys) => {
+              const next = { ...(detailsMap || {}) };
+              if (!excludedKeys || excludedKeys.size === 0) return next;
+              Object.keys(next).forEach(k => {
+                  const dashIdx = k.indexOf('-');
+                  if (dashIdx > 0) {
+                      const cls = k.slice(0, dashIdx);
+                      const stName = k.slice(dashIdx + 1);
+                      if (excludedKeys.has(makeStudentExclusionKey(cls, stName))) {
+                          delete next[k];
+                      }
+                  }
+              });
+              return next;
+          };
+
+          const mergeWithClass8Details = (target, excludedKeys, activeStudentsMap) => {
               if (typeof CLASS_8_STUDENTS_DETAIL === 'undefined' || !CLASS_8_STUDENTS_DETAIL) return target || {};
               const result = { ...(target || {}) };
+              const activeNormsByClass = {};
+              if (activeStudentsMap && typeof activeStudentsMap === 'object') {
+                  Object.keys(activeStudentsMap).forEach(cls => {
+                      if (Array.isArray(activeStudentsMap[cls])) {
+                          activeNormsByClass[cls] = new Set(activeStudentsMap[cls].map(normalizeStudentName));
+                      }
+                  });
+              }
               for (const k in CLASS_8_STUDENTS_DETAIL) {
+                  const dashIdx = k.indexOf('-');
+                  if (dashIdx > 0) {
+                      const cls = k.slice(0, dashIdx);
+                      const stName = k.slice(dashIdx + 1);
+                      if (excludedKeys && excludedKeys.has(makeStudentExclusionKey(cls, stName))) {
+                          delete result[k];
+                          continue;
+                      }
+                      if (activeNormsByClass[cls] && !activeNormsByClass[cls].has(normalizeStudentName(stName)) && !result[k]) {
+                          continue;
+                      }
+                  }
                   const base = CLASS_8_STUDENTS_DETAIL[k];
                   if (!result[k]) {
                       result[k] = { ...base };
@@ -3956,15 +4263,29 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       result[k] = merged;
                   }
               }
-              return result;
+              return excludedKeys ? filterDetailsMap(result, excludedKeys) : result;
+          };
+
+          const loadInitialMutasiAndDeleted = () => {
+              let mutasiSaved = { masuk: [], keluar: [] };
+              try {
+                  mutasiSaved = JSON.parse(localStorage.getItem('jurnal_mutasi')) || JSON.parse(localStorage.getItem('jurnal_mutasi_data')) || { masuk: [], keluar: [] };
+              } catch (e) {}
+              let deletedSaved = {};
+              try {
+                  const dRaw = JSON.parse(localStorage.getItem('jurnal_deleted_students'));
+                  if (dRaw && typeof dRaw === 'object') deletedSaved = mergeDeletedMaps(dRaw, {});
+              } catch (e) {}
+              return { mutasiSaved, deletedSaved, excluded: getExcludedStudentKeys(mutasiSaved, deletedSaved) };
           };
 
           const [studentDetails, setStudentDetails] = useState(() => {
-            let mutasiSaved = null;
-            try { 
-                mutasiSaved = JSON.parse(localStorage.getItem('jurnal_mutasi')) || JSON.parse(localStorage.getItem('jurnal_mutasi_data')); 
-            } catch (e) { }
-            const mutatedOut = new Set((mutasiSaved && mutasiSaved.keluar ? mutasiSaved.keluar : []).map(m => (m.kelas || '') + '-' + (m.nama || m.name || '')));
+            const { excluded } = loadInitialMutasiAndDeleted();
+            let savedStudents = null;
+            try {
+                const rs = JSON.parse(localStorage.getItem('jurnal_students'));
+                if (rs && typeof rs === 'object' && !Array.isArray(rs)) savedStudents = rs;
+            } catch (e) {}
 
             let currentData = {};
             try { 
@@ -3974,49 +4295,49 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
               }
             } catch (e) { }
 
-            let merged = mergeWithClass8Details(currentData);
+            let merged = mergeWithClass8Details(currentData, excluded, savedStudents);
             if (typeof STUDENTS_DETAIL_DATA !== 'undefined') {
                 Object.keys(STUDENTS_DETAIL_DATA).forEach(cls => {
+                    const activeNorms = (savedStudents && Array.isArray(savedStudents[cls]))
+                        ? new Set(savedStudents[cls].map(normalizeStudentName))
+                        : null;
                     STUDENTS_DETAIL_DATA[cls].forEach(st => {
                         const k = cls + '-' + st.name;
+                        if (excluded.has(makeStudentExclusionKey(cls, st.name))) return;
+                        if (activeNorms && !activeNorms.has(normalizeStudentName(st.name))) return;
                         if (!merged[k]) {
                             merged[k] = { nis: st.nis, gender: st.gender };
                         }
                     });
                 });
             }
-            if (mutatedOut.size > 0) {
-                mutatedOut.forEach(k => { delete merged[k]; });
-            }
-            return merged;
+            return filterDetailsMap(merged, excluded);
           });
 
           const [studentsData, setStudentsData] = useState(() => {
-            let mutasiSaved = null;
-            try { 
-                mutasiSaved = JSON.parse(localStorage.getItem('jurnal_mutasi')) || JSON.parse(localStorage.getItem('jurnal_mutasi_data')); 
-            } catch (e) { }
-            const mutatedOut = new Set((mutasiSaved && mutasiSaved.keluar ? mutasiSaved.keluar : []).map(m => (m.kelas || '') + '-' + (m.nama || m.name || '')));
-
-            try { 
-                let data = JSON.parse(localStorage.getItem('jurnal_students')) || INITIAL_STUDENTS;
-                for (let cls in INITIAL_STUDENTS) {
-                    if (!data[cls] || !Array.isArray(data[cls]) || data[cls].length === 0) {
-                        data[cls] = (INITIAL_STUDENTS[cls] || []).filter(st => !mutatedOut.has(cls + '-' + st));
+            const { excluded } = loadInitialMutasiAndDeleted();
+            try {
+                const rawStr = localStorage.getItem('jurnal_students');
+                let data = {};
+                if (!rawStr) {
+                    Object.keys(INITIAL_STUDENTS).forEach(cls => { data[cls] = [...INITIAL_STUDENTS[cls]]; });
+                } else {
+                    const parsed = JSON.parse(rawStr);
+                    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+                        Object.keys(INITIAL_STUDENTS).forEach(cls => { data[cls] = [...INITIAL_STUDENTS[cls]]; });
                     } else {
-                        if (cls.startsWith('8')) {
-                            INITIAL_STUDENTS[cls].forEach(st => {
-                                if (!data[cls].includes(st) && !mutatedOut.has(cls + '-' + st)) {
-                                    data[cls].push(st);
-                                }
-                            });
-                        }
-                        data[cls] = data[cls].filter(st => !mutatedOut.has(cls + '-' + st));
-                        data[cls].sort((a,b) => a.localeCompare(b));
+                        data = { ...parsed };
+                        Object.keys(INITIAL_STUDENTS).forEach(cls => {
+                            if (!Object.prototype.hasOwnProperty.call(data, cls) || !Array.isArray(data[cls])) {
+                                data[cls] = [...INITIAL_STUDENTS[cls]];
+                            }
+                        });
                     }
                 }
-                return data;
-            } catch (e) { return INITIAL_STUDENTS; }
+                return filterStudentsMap(data, excluded);
+            } catch (e) {
+                return filterStudentsMap(INITIAL_STUDENTS, excluded);
+            }
           });
 
           const [attendance, setAttendance] = useState(() => {
@@ -4057,6 +4378,63 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
               try { return JSON.parse(localStorage.getItem('jurnal_mutasi')) || { masuk: [], keluar: [] }; } 
               catch(e) { return { masuk: [], keluar: [] }; }
           });
+          const [deletedStudents, setDeletedStudents] = useState(() => {
+              try {
+                  const dRaw = JSON.parse(localStorage.getItem('jurnal_deleted_students'));
+                  return (dRaw && typeof dRaw === 'object') ? mergeDeletedMaps(dRaw, {}) : {};
+              } catch(e) { return {}; }
+          });
+
+          const studentsDataRef = useRef(studentsData);
+          const studentDetailsRef = useRef(studentDetails);
+          const mutasiDataRef = useRef(mutasiData);
+          const deletedStudentsRef = useRef(deletedStudents);
+          studentsDataRef.current = studentsData;
+          studentDetailsRef.current = studentDetails;
+          mutasiDataRef.current = mutasiData;
+          deletedStudentsRef.current = deletedStudents;
+
+          const syncStudentBundle = ({ students, details, mutasi, deleted, extraFirebaseKeys } = {}) => {
+              const nextMutasi = mutasi !== undefined ? mutasi : mutasiDataRef.current;
+              const nextDeleted = deleted !== undefined ? deleted : deletedStudentsRef.current;
+              const nextStudentsRaw = students !== undefined ? students : studentsDataRef.current;
+              const nextDetailsRaw = details !== undefined ? details : studentDetailsRef.current;
+
+              const excluded = getExcludedStudentKeys(nextMutasi, nextDeleted);
+              const cleanedStudents = filterStudentsMap(nextStudentsRaw, excluded);
+              const cleanedDetails = filterDetailsMap(nextDetailsRaw, excluded);
+
+              studentsDataRef.current = cleanedStudents;
+              studentDetailsRef.current = cleanedDetails;
+              mutasiDataRef.current = nextMutasi;
+              deletedStudentsRef.current = nextDeleted;
+
+              setStudentsData(cleanedStudents);
+              setStudentDetails(cleanedDetails);
+              if (mutasi !== undefined) setMutasiData(nextMutasi);
+              if (deleted !== undefined) setDeletedStudents(nextDeleted);
+
+              const atomicPayload = {
+                  jurnal_students: JSON.stringify(cleanedStudents),
+                  jurnal_student_details: JSON.stringify(cleanedDetails),
+                  jurnal_mutasi: JSON.stringify(nextMutasi),
+                  jurnal_deleted_students: JSON.stringify(nextDeleted)
+              };
+              if (extraFirebaseKeys && typeof extraFirebaseKeys === 'object') {
+                  Object.keys(extraFirebaseKeys).forEach(k => {
+                      const v = extraFirebaseKeys[k];
+                      atomicPayload[k] = typeof v === 'string' ? v : JSON.stringify(v);
+                  });
+              }
+
+              if (typeof window.pushSimaduDataAtomic === 'function') {
+                  return window.pushSimaduDataAtomic(atomicPayload);
+              }
+              Object.keys(atomicPayload).forEach(k => {
+                  try { localStorage.setItem(k, atomicPayload[k]); } catch (e) {}
+              });
+              return Promise.resolve({ localOnly: true });
+          };
           const [filterNisKelas, setFilterNisKelas] = useState('semua');
           const [filterNisStatus, setFilterNisStatus] = useState('semua');
           const [searchNisQuery, setSearchNisQuery] = useState('');
@@ -4113,28 +4491,35 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
               }
 
               const active = [];
+              const activeNorms = new Set();
               liveStudents.forEach(stName => {
-                  const masukRecord = (mutasiData.masuk || []).find(m => m.kelas === cls && (m.nama === stName || m.name === stName));
+                  const normSt = normalizeStudentName(stName);
+                  const masukRecord = (mutasiData.masuk || []).find(m => m.kelas === cls && normalizeStudentName(m.nama || m.name) === normSt);
                   if (masukRecord) {
                       const mIn = parseMonthIdx(masukRecord.tanggal);
                       if (mIn > targetM) {
                           return;
                       }
                   }
-                  active.push(stName);
+                  if (!activeNorms.has(normSt)) {
+                      activeNorms.add(normSt);
+                      active.push(stName);
+                  }
               });
 
               (mutasiData.keluar || []).forEach(k => {
                   if (k.kelas === cls) {
                       const kName = k.nama || k.name;
+                      const normK = normalizeStudentName(kName);
                       const mOut = parseMonthIdx(k.tanggal);
                       if (mOut > targetM) {
-                          const masukRecord = (mutasiData.masuk || []).find(m => m.kelas === cls && (m.nama === kName || m.name === kName));
+                          const masukRecord = (mutasiData.masuk || []).find(m => m.kelas === cls && normalizeStudentName(m.nama || m.name) === normK);
                           if (masukRecord) {
                               const mIn = parseMonthIdx(masukRecord.tanggal);
                               if (mIn > targetM) return;
                           }
-                          if (!active.includes(kName)) {
+                          if (!activeNorms.has(normK)) {
+                              activeNorms.add(normK);
                               active.push(kName);
                           }
                       }
@@ -4399,18 +4784,23 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       return;
                   }
 
-                  const newStudentsData = { ...studentsData };
-                  const newDetails = { ...studentDetails };
+                  const nowTs = Date.now();
+                  const newStudentsData = { ...studentsDataRef.current };
+                  let newDetails = { ...studentDetailsRef.current };
+                  let newDeleted = markStudentsRestoredInMap(deletedStudentsRef.current, cls, [newName], nowTs);
 
                   if (origName !== newName) {
                       if (newStudentsData[cls]) {
-                          newStudentsData[cls] = newStudentsData[cls].filter(s => s !== origName);
-                          if (!newStudentsData[cls].includes(newName)) {
+                          newStudentsData[cls] = removeStudentsFromList(newStudentsData[cls], [origName]);
+                          if (!newStudentsData[cls].some(s => normalizeStudentName(s) === normalizeStudentName(newName))) {
                               newStudentsData[cls].push(newName);
                               newStudentsData[cls].sort((a,b) => a.localeCompare(b));
                           }
                       }
-                      delete newDetails[`${cls}-${origName}`];
+                      newDetails = removeDetailsForClassStudents(newDetails, cls, [origName]);
+                      if (normalizeStudentName(origName) !== normalizeStudentName(newName)) {
+                          newDeleted = markStudentsDeletedInMap(newDeleted, cls, [origName], nowTs);
+                      }
                   }
 
                   newDetails[`${cls}-${newName}`] = {
@@ -4443,19 +4833,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       foto: formData.foto || ''
                   };
 
-                  setStudentsData(newStudentsData);
-                  setStudentDetails(newDetails);
-
-                  localStorage.setItem('jurnal_students', JSON.stringify(newStudentsData));
-                  localStorage.setItem('jurnal_student_details', JSON.stringify(newDetails));
-
-                  window.dispatchEvent(new CustomEvent('firebaseSync', {
-                      detail: {
-                          jurnal_students: newStudentsData,
-                          jurnal_student_details: newDetails
-                      }
-                  }));
-
+                  syncStudentBundle({ students: newStudentsData, details: newDetails, deleted: newDeleted });
                   setEditingBiodataStudent(null);
                   alert(`Data siswa "${newName}" berhasil disimpan!`);
               });
@@ -4463,50 +4841,39 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
 
           const handleConfirmMutasi = (studentToMutate, tanggalKeluar, keteranganKeluar) => {
               executeWithAdmin(() => {
+                  const nowTs = Date.now();
                   const cls = studentToMutate.className;
                   const stName = studentToMutate.nama || studentToMutate.originalName;
+                  const origName = studentToMutate.originalName || stName;
                   const nis = studentToMutate.nis;
-                  
+                  const curDetails = studentDetailsRef.current;
+                  const curMutasi = mutasiDataRef.current;
+                  const curStudents = studentsDataRef.current;
+
                   const newKeluar = {
-                      id: Date.now(),
+                      id: nowTs,
                       nis: nis || '-',
                       nama: stName,
                       kelas: cls,
                       tanggal: tanggalKeluar || currentDateStr,
                       keterangan: keteranganKeluar || 'Pindah Sekolah',
-                      gender: studentToMutate.gender || (studentDetails[`${cls}-${stName}`] ? studentDetails[`${cls}-${stName}`].gender : 'L')
+                      gender: studentToMutate.gender || (curDetails[`${cls}-${stName}`] ? curDetails[`${cls}-${stName}`].gender : 'L')
                   };
 
                   const newMutasi = {
-                      ...mutasiData,
-                      keluar: [newKeluar, ...(mutasiData.keluar || [])]
+                      ...curMutasi,
+                      keluar: [newKeluar, ...(curMutasi.keluar || [])]
                   };
 
-                  const newStudentsData = { ...studentsData };
+                  const namesToRemove = [stName, origName].filter(Boolean);
+                  const newStudentsData = { ...curStudents };
                   if (newStudentsData[cls]) {
-                      newStudentsData[cls] = newStudentsData[cls].filter(s => s !== stName && s !== studentToMutate.originalName);
+                      newStudentsData[cls] = removeStudentsFromList(newStudentsData[cls], namesToRemove);
                   }
+                  const newDetails = removeDetailsForClassStudents(curDetails, cls, namesToRemove);
+                  const newDeleted = markStudentsDeletedInMap(deletedStudentsRef.current, cls, namesToRemove, nowTs);
 
-                  const newDetails = { ...studentDetails };
-                  delete newDetails[`${cls}-${stName}`];
-                  delete newDetails[`${cls}-${studentToMutate.originalName}`];
-
-                  setMutasiData(newMutasi);
-                  setStudentsData(newStudentsData);
-                  setStudentDetails(newDetails);
-
-                  localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
-                  localStorage.setItem('jurnal_students', JSON.stringify(newStudentsData));
-                  localStorage.setItem('jurnal_student_details', JSON.stringify(newDetails));
-
-                  window.dispatchEvent(new CustomEvent('firebaseSync', {
-                      detail: {
-                          jurnal_mutasi: newMutasi,
-                          jurnal_students: newStudentsData,
-                          jurnal_student_details: newDetails
-                      }
-                  }));
-
+                  syncStudentBundle({ students: newStudentsData, details: newDetails, mutasi: newMutasi, deleted: newDeleted });
                   setMutatingBiodataStudent(null);
                   alert(`Siswa "${stName}" berhasil dipindahkan ke Alumni / Mutasi Keluar dari kelas ${cls} dan otomatis dihapus dari kelas.`);
               });
@@ -4520,16 +4887,20 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       return;
                   }
 
-                  const newStudentsData = { ...studentsData };
+                  const nowTs = Date.now();
+                  const curStudents = studentsDataRef.current;
+                  const curDetails = studentDetailsRef.current;
+                  const curMutasi = mutasiDataRef.current;
+
+                  const newStudentsData = { ...curStudents };
                   if (!newStudentsData[cls]) {
                       newStudentsData[cls] = [];
                   }
-                  if (!newStudentsData[cls].includes(stName)) {
-                      newStudentsData[cls].push(stName);
-                      newStudentsData[cls].sort((a, b) => a.localeCompare(b));
+                  if (!newStudentsData[cls].some(s => normalizeStudentName(s) === normalizeStudentName(stName))) {
+                      newStudentsData[cls] = [...newStudentsData[cls], stName].sort((a, b) => a.localeCompare(b));
                   }
 
-                  const newDetails = { ...studentDetails };
+                  const newDetails = { ...curDetails };
                   const k = `${cls}-${stName}`;
                   if (!newDetails[k]) {
                       newDetails[k] = {
@@ -4539,26 +4910,12 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                   }
 
                   const newMutasi = {
-                      ...mutasiData,
-                      keluar: (mutasiData.keluar || []).filter(item => item.id !== alumniItem.id)
+                      ...curMutasi,
+                      keluar: (curMutasi.keluar || []).filter(item => item.id !== alumniItem.id)
                   };
+                  const newDeleted = markStudentsRestoredInMap(deletedStudentsRef.current, cls, [stName], nowTs);
 
-                  setStudentsData(newStudentsData);
-                  setStudentDetails(newDetails);
-                  setMutasiData(newMutasi);
-
-                  localStorage.setItem('jurnal_students', JSON.stringify(newStudentsData));
-                  localStorage.setItem('jurnal_student_details', JSON.stringify(newDetails));
-                  localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
-
-                  window.dispatchEvent(new CustomEvent('firebaseSync', {
-                      detail: {
-                          jurnal_students: newStudentsData,
-                          jurnal_student_details: newDetails,
-                          jurnal_mutasi: newMutasi
-                      }
-                  }));
-
+                  syncStudentBundle({ students: newStudentsData, details: newDetails, mutasi: newMutasi, deleted: newDeleted });
                   alert(`Siswa "${stName}" berhasil dikembalikan ke kelas ${cls}!`);
               });
           };
@@ -4566,37 +4923,32 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
           const handleDeleteAlumni = (alumniItem) => {
               executeWithAdmin(() => {
                   const stName = alumniItem.nama || alumniItem.name;
+                  const cls = alumniItem.kelas;
                   if (!confirm(`Yakin ingin menghapus permanen data alumni "${stName}" dari arsip?\n\nTindakan ini tidak dapat dibatalkan.`)) {
                       return;
                   }
 
+                  const nowTs = Date.now();
+                  const curMutasi = mutasiDataRef.current;
                   const newMutasi = {
-                      ...mutasiData,
-                      keluar: (mutasiData.keluar || []).filter(item => item.id !== alumniItem.id)
+                      ...curMutasi,
+                      keluar: (curMutasi.keluar || []).filter(item => item.id !== alumniItem.id)
                   };
+                  const newDeleted = cls ? markStudentsDeletedInMap(deletedStudentsRef.current, cls, [stName], nowTs) : deletedStudentsRef.current;
 
-                  setMutasiData(newMutasi);
-                  localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
-
-                  window.dispatchEvent(new CustomEvent('firebaseSync', {
-                      detail: { jurnal_mutasi: newMutasi }
-                  }));
-
+                  syncStudentBundle({ mutasi: newMutasi, deleted: newDeleted });
                   alert(`Data alumni "${stName}" berhasil dihapus dari arsip.`);
               });
           };
 
           const handleSaveEditAlumni = (updatedItem) => {
               executeWithAdmin(() => {
+                  const curMutasi = mutasiDataRef.current;
                   const newMutasi = {
-                      ...mutasiData,
-                      keluar: (mutasiData.keluar || []).map(item => item.id === updatedItem.id ? updatedItem : item)
+                      ...curMutasi,
+                      keluar: (curMutasi.keluar || []).map(item => item.id === updatedItem.id ? updatedItem : item)
                   };
-                  setMutasiData(newMutasi);
-                  localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
-                  window.dispatchEvent(new CustomEvent('firebaseSync', {
-                      detail: { jurnal_mutasi: newMutasi }
-                  }));
+                  syncStudentBundle({ mutasi: newMutasi });
                   setEditingAlumniItem(null);
                   alert('Data alumni berhasil diperbarui!');
               });
@@ -4630,7 +4982,11 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       return;
                   }
 
-                  const det = studentDetails[`${cls}-${targetName}`];
+                  const nowTs = Date.now();
+                  const curDetails = studentDetailsRef.current;
+                  const curMutasi = mutasiDataRef.current;
+                  const curStudents = studentsDataRef.current;
+                  const det = curDetails[`${cls}-${targetName}`];
                   const nis = addAlumniForm.nis ? addAlumniForm.nis.trim() : (det ? det.nis : '-');
                   const jenis = addAlumniForm.jenis || 'Pindah Sekolah';
                   const ketDetail = (addAlumniForm.keterangan || '').trim();
@@ -4639,7 +4995,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                   const gender = det ? (det.gender || 'L') : 'L';
 
                   const newAlumniItem = {
-                      id: Date.now(),
+                      id: nowTs,
                       nis: nis || '-',
                       nama: targetName,
                       kelas: cls,
@@ -4649,36 +5005,19 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                   };
 
                   const newMutasi = {
-                      ...mutasiData,
-                      keluar: [newAlumniItem, ...(mutasiData.keluar || [])]
+                      ...curMutasi,
+                      keluar: [newAlumniItem, ...(curMutasi.keluar || [])]
                   };
 
-                  // Otomatis hapus siswa dari kelas aktif
-                  const newStudentsData = { ...studentsData };
+                  const newStudentsData = { ...curStudents };
                   if (newStudentsData[cls]) {
-                      newStudentsData[cls] = newStudentsData[cls].filter(s => s !== targetName);
+                      newStudentsData[cls] = removeStudentsFromList(newStudentsData[cls], [targetName]);
                   }
 
-                  // Hapus dari studentDetails
-                  const newDetails = { ...studentDetails };
-                  delete newDetails[`${cls}-${targetName}`];
+                  const newDetails = removeDetailsForClassStudents(curDetails, cls, [targetName]);
+                  const newDeleted = markStudentsDeletedInMap(deletedStudentsRef.current, cls, [targetName], nowTs);
 
-                  setMutasiData(newMutasi);
-                  setStudentsData(newStudentsData);
-                  setStudentDetails(newDetails);
-
-                  localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
-                  localStorage.setItem('jurnal_students', JSON.stringify(newStudentsData));
-                  localStorage.setItem('jurnal_student_details', JSON.stringify(newDetails));
-
-                  window.dispatchEvent(new CustomEvent('firebaseSync', {
-                      detail: {
-                          jurnal_mutasi: newMutasi,
-                          jurnal_students: newStudentsData,
-                          jurnal_student_details: newDetails
-                      }
-                  }));
-
+                  syncStudentBundle({ students: newStudentsData, details: newDetails, mutasi: newMutasi, deleted: newDeleted });
                   setIsAddAlumniModalOpen(false);
                   alert(`Siswa "${targetName}" berhasil dimasukkan ke Data Alumni (${fullKeterangan}) dan otomatis dihapus dari daftar kelas ${cls}!`);
               });
@@ -4729,9 +5068,14 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       return;
                   }
 
+                  const nowTs = Date.now();
+                  const curStudents = studentsDataRef.current;
+                  const curDetails = studentDetailsRef.current;
+                  let newDeleted = { ...deletedStudentsRef.current };
+
                   if (hapusSemuaBiodataTarget === 'kelas') {
                       const cls = activeClass;
-                      const currentList = studentsData[cls] || [];
+                      const currentList = curStudents[cls] || [];
                       if (currentList.length === 0) {
                           alert(`Data siswa kelas ${classToDisplay(cls)} sudah kosong.`);
                           setIsHapusSemuaBiodataModalOpen(false);
@@ -4739,38 +5083,26 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                           return;
                       }
 
-                      const newStudentsData = { ...studentsData, [cls]: [] };
-                      const newDetails = { ...studentDetails };
-                      currentList.forEach(st => {
-                          delete newDetails[`${cls}-${st}`];
-                      });
+                      const allToMark = [...currentList, ...(INITIAL_STUDENTS[cls] || [])];
+                      newDeleted = markStudentsDeletedInMap(newDeleted, cls, allToMark, nowTs);
+                      const newStudentsData = { ...curStudents, [cls]: [] };
+                      const newDetails = removeDetailsForClassStudents(curDetails, cls, allToMark);
 
-                      setStudentsData(newStudentsData);
-                      setStudentDetails(newDetails);
-                      localStorage.setItem('jurnal_students', JSON.stringify(newStudentsData));
-                      localStorage.setItem('jurnal_student_details', JSON.stringify(newDetails));
-                      window.dispatchEvent(new CustomEvent('firebaseSync', { 
-                          detail: { jurnal_students: newStudentsData, jurnal_student_details: newDetails } 
-                      }));
-
+                      syncStudentBundle({ students: newStudentsData, details: newDetails, deleted: newDeleted });
                       setIsHapusSemuaBiodataModalOpen(false);
                       setHapusSemuaKonfirmasiText('');
                       alert(`Berhasil menghapus seluruh data siswa di kelas ${classToDisplay(cls)} (${currentList.length} siswa).`);
                   } else {
                       const newStudentsData = {};
-                      Object.keys(studentsData).forEach(k => {
+                      const allClasses = new Set([...Object.keys(curStudents), ...Object.keys(INITIAL_STUDENTS)]);
+                      allClasses.forEach(k => {
                           newStudentsData[k] = [];
+                          const toMark = [...(curStudents[k] || []), ...(INITIAL_STUDENTS[k] || [])];
+                          newDeleted = markStudentsDeletedInMap(newDeleted, k, toMark, nowTs);
                       });
                       const newDetails = {};
 
-                      setStudentsData(newStudentsData);
-                      setStudentDetails(newDetails);
-                      localStorage.setItem('jurnal_students', JSON.stringify(newStudentsData));
-                      localStorage.setItem('jurnal_student_details', JSON.stringify(newDetails));
-                      window.dispatchEvent(new CustomEvent('firebaseSync', { 
-                          detail: { jurnal_students: newStudentsData, jurnal_student_details: newDetails } 
-                      }));
-
+                      syncStudentBundle({ students: newStudentsData, details: newDetails, deleted: newDeleted });
                       setIsHapusSemuaBiodataModalOpen(false);
                       setHapusSemuaKonfirmasiText('');
                       alert('Berhasil menghapus seluruh data siswa di semua kelas.');
@@ -4781,13 +5113,29 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
           const handleRestoreDefaultSiswa = () => {
               executeWithAdmin(() => {
                   if (confirm(`Apakah Anda yakin ingin memuat kembali data siswa bawaan (default)?\n\nSeluruh data kelas 7, 8 (termasuk hasil input PDF), dan 9 akan dipulihkan.`)) {
-                      setStudentsData(INITIAL_STUDENTS);
-                      setStudentDetails(typeof CLASS_8_STUDENTS_DETAIL !== 'undefined' ? { ...CLASS_8_STUDENTS_DETAIL } : {});
-                      localStorage.setItem('jurnal_students', JSON.stringify(INITIAL_STUDENTS));
-                      localStorage.setItem('jurnal_student_details', JSON.stringify(typeof CLASS_8_STUDENTS_DETAIL !== 'undefined' ? CLASS_8_STUDENTS_DETAIL : {}));
-                      window.dispatchEvent(new CustomEvent('firebaseSync', { 
-                          detail: { jurnal_students: INITIAL_STUDENTS, jurnal_student_details: typeof CLASS_8_STUDENTS_DETAIL !== 'undefined' ? CLASS_8_STUDENTS_DETAIL : {} } 
-                      }));
+                      const nowTs = Date.now();
+                      let newDeleted = {};
+                      Object.keys(deletedStudentsRef.current || {}).forEach(k => {
+                          newDeleted[k] = { del: false, ts: nowTs };
+                      });
+                      Object.keys(INITIAL_STUDENTS).forEach(cls => {
+                          newDeleted = markStudentsRestoredInMap(newDeleted, cls, INITIAL_STUDENTS[cls], nowTs);
+                      });
+                      const curMutasi = mutasiDataRef.current;
+                      const mutatedExcluded = getExcludedStudentKeys(curMutasi, newDeleted);
+                      const restoredStudents = filterStudentsMap(INITIAL_STUDENTS, mutatedExcluded);
+                      let restoredDetails = mergeWithClass8Details({}, mutatedExcluded, restoredStudents);
+                      if (typeof STUDENTS_DETAIL_DATA !== 'undefined') {
+                          Object.keys(STUDENTS_DETAIL_DATA).forEach(cls => {
+                              STUDENTS_DETAIL_DATA[cls].forEach(st => {
+                                  if (!mutatedExcluded.has(makeStudentExclusionKey(cls, st.name))) {
+                                      const k = cls + '-' + st.name;
+                                      if (!restoredDetails[k]) restoredDetails[k] = { nis: st.nis, gender: st.gender };
+                                  }
+                              });
+                          });
+                      }
+                      syncStudentBundle({ students: restoredStudents, details: restoredDetails, deleted: newDeleted });
                       setIsHapusSemuaBiodataModalOpen(false);
                       setHapusSemuaKonfirmasiText('');
                       alert('Data siswa berhasil dipulihkan ke data awal bawaan!');
@@ -4804,14 +5152,14 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       return;
                   }
 
-                  const newStudentsData = { ...studentsData };
+                  const nowTs = Date.now();
+                  const newStudentsData = { ...studentsDataRef.current };
                   if (!newStudentsData[cls]) newStudentsData[cls] = [];
-                  if (!newStudentsData[cls].includes(newName)) {
-                      newStudentsData[cls].push(newName);
-                      newStudentsData[cls].sort((a,b) => a.localeCompare(b));
+                  if (!newStudentsData[cls].some(s => normalizeStudentName(s) === normalizeStudentName(newName))) {
+                      newStudentsData[cls] = [...newStudentsData[cls], newName].sort((a,b) => a.localeCompare(b));
                   }
 
-                  const newDetails = { ...studentDetails };
+                  const newDetails = { ...studentDetailsRef.current };
                   newDetails[`${cls}-${newName}`] = {
                       nama: newName,
                       nis: newBiodataForm.nis || '-',
@@ -4842,18 +5190,8 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       foto: newBiodataForm.foto || ''
                   };
 
-                  setStudentsData(newStudentsData);
-                  setStudentDetails(newDetails);
-
-                  localStorage.setItem('jurnal_students', JSON.stringify(newStudentsData));
-                  localStorage.setItem('jurnal_student_details', JSON.stringify(newDetails));
-
-                  window.dispatchEvent(new CustomEvent('firebaseSync', {
-                      detail: {
-                          jurnal_students: newStudentsData,
-                          jurnal_student_details: newDetails
-                      }
-                  }));
+                  const newDeleted = markStudentsRestoredInMap(deletedStudentsRef.current, cls, [newName], nowTs);
+                  syncStudentBundle({ students: newStudentsData, details: newDetails, deleted: newDeleted });
 
                   setIsAddingBiodataStudent(false);
                   setNewBiodataForm({
@@ -4892,16 +5230,15 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
 
           const handleSyncBiodataToServer = () => {
               try {
-                  const merged = mergeWithClass8Details(studentDetails);
-                  setStudentDetails(merged);
-                  localStorage.setItem('jurnal_student_details', JSON.stringify(merged));
-                  if (window.firebaseLoaded && window.db) {
-                      window.db.ref('simadu_data_v2/jurnal_student_details').set(JSON.stringify(merged))
-                          .then(() => alert('Data identitas siswa berhasil disimpan dan disinkronkan ke server Firebase!'))
-                          .catch(err => alert('Gagal menyimpan ke server: ' + err.message));
-                  } else {
-                      alert('Data tersimpan secara lokal di browser.');
-                  }
+                  const excluded = getExcludedStudentKeys(mutasiDataRef.current, deletedStudentsRef.current);
+                  const merged = mergeWithClass8Details(studentDetailsRef.current, excluded, studentsDataRef.current);
+                  syncStudentBundle({ details: merged }).then(res => {
+                      if (res && res.synced) {
+                          alert('Data identitas siswa berhasil disimpan dan disinkronkan ke server Firebase!');
+                      } else {
+                          alert('Data tersimpan secara lokal di browser.');
+                      }
+                  }).catch(err => alert('Gagal menyimpan ke server: ' + err.message));
               } catch (e) {
                   alert('Terjadi kesalahan: ' + e.message);
               }
@@ -5021,9 +5358,11 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                           const ayahCol = findCol(['ayah']);
                           const ibuCol = findCol(['ibu']);
 
-                          const newStudentsData = { ...studentsData };
+                          const nowTs = Date.now();
+                          const newStudentsData = { ...studentsDataRef.current };
                           if (!newStudentsData[activeClass]) newStudentsData[activeClass] = [];
-                          const newDetails = { ...studentDetails };
+                          const newDetails = { ...studentDetailsRef.current };
+                          const importedNames = [];
                           let importedCount = 0;
 
                           for (let r = headerRowIndex + 1; r < json.length; r++) {
@@ -5032,9 +5371,10 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                               const stName = nameCol !== -1 && row[nameCol] ? String(row[nameCol]).trim() : '';
                               if (!stName || stName.toLowerCase() === 'nama') continue;
 
-                              if (!newStudentsData[activeClass].includes(stName)) {
+                              if (!newStudentsData[activeClass].some(s => normalizeStudentName(s) === normalizeStudentName(stName))) {
                                   newStudentsData[activeClass].push(stName);
                               }
+                              importedNames.push(stName);
 
                               const nis = nisCol !== -1 && row[nisCol] ? String(row[nisCol]).trim() : '-';
                               const nisn = nisnCol !== -1 && row[nisnCol] ? String(row[nisnCol]).trim() : (nis !== '-' ? '01' + nis.padStart(8, '0') : '-');
@@ -5066,19 +5406,8 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                           }
 
                           newStudentsData[activeClass].sort((a,b) => a.localeCompare(b));
-
-                          setStudentsData(newStudentsData);
-                          setStudentDetails(newDetails);
-
-                          localStorage.setItem('jurnal_students', JSON.stringify(newStudentsData));
-                          localStorage.setItem('jurnal_student_details', JSON.stringify(newDetails));
-
-                          window.dispatchEvent(new CustomEvent('firebaseSync', {
-                              detail: {
-                                  jurnal_students: newStudentsData,
-                                  jurnal_student_details: newDetails
-                              }
-                          }));
+                          const newDeleted = markStudentsRestoredInMap(deletedStudentsRef.current, activeClass, importedNames, nowTs);
+                          syncStudentBundle({ students: newStudentsData, details: newDetails, deleted: newDeleted });
 
                           alert(`Berhasil mengimpor ${importedCount} data siswa ke kelas ${activeClass}!`);
                       } catch (err) {
@@ -5093,17 +5422,15 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
           
           useEffect(() => { 
               localStorage.setItem('jurnal_nis_terakhir', JSON.stringify(nisTerakhirData));
-              if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
-                  try { window.db.ref('simadu_data_v2/jurnal_nis_terakhir').set(JSON.stringify(nisTerakhirData)); } catch(e) {}
-              }
           }, [nisTerakhirData]);
 
           useEffect(() => { 
               localStorage.setItem('jurnal_mutasi', JSON.stringify(mutasiData));
-              if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
-                  try { window.db.ref('simadu_data_v2/jurnal_mutasi').set(JSON.stringify(mutasiData)); } catch(e) {}
-              }
           }, [mutasiData]);
+
+          useEffect(() => { 
+              localStorage.setItem('jurnal_deleted_students', JSON.stringify(deletedStudents));
+          }, [deletedStudents]);
           const [editingJurnal, setEditingJurnal] = useState(null);
 
           const scriptUrl = "https://script.google.com/macros/s/AKfycbxKrPzQ8o0XD6vlg1t0AIt8_-Y4fUAOgA-pwTdtPwqcpp2uDRo9IgPHFfJ_Sl0bsByg1Q/exec";
@@ -5169,18 +5496,23 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
     localStorage.setItem('jurnal_gradesData', JSON.stringify(gradesData));
     if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
         window.localUpdateInProgress = true;
+        window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 2500);
         clearTimeout(window.gradesSyncTimeout);
         window.gradesSyncTimeout = setTimeout(() => {
             try { window.db.ref('simadu_data_v2/jurnal_gradesData').set(JSON.stringify(gradesData)); } catch(e) {}
-            setTimeout(() => { window.localUpdateInProgress = false; }, 500);
+            setTimeout(() => {
+                if (!window._pendingFirebaseKeys || window._pendingFirebaseKeys.size === 0) {
+                    window.localUpdateInProgress = false;
+                }
+            }, 500);
         }, 800);
     }
 }, [gradesData]);
 
-                    useEffect(() => {
+          useEffect(() => {
               const handleSync = (e) => {
-                  const data = e.detail;
-                  
+                  const data = e.detail || {};
+
                   const updateStateIfChanged = (setter, newData) => {
                       setter(prev => {
                           if (JSON.stringify(prev) === JSON.stringify(newData)) return prev;
@@ -5188,18 +5520,75 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       });
                   };
 
-                  if (data.jurnal_student_details) {
-                      const mergedRemote = mergeWithClass8Details(data.jurnal_student_details);
-                      updateStateIfChanged(setStudentDetails, mergedRemote);
+                  const mergedDeleted = mergeDeletedMaps(deletedStudentsRef.current, data.jurnal_deleted_students);
+                  if (JSON.stringify(mergedDeleted) !== JSON.stringify(deletedStudentsRef.current)) {
+                      deletedStudentsRef.current = mergedDeleted;
+                      setDeletedStudents(mergedDeleted);
                   }
-                  if (data.jurnal_students) updateStateIfChanged(setStudentsData, data.jurnal_students);
+
+                  const effectiveMutasi = data.jurnal_mutasi || mutasiDataRef.current;
+                  if (data.jurnal_mutasi) {
+                      mutasiDataRef.current = data.jurnal_mutasi;
+                      updateStateIfChanged(setMutasiData, data.jurnal_mutasi);
+                  }
+
+                  const excluded = getExcludedStudentKeys(effectiveMutasi, mergedDeleted);
+
+                  let cleanedStudentsForMerge = studentsDataRef.current;
+                  let shouldHealCloud = false;
+                  const healPayload = {};
+
+                  if (data.jurnal_students) {
+                      const filteredRemoteStudents = filterStudentsMap(data.jurnal_students, excluded);
+                      cleanedStudentsForMerge = filteredRemoteStudents;
+                      if (JSON.stringify(filteredRemoteStudents) !== JSON.stringify(data.jurnal_students)) {
+                          shouldHealCloud = true;
+                          healPayload.jurnal_students = filteredRemoteStudents;
+                      }
+                      studentsDataRef.current = filteredRemoteStudents;
+                      updateStateIfChanged(setStudentsData, filteredRemoteStudents);
+                  } else if (data.jurnal_mutasi || data.jurnal_deleted_students) {
+                      const reFilteredLocal = filterStudentsMap(studentsDataRef.current, excluded);
+                      cleanedStudentsForMerge = reFilteredLocal;
+                      studentsDataRef.current = reFilteredLocal;
+                      updateStateIfChanged(setStudentsData, reFilteredLocal);
+                  }
+
+                  if (data.jurnal_deleted_students === undefined && Object.keys(mergedDeleted).length > 0 && data.jurnal_students) {
+                      shouldHealCloud = true;
+                      healPayload.jurnal_deleted_students = mergedDeleted;
+                  } else if (data.jurnal_deleted_students && JSON.stringify(mergedDeleted) !== JSON.stringify(data.jurnal_deleted_students)) {
+                      shouldHealCloud = true;
+                      healPayload.jurnal_deleted_students = mergedDeleted;
+                  }
+
+                  if (data.jurnal_student_details) {
+                      const mergedRemoteDetails = filterDetailsMap(mergeWithClass8Details(data.jurnal_student_details, excluded, cleanedStudentsForMerge), excluded);
+                      studentDetailsRef.current = mergedRemoteDetails;
+                      updateStateIfChanged(setStudentDetails, mergedRemoteDetails);
+                  } else if (data.jurnal_mutasi || data.jurnal_deleted_students) {
+                      const cleanedLocalDetails = filterDetailsMap(studentDetailsRef.current, excluded);
+                      studentDetailsRef.current = cleanedLocalDetails;
+                      updateStateIfChanged(setStudentDetails, cleanedLocalDetails);
+                  }
+
+                  if (shouldHealCloud && window.firebaseLoaded && window.db && window.firebaseInitialSyncDone && typeof window.pushSimaduDataAtomic === 'function') {
+                      const healSig = JSON.stringify(healPayload);
+                      if (window._lastStudentHealSig !== healSig) {
+                          window._lastStudentHealSig = healSig;
+                          setTimeout(() => {
+                              window.pushSimaduDataAtomic(healPayload).catch(() => {});
+                          }, 600);
+                      }
+                  }
+
                   if (data.jurnal_attendance) updateStateIfChanged(setAttendance, data.jurnal_attendance);
                   if (data.jurnal_attendance_mengajar) updateStateIfChanged(setAttendanceJurnal, data.jurnal_attendance_mengajar);
                   if (data.jurnal_classNotes) updateStateIfChanged(setClassNotes, data.jurnal_classNotes);
                   if (data.jurnal_savingsData) updateStateIfChanged(setSavingsData, data.jurnal_savingsData);
                   if (data.jurnal_agendaKelasData) updateStateIfChanged(setAgendaKelasData, data.jurnal_agendaKelasData);
                   if (data.jurnal_gradesData) updateStateIfChanged(setGradesData, data.jurnal_gradesData);
-                  if (data.jurnal_mutasi) updateStateIfChanged(setMutasiData, data.jurnal_mutasi); if (data.jurnal_nis_terakhir) updateStateIfChanged(setNisTerakhirData, data.jurnal_nis_terakhir);
+                  if (data.jurnal_nis_terakhir) updateStateIfChanged(setNisTerakhirData, data.jurnal_nis_terakhir);
               };
               window.addEventListener('firebaseSync', handleSync);
               return () => window.removeEventListener('firebaseSync', handleSync);
@@ -5317,14 +5706,19 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       message: `Masukkan nama lengkap siswa baru untuk kelas ${activeClass}:`,
                       placeholder: 'Nama Lengkap',
                       onConfirm: (nama) => {
-                          if (nama && nama.trim() !== '') {
-                              setStudentsData(prev => {
-                                  const classStudents = [...(prev[activeClass] || [])];
-                                  classStudents.push(nama.trim());
-                                  classStudents.sort(); 
-                                  return { ...prev, [activeClass]: classStudents };
-                              });
-                              showAlert(`Siswa bernama "${nama.trim()}" berhasil ditambahkan ke kelas ${activeClass}.`);
+                          const cleanName = (nama || '').trim();
+                          if (cleanName !== '') {
+                              const nowTs = Date.now();
+                              const curStudents = studentsDataRef.current;
+                              const classStudents = [...(curStudents[activeClass] || [])];
+                              if (!classStudents.some(s => normalizeStudentName(s) === normalizeStudentName(cleanName))) {
+                                  classStudents.push(cleanName);
+                                  classStudents.sort((a, b) => a.localeCompare(b));
+                              }
+                              const newStudentsData = { ...curStudents, [activeClass]: classStudents };
+                              const newDeleted = markStudentsRestoredInMap(deletedStudentsRef.current, activeClass, [cleanName], nowTs);
+                              syncStudentBundle({ students: newStudentsData, deleted: newDeleted });
+                              showAlert(`Siswa bernama "${cleanName}" berhasil ditambahkan ke kelas ${activeClass}.`);
                           } else {
                               setDialog(null);
                           }
@@ -5441,15 +5835,19 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                             }
                             
                             if (newStudents.length > 0) {
-                                setStudentsData(prev => {
-                                    const currentList = [...(prev[activeClass] || [])];
-                                    newStudents.forEach(st => {
-                                        if(!currentList.includes(st)) currentList.push(st);
-                                    });
-                                    currentList.sort((a, b) => a.localeCompare(b));
-                                    return { ...prev, [activeClass]: currentList };
+                                const nowTs = Date.now();
+                                const curStudents = studentsDataRef.current;
+                                const currentList = [...(curStudents[activeClass] || [])];
+                                newStudents.forEach(st => {
+                                    if (!currentList.some(s => normalizeStudentName(s) === normalizeStudentName(st))) {
+                                        currentList.push(st);
+                                    }
                                 });
-                                setStudentDetails(prev => ({ ...prev, ...newDetails }));
+                                currentList.sort((a, b) => a.localeCompare(b));
+                                const updatedStudents = { ...curStudents, [activeClass]: currentList };
+                                const updatedDetails = { ...studentDetailsRef.current, ...newDetails };
+                                const newDeleted = markStudentsRestoredInMap(deletedStudentsRef.current, activeClass, newStudents, nowTs);
+                                syncStudentBundle({ students: updatedStudents, details: updatedDetails, deleted: newDeleted });
                                 alert(`Berhasil mengimpor ${newStudents.length} siswa ke Kelas ${activeClass}. Sistem telah mengurutkan daftar nama secara otomatis.`);
                             } else {
                                 alert('Tidak ada data siswa yang valid ditemukan dalam file Excel. Pastikan format kolom: NO, NIS, NAMA SISWA, L/P.');
@@ -5465,7 +5863,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
 
             const handleHapusSiswa = () => {
               executeWithAdmin(() => {
-                  const listSiswa = [...(studentsData[activeClass] || [])].sort((a, b) => a.localeCompare(b));
+                  const listSiswa = [...(studentsDataRef.current[activeClass] || [])].sort((a, b) => a.localeCompare(b));
                   const previewList = listSiswa.slice(0, 10).join(', ') + (listSiswa.length > 10 ? '...' : '');
                   
                   setDialog({
@@ -5474,18 +5872,23 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       placeholder: 'Nama Lengkap Siswa',
                       onConfirm: (nama) => {
                           if (nama && nama.trim() !== '') {
-                              const target = nama.trim();
-                              if (listSiswa.includes(target)) {
+                              const inputNorm = normalizeStudentName(nama);
+                              const target = listSiswa.find(s => normalizeStudentName(s) === inputNorm);
+                              if (target) {
                                   setDialog({
                                       type: 'confirm',
                                       message: `Apakah Anda yakin ingin menghapus "${target}" dari kelas ${activeClass}?`,
                                       onConfirm: () => {
-                                          const stDetail = studentDetails[`${activeClass}-${target}`];
+                                          const nowTs = Date.now();
+                                          const curDetails = studentDetailsRef.current;
+                                          const curMutasi = mutasiDataRef.current;
+                                          const curStudents = studentsDataRef.current;
+                                          const stDetail = curDetails[`${activeClass}-${target}`];
                                           const nis = stDetail ? (stDetail.nis || '-') : '-';
                                           const gender = stDetail ? (stDetail.gender || 'L') : 'L';
                                           
                                           const newKeluarItem = {
-                                              id: Date.now(),
+                                              id: nowTs,
                                               nis: nis,
                                               nama: target,
                                               kelas: activeClass,
@@ -5495,49 +5898,34 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                           };
 
                                           const newMutasi = {
-                                              ...mutasiData,
-                                              keluar: [newKeluarItem, ...(mutasiData.keluar || [])]
+                                              ...curMutasi,
+                                              keluar: [newKeluarItem, ...(curMutasi.keluar || [])]
                                           };
-                                          setMutasiData(newMutasi);
-                                          localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
+                                          const newStudentsData = {
+                                              ...curStudents,
+                                              [activeClass]: removeStudentsFromList(curStudents[activeClass] || [], [target])
+                                          };
+                                          const newDetails = removeDetailsForClassStudents(curDetails, activeClass, [target]);
+                                          const newDeleted = markStudentsDeletedInMap(deletedStudentsRef.current, activeClass, [target], nowTs);
 
-                                          setStudentsData(prev => {
-                                              const classStudents = (prev[activeClass] || []).filter(s => s !== target);
-                                              const updated = { ...prev, [activeClass]: classStudents };
-                                              localStorage.setItem('jurnal_students', JSON.stringify(updated));
-                                              return updated;
-                                          });
-
-                                          setStudentDetails(prev => {
-                                              const next = { ...prev };
-                                              delete next[`${activeClass}-${target}`];
-                                              localStorage.setItem('jurnal_student_details', JSON.stringify(next));
-                                              return next;
-                                          });
-
-                                          window.dispatchEvent(new CustomEvent('firebaseSync', {
-                                              detail: {
-                                                  jurnal_mutasi: newMutasi
-                                              }
-                                          }));
-
+                                          syncStudentBundle({ students: newStudentsData, details: newDetails, mutasi: newMutasi, deleted: newDeleted });
                                           showAlert(`Siswa "${target}" berhasil dihapus dari kelas ${activeClass} dan diarsipkan ke Data Alumni.`);
                                       },
                                       onCancel: () => setDialog(null)
                                   });
                               } else {
-                                  showAlert(`Siswa dengan nama "${target}" tidak ditemukan di kelas ${activeClass}. Harap perhatikan huruf besar dan kecil.`);
+                                  showAlert(`Siswa dengan nama "${nama.trim()}" tidak ditemukan di kelas ${activeClass}.`);
                               }
                           } else {
                               setDialog(null);
                           }
                       },
-                                              onCancel: () => setDialog(null)
-                    });
-                });
+                      onCancel: () => setDialog(null)
+                  });
+              });
             };
 
-                        const handleHapusMassal = () => {
+            const handleHapusMassal = () => {
                 executeWithAdmin(() => {
                     setDialog({
                         type: 'prompt',
@@ -5550,12 +5938,17 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                     type: 'confirm',
                                     message: `PERINGATAN KRITIS!\n\nAnda akan MENGHAPUS PERMANEN SEMUA SISWA pada Kelas ${activeClass}.\n\nData tidak dapat dikembalikan! Lanjutkan?`,
                                     onConfirm: () => {
-                                        setStudentsData(prev => {
-                                            return { ...prev, [activeClass]: [] };
-                                        });
-                                        alert(`Berhasil mengosongkan semua siswa di Kelas ${activeClass}`);
+                                        const nowTs = Date.now();
+                                        const curStudents = studentsDataRef.current;
+                                        const allToMark = [...(curStudents[activeClass] || []), ...(INITIAL_STUDENTS[activeClass] || [])];
+                                        const newStudentsData = { ...curStudents, [activeClass]: [] };
+                                        const newDetails = removeDetailsForClassStudents(studentDetailsRef.current, activeClass, allToMark);
+                                        const newDeleted = markStudentsDeletedInMap(deletedStudentsRef.current, activeClass, allToMark, nowTs);
+                                        syncStudentBundle({ students: newStudentsData, details: newDetails, deleted: newDeleted });
                                         setDialog(null);
-                                    }
+                                        alert(`Berhasil mengosongkan semua siswa di Kelas ${activeClass}`);
+                                    },
+                                    onCancel: () => setDialog(null)
                                 });
                             } else {
                                 if(target) alert('Konfirmasi gagal. Teks yang diketik tidak cocok dengan nama kelas saat ini.');
@@ -8281,12 +8674,13 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                             </button>
                             <button onClick={() => {
                                 executeWithAdmin(() => {
-                                    localStorage.setItem('jurnal_students', JSON.stringify(studentsData));
-                                    localStorage.setItem('jurnal_student_details', JSON.stringify(studentDetails));
-                                    window.dispatchEvent(new CustomEvent('firebaseSync', { 
-                                        detail: { jurnal_students: studentsData, jurnal_student_details: studentDetails } 
-                                    }));
-                                    alert('Data Siswa berhasil disimpan ke server!');
+                                    syncStudentBundle({}).then(res => {
+                                        if (res && res.synced) {
+                                            alert('Data Siswa berhasil disimpan ke server!');
+                                        } else {
+                                            alert('Data Siswa berhasil disimpan secara lokal (menunggu koneksi server).');
+                                        }
+                                    }).catch(err => alert('Data Siswa tersimpan lokal, gagal sinkron ke server: ' + err.message));
                                 });
                             }} className="px-3 py-1.5 bg-yellow-500 text-white hover:bg-yellow-600 rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
@@ -8602,26 +8996,26 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                     if (pwd === 'F134nto') {
                                         const nis = prompt('Masukkan NIS Siswa:');
                                         if(!nis) return;
-                                        const nama = prompt('Masukkan Nama Siswa:');
+                                        const namaRaw = prompt('Masukkan Nama Siswa:');
+                                        const nama = (namaRaw || '').trim();
                                         if(!nama) return;
-                                        const gender = prompt('Masukkan L/P (Laki-laki / Perempuan):');
+                                        const genderRaw = prompt('Masukkan L/P (Laki-laki / Perempuan):');
+                                        const gender = (genderRaw || '').trim().toUpperCase();
                                         if(gender !== 'L' && gender !== 'P') { alert('Harus L atau P!'); return; }
                                         
-                                        const newStudentsData = { ...studentsData };
+                                        const nowTs = Date.now();
+                                        const curStudents = studentsDataRef.current;
+                                        const newStudentsData = { ...curStudents };
                                         if(!newStudentsData[activeClass]) newStudentsData[activeClass] = [];
-                                        newStudentsData[activeClass].push(nama);
+                                        if (!newStudentsData[activeClass].some(s => normalizeStudentName(s) === normalizeStudentName(nama))) {
+                                            newStudentsData[activeClass] = [...newStudentsData[activeClass], nama].sort((a, b) => a.localeCompare(b));
+                                        }
                                         
-                                        const newDetails = { ...studentDetails };
-                                        newDetails[`${activeClass}-${nama}`] = { nis, gender };
+                                        const newDetails = { ...studentDetailsRef.current };
+                                        newDetails[`${activeClass}-${nama}`] = { ...(newDetails[`${activeClass}-${nama}`] || {}), nis: nis.trim(), gender };
+                                        const newDeleted = markStudentsRestoredInMap(deletedStudentsRef.current, activeClass, [nama], nowTs);
                                         
-                                        setStudentDetails(newDetails);
-                                        setStudentsData(newStudentsData);
-                                        
-                                        setTimeout(() => {
-                                            window.dispatchEvent(new CustomEvent('firebaseSync', { 
-                                                detail: { jurnal_students: newStudentsData, jurnal_student_details: newDetails } 
-                                            }));
-                                        }, 500);
+                                        syncStudentBundle({ students: newStudentsData, details: newDetails, deleted: newDeleted });
                                         alert('Siswa berhasil ditambahkan!');
                                     } else if (pwd !== null) {
                                         alert('Password salah!');
@@ -8696,16 +9090,26 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                             const pwd = prompt('Masukkan password admin untuk menyimpan perubahan:');
                                                             if (pwd === 'F134nto') {
                                                                 const { originalName, name, nis, gender } = editingStudentInfo;
-                                                                if (!name.trim()) { alert('Nama tidak boleh kosong!'); return; }
+                                                                const trimmedName = (name || '').trim();
+                                                                if (!trimmedName) { alert('Nama tidak boleh kosong!'); return; }
                                                                 
-                                                                const newStudentsData = { ...studentsData };
-                                                                const newDetails = { ...studentDetails };
+                                                                const nowTs = Date.now();
+                                                                const newStudentsData = { ...studentsDataRef.current };
+                                                                let newDetails = { ...studentDetailsRef.current };
+                                                                const existingDetail = newDetails[`${activeClass}-${originalName}`] || {};
+                                                                let newDeleted = markStudentsRestoredInMap(deletedStudentsRef.current, activeClass, [trimmedName], nowTs);
+                                                                const extraKeys = {};
                                                                 
-                                                                if (originalName !== name) {
-                                                                    newStudentsData[activeClass] = newStudentsData[activeClass].filter(s => s !== originalName);
-                                                                    newStudentsData[activeClass].push(name.trim());
-                                                                    newStudentsData[activeClass].sort((a,b) => a.localeCompare(b));
-                                                                    delete newDetails[`${activeClass}-${originalName}`];
+                                                                if (originalName !== trimmedName) {
+                                                                    newStudentsData[activeClass] = removeStudentsFromList(newStudentsData[activeClass] || [], [originalName]);
+                                                                    if (!newStudentsData[activeClass].some(s => normalizeStudentName(s) === normalizeStudentName(trimmedName))) {
+                                                                        newStudentsData[activeClass].push(trimmedName);
+                                                                        newStudentsData[activeClass].sort((a,b) => a.localeCompare(b));
+                                                                    }
+                                                                    newDetails = removeDetailsForClassStudents(newDetails, activeClass, [originalName]);
+                                                                    if (normalizeStudentName(originalName) !== normalizeStudentName(trimmedName)) {
+                                                                        newDeleted = markStudentsDeletedInMap(newDeleted, activeClass, [originalName], nowTs);
+                                                                    }
                                                                     
                                                                     const replaceKey = (obj, oldN, newN) => {
                                                                         const newObj = {};
@@ -8725,40 +9129,26 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                                         return newObj;
                                                                     };
                                                                     
-                                                                    const newAttendance = replaceKey(attendance, originalName, name.trim());
+                                                                    const newAttendance = replaceKey(attendance, originalName, trimmedName);
                                                                     setAttendance(newAttendance);
+                                                                    extraKeys.jurnal_attendance = newAttendance;
                                                                     
-                                                                    const newAttendanceJurnal = replaceKey(attendanceJurnal, originalName, name.trim());
+                                                                    const newAttendanceJurnal = replaceKey(attendanceJurnal, originalName, trimmedName);
                                                                     setAttendanceJurnal(newAttendanceJurnal);
+                                                                    extraKeys.jurnal_attendance_mengajar = newAttendanceJurnal;
                                                                     
-                                                                    const newGrades = replaceKey(gradesData, originalName, name.trim());
+                                                                    const newGrades = replaceKey(gradesData, originalName, trimmedName);
                                                                     setGradesData(newGrades);
+                                                                    extraKeys.jurnal_gradesData = newGrades;
                                                                     
-                                                                    const newSavings = replaceKey(savingsData, originalName, name.trim());
+                                                                    const newSavings = replaceKey(savingsData, originalName, trimmedName);
                                                                     setSavingsData(newSavings);
-                                                                    
-                                                                    setTimeout(() => {
-                                                                        window.dispatchEvent(new CustomEvent('firebaseSync', { 
-                                                                            detail: { 
-                                                                                jurnal_attendance: newAttendance,
-                                                                                jurnal_attendance_mengajar: newAttendanceJurnal,
-                                                                                jurnal_grades: newGrades,
-                                                                                jurnal_savings: newSavings
-                                                                            } 
-                                                                        }));
-                                                                    }, 500);
+                                                                    extraKeys.jurnal_savingsData = newSavings;
                                                                 }
                                                                 
-                                                                newDetails[`${activeClass}-${name.trim()}`] = { nis, gender };
-                                                                setStudentsData(newStudentsData);
-                                                                setStudentDetails(newDetails);
+                                                                newDetails[`${activeClass}-${trimmedName}`] = { ...existingDetail, nama: trimmedName, nis, gender };
+                                                                syncStudentBundle({ students: newStudentsData, details: newDetails, deleted: newDeleted, extraFirebaseKeys: extraKeys });
                                                                 setEditingStudentInfo(null);
-                                                                
-                                                                setTimeout(() => {
-                                                                    window.dispatchEvent(new CustomEvent('firebaseSync', { 
-                                                                        detail: { jurnal_students: newStudentsData, jurnal_student_details: newDetails } 
-                                                                    }));
-                                                                }, 500);
                                                             } else if (pwd !== null) {
                                                                 alert('Password salah!');
                                                             }
@@ -8806,27 +9196,25 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                             alert(`Siswa "${student}" tercatat dalam riwayat Mutasi Keluar. Silakan kelola di tab "Mutasi Siswa".`);
                                                             return;
                                                         }
-                                                        const pwd = prompt(`Masukkan password untuk menghapus ${student}:`);
-                                                        if (pwd === 'F134nto') {
-                                                            if (confirm(`Yakin hapus ${student} dari ${activeClass}?`)) {
-                                                                const newStudentsData = { ...studentsData };
-                                                                newStudentsData[activeClass] = newStudentsData[activeClass].filter(s => s !== student);
-                                                                
-                                                                const newDetails = { ...studentDetails };
-                                                                delete newDetails[`${activeClass}-${student}`];
-                                                                
-                                                                setStudentDetails(newDetails);
-                                                                setStudentsData(newStudentsData);
-                                                                
-                                                                setTimeout(() => {
-                                                                    window.dispatchEvent(new CustomEvent('firebaseSync', { 
-                                                                        detail: { jurnal_students: newStudentsData, jurnal_student_details: newDetails } 
-                                                                    }));
-                                                                }, 500);
-                                                            }
-                                                        } else if (pwd !== null) {
-                                                            alert('Password salah!');
-                                                        }
+                                                        executeWithAdmin(() => {
+                                                            setDialog({
+                                                                type: 'confirm',
+                                                                message: `Yakin hapus "${student}" dari daftar kelas ${activeClass}?\n\nSiswa akan dihapus secara permanen dari daftar kelas ${activeClass}.`,
+                                                                onConfirm: () => {
+                                                                    const nowTs = Date.now();
+                                                                    const curStudents = studentsDataRef.current;
+                                                                    const newStudentsData = {
+                                                                        ...curStudents,
+                                                                        [activeClass]: removeStudentsFromList(curStudents[activeClass] || [], [student])
+                                                                    };
+                                                                    const newDetails = removeDetailsForClassStudents(studentDetailsRef.current, activeClass, [student]);
+                                                                    const newDeleted = markStudentsDeletedInMap(deletedStudentsRef.current, activeClass, [student], nowTs);
+                                                                    syncStudentBundle({ students: newStudentsData, details: newDetails, deleted: newDeleted });
+                                                                    setDialog(null);
+                                                                },
+                                                                onCancel: () => setDialog(null)
+                                                            });
+                                                        });
                                                     }} className="text-red-500 hover:text-red-700 font-bold text-[11px] px-1.5 py-0.5 border border-red-200 bg-red-50 rounded">
                                                         Hapus
                                                     </button>
@@ -8847,9 +9235,13 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                 <h2 className="text-lg font-black text-slate-800">Mutasi Siswa</h2>
                                 <button onClick={() => {
                                     executeWithAdmin(() => {
-                                        localStorage.setItem('jurnal_mutasi', JSON.stringify(mutasiData));
-                                        window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_mutasi: mutasiData } }));
-                                        alert('Data Mutasi berhasil disimpan ke server!');
+                                        syncStudentBundle({}).then(res => {
+                                            if (res && res.synced) {
+                                                alert('Data Mutasi berhasil disimpan ke server!');
+                                            } else {
+                                                alert('Data Mutasi tersimpan secara lokal (menunggu koneksi server).');
+                                            }
+                                        }).catch(err => alert('Gagal menyimpan ke server: ' + err.message));
                                     });
                                 }} className="px-3 py-1.5 bg-yellow-500 text-white hover:bg-yellow-600 rounded-md text-sm font-bold shadow-sm transition-colors flex items-center gap-2">
                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
@@ -8865,9 +9257,11 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                         executeWithAdmin(() => {
                                             const nis = prompt('Masukkan NIS:');
                                             if (!nis) return;
-                                            const nama = prompt('Masukkan Nama Siswa:');
+                                            const namaRaw = prompt('Masukkan Nama Siswa:');
+                                            const nama = (namaRaw || '').trim();
                                             if (!nama) return;
-                                            const kelas = prompt('Masukkan Kelas:', activeClass);
+                                            const kelasRaw = prompt('Masukkan Kelas:', activeClass);
+                                            const kelas = (kelasRaw || '').trim();
                                             if (!kelas) return;
                                             const tanggal = prompt('Masukkan Tanggal Masuk (misal: 10 Sep 2026):', currentDateStr);
                                             if (!tanggal) return;
@@ -8875,32 +9269,22 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                             const keterangan = prompt('Masukkan Keterangan (Alasan pindah, dsb):');
                                             const gender = prompt('Masukkan L/P:', 'L');
                                             
-                                            const newMutasi = { ...mutasiData };
-                                            newMutasi.masuk.push({ id: Date.now(), nis, nama, kelas, tanggal, asalSekolah: asalSekolah || '-', keterangan: keterangan || '-' });
+                                            const nowTs = Date.now();
+                                            const curMutasi = mutasiDataRef.current;
+                                            const newMutasi = { ...curMutasi, masuk: [...(curMutasi.masuk || []), { id: nowTs, nis: nis.trim(), nama, kelas, tanggal, asalSekolah: asalSekolah || '-', keterangan: keterangan || '-' }] };
                                             
-                                            const newStudentsData = { ...studentsData };
+                                            const curStudents = studentsDataRef.current;
+                                            const newStudentsData = { ...curStudents };
                                             if (!newStudentsData[kelas]) newStudentsData[kelas] = [];
-                                            if (!newStudentsData[kelas].includes(nama)) {
-                                                newStudentsData[kelas].push(nama);
-                                                newStudentsData[kelas].sort((a,b) => a.localeCompare(b));
+                                            if (!newStudentsData[kelas].some(s => normalizeStudentName(s) === normalizeStudentName(nama))) {
+                                                newStudentsData[kelas] = [...newStudentsData[kelas], nama].sort((a,b) => a.localeCompare(b));
                                             }
                                             
-                                            const newDetails = { ...studentDetails };
-                                            newDetails[`${kelas}-${nama}`] = { nis: nis || '-', gender: gender || 'L' };
+                                            const newDetails = { ...studentDetailsRef.current };
+                                            newDetails[`${kelas}-${nama}`] = { ...(newDetails[`${kelas}-${nama}`] || {}), nis: nis.trim() || '-', gender: (gender || 'L').trim().toUpperCase() === 'P' ? 'P' : 'L' };
+                                            const newDeleted = markStudentsRestoredInMap(deletedStudentsRef.current, kelas, [nama], nowTs);
                                             
-                                            setMutasiData(newMutasi);
-                                            setStudentsData(newStudentsData);
-                                            setStudentDetails(newDetails);
-                                            
-                                            localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
-                                            
-                                            window.dispatchEvent(new CustomEvent('firebaseSync', { 
-                                                detail: { 
-                                                    jurnal_mutasi: newMutasi,
-                                                    jurnal_students: newStudentsData,
-                                                    jurnal_student_details: newDetails
-                                                } 
-                                            }));
+                                            syncStudentBundle({ students: newStudentsData, details: newDetails, mutasi: newMutasi, deleted: newDeleted });
                                         });
                                     }} className="px-3 py-1 bg-emerald-600 text-white hover:bg-emerald-700 rounded text-xs font-bold shadow-sm transition-colors">+ Siswa Masuk</button>
                                 </div>
@@ -8939,21 +9323,17 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                                 const newAsal = prompt('Edit Asal Sekolah:', m.asalSekolah);
                                                                 const newKet = prompt('Edit Keterangan:', m.keterangan);
                                                                 
-                                                                const newMutasi = {...mutasiData};
-                                                                newMutasi.masuk = newMutasi.masuk.map(x => x.id === m.id ? {...x, nama: newNama, nis: newNis, kelas: newKelas, tanggal: newTanggal, asalSekolah: newAsal, keterangan: newKet} : x);
-                                                                setMutasiData(newMutasi);
-                                                                localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
-                                                                window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_mutasi: newMutasi } }));
+                                                                const curMutasi = mutasiDataRef.current;
+                                                                const newMutasi = { ...curMutasi, masuk: (curMutasi.masuk || []).map(x => x.id === m.id ? {...x, nama: newNama, nis: newNis, kelas: newKelas, tanggal: newTanggal, asalSekolah: newAsal, keterangan: newKet} : x) };
+                                                                syncStudentBundle({ mutasi: newMutasi });
                                                             });
                                                         }} className="text-xs bg-blue-500 text-white px-2 py-1 rounded mr-1">Edit</button>
                                                         <button onClick={() => {
                                                             executeWithAdmin(() => {
                                                                 if(confirm('Yakin hapus data masuk ini?')) {
-                                                                    const newMutasi = {...mutasiData};
-                                                                    newMutasi.masuk = newMutasi.masuk.filter(x => x.id !== m.id);
-                                                                    setMutasiData(newMutasi);
-                                                                    localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
-                                                                    window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_mutasi: newMutasi } }));
+                                                                    const curMutasi = mutasiDataRef.current;
+                                                                    const newMutasi = { ...curMutasi, masuk: (curMutasi.masuk || []).filter(x => x.id !== m.id) };
+                                                                    syncStudentBundle({ mutasi: newMutasi });
                                                                 }
                                                             });
                                                         }} className="text-xs bg-red-500 text-white px-2 py-1 rounded">Hapus</button>
@@ -8965,7 +9345,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                 </div>
                             </div>
 
-                                                        {/* Siswa Keluar */}
+                            {/* Siswa Keluar */}
                             <div className="pt-4 border-t border-slate-200">
                                 <div className="flex justify-between items-center mb-3">
                                     <h3 className="text-md font-bold text-red-800">Siswa Keluar</h3>
@@ -8973,36 +9353,30 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                         const studentName = e.target.value;
                                         if (!studentName) return;
                                         executeWithAdmin(() => {
-                                            const studentData = studentDetails[`${activeClass}-${studentName}`];
+                                            const curDetails = studentDetailsRef.current;
+                                            const curMutasi = mutasiDataRef.current;
+                                            const curStudents = studentsDataRef.current;
+                                            const studentData = curDetails[`${activeClass}-${studentName}`];
                                             const nis = studentData ? studentData.nis : prompt(`Masukkan NIS untuk ${studentName}:`);
                                             const tanggal = prompt(`Masukkan Tanggal Keluar untuk ${studentName} (misal: 10 Sep 2026):`, currentDateStr);
                                             if (!tanggal) return;
                                             const keterangan = prompt(`Masukkan Keterangan (Alasan keluar, pindah kemana, dsb):`);
                                             
-                                            const newMutasi = { ...mutasiData };
+                                            const nowTs = Date.now();
                                             const gender = studentData ? (studentData.gender || 'L') : 'L';
-                                            newMutasi.keluar.push({ id: Date.now(), nis: nis || '-', nama: studentName, kelas: activeClass, tanggal, keterangan: keterangan || '-', gender: gender });
+                                            const newMutasi = {
+                                                ...curMutasi,
+                                                keluar: [...(curMutasi.keluar || []), { id: nowTs, nis: nis || '-', nama: studentName, kelas: activeClass, tanggal, keterangan: keterangan || '-', gender: gender }]
+                                            };
                                             
-                                            const newStudentsData = { ...studentsData };
+                                            const newStudentsData = { ...curStudents };
                                             if (newStudentsData[activeClass]) {
-                                                newStudentsData[activeClass] = newStudentsData[activeClass].filter(s => s !== studentName);
+                                                newStudentsData[activeClass] = removeStudentsFromList(newStudentsData[activeClass], [studentName]);
                                             }
-                                            const newDetails = { ...studentDetails };
-                                            delete newDetails[`${activeClass}-${studentName}`];
+                                            const newDetails = removeDetailsForClassStudents(curDetails, activeClass, [studentName]);
+                                            const newDeleted = markStudentsDeletedInMap(deletedStudentsRef.current, activeClass, [studentName], nowTs);
                                             
-                                            setMutasiData(newMutasi);
-                                            setStudentsData(newStudentsData);
-                                            setStudentDetails(newDetails);
-                                            
-                                            localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
-                                            
-                                            window.dispatchEvent(new CustomEvent('firebaseSync', { 
-                                                detail: { 
-                                                    jurnal_mutasi: newMutasi,
-                                                    jurnal_students: newStudentsData,
-                                                    jurnal_student_details: newDetails
-                                                } 
-                                            }));
+                                            syncStudentBundle({ students: newStudentsData, details: newDetails, mutasi: newMutasi, deleted: newDeleted });
                                         });
                                     }}>
                                         <option value="">+ Siswa Keluar</option>
@@ -9041,21 +9415,20 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                                 const newTanggal = prompt('Edit Tanggal:', m.tanggal);
                                                                 const newKet = prompt('Edit Keterangan:', m.keterangan);
                                                                 
-                                                                const newMutasi = {...mutasiData};
-                                                                newMutasi.keluar = newMutasi.keluar.map(x => x.id === m.id ? {...x, nama: newNama, nis: newNis, kelas: newKelas, tanggal: newTanggal, keterangan: newKet} : x);
-                                                                setMutasiData(newMutasi);
-                                                                localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
-                                                                window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_mutasi: newMutasi } }));
+                                                                const curMutasi = mutasiDataRef.current;
+                                                                const newMutasi = { ...curMutasi, keluar: (curMutasi.keluar || []).map(x => x.id === m.id ? {...x, nama: newNama, nis: newNis, kelas: newKelas, tanggal: newTanggal, keterangan: newKet} : x) };
+                                                                syncStudentBundle({ mutasi: newMutasi });
                                                             });
                                                         }} className="text-xs bg-blue-500 text-white px-2 py-1 rounded mr-1">Edit</button>
                                                         <button onClick={() => {
                                                             executeWithAdmin(() => {
                                                                 if(confirm('Yakin hapus data keluar ini?')) {
-                                                                    const newMutasi = {...mutasiData};
-                                                                    newMutasi.keluar = newMutasi.keluar.filter(x => x.id !== m.id);
-                                                                    setMutasiData(newMutasi);
-                                                                    localStorage.setItem('jurnal_mutasi', JSON.stringify(newMutasi));
-                                                                    window.dispatchEvent(new CustomEvent('firebaseSync', { detail: { jurnal_mutasi: newMutasi } }));
+                                                                    const nowTs = Date.now();
+                                                                    const curMutasi = mutasiDataRef.current;
+                                                                    const newMutasi = { ...curMutasi, keluar: (curMutasi.keluar || []).filter(x => x.id !== m.id) };
+                                                                    const stName = m.nama || m.name;
+                                                                    const newDeleted = (m.kelas && stName) ? markStudentsDeletedInMap(deletedStudentsRef.current, m.kelas, [stName], nowTs) : deletedStudentsRef.current;
+                                                                    syncStudentBundle({ mutasi: newMutasi, deleted: newDeleted });
                                                                 }
                                                             });
                                                         }} className="text-xs bg-red-500 text-white px-2 py-1 rounded">Hapus</button>

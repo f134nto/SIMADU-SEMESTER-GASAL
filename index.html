@@ -5,23 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SIMADU - MTs Ma'arif NU 1 Wangon</title>
     <script>
-                var oldError = console.error;
+        var oldError = console.error;
         console.error = function() {
             var args = Array.prototype.slice.call(arguments);
             var msg = args.join(' ');
-            if (msg.indexOf('[BABEL] Note:') === -1) {
+            var isIgnored = msg.indexOf('[BABEL] Note:') !== -1 ||
+                            msg.indexOf('permission_denied') !== -1 ||
+                            msg.indexOf('Firebase') !== -1 ||
+                            msg.indexOf('FIREBASE') !== -1 ||
+                            msg.indexOf('favicon') !== -1;
+            if (!isIgnored && (msg.indexOf('SyntaxError') !== -1 || msg.indexOf('ReferenceError') !== -1)) {
                 document.body.innerHTML += '<div style="color:red; padding:20px; font-family:monospace; background:white; position:fixed; top:0; left:0; right:0; bottom:0; z-index:999999;">' +
                     '<h3>TERJADI ERROR (Mohon fotokan ini):</h3><pre style="white-space:pre-wrap;">' + msg + '</pre></div>';
             }
             oldError.apply(console, args);
         };
         window.addEventListener('error', function(event) {
+            var msg = (event && event.message) ? event.message : '';
+            if (msg.indexOf('permission_denied') !== -1 || msg.indexOf('Firebase') !== -1 || msg.indexOf('ResizeObserver') !== -1) {
+                return;
+            }
             document.body.innerHTML += '<div style="color:red; padding:20px; font-family:monospace; background:white; position:fixed; top:0; left:0; right:0; bottom:0; z-index:999999;">' +
                 '<h3>TERJADI RUNTIME ERROR:</h3>' +
-                '<p>' + event.message + '</p>' +
+                '<p>' + msg + '</p>' +
                 '<p>Line: ' + event.lineno + '</p>' +
                 '<pre>' + (event.error ? event.error.stack : '') + '</pre>' +
                 '</div>';
+        });
+        window.addEventListener('unhandledrejection', function(event) {
+            var reason = event && event.reason ? (event.reason.message || String(event.reason)) : '';
+            if (reason.indexOf('permission_denied') !== -1 || reason.indexOf('Firebase') !== -1) {
+                event.preventDefault();
+            }
         });
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -152,12 +167,30 @@
   window.firebaseLoaded = true;
   window.isSyncingFromFirebase = false;
 
-  // Firebase Sync Logic (with Debounce, Atomic Multi-Key Push, and Deleted-Student Protection)
+  // Real-Time Firebase Connection Monitor (.info/connected)
+  window.firebaseConnected = false;
+  window.firebaseSyncState = 'connecting';
+  window.firebaseSyncError = '';
+  window.latestFirebaseSnapshot = null;
+  window.hasReceivedCloudSnapshot = false;
+
+  try {
+      window.db.ref('.info/connected').on('value', snap => {
+          const isConnected = !!snap.val();
+          window.firebaseConnected = isConnected;
+          window.firebaseSyncState = isConnected ? 'connected' : (window.firebaseSyncError ? 'error' : 'offline');
+          window.dispatchEvent(new CustomEvent('firebaseConnectionChange', {
+              detail: { connected: isConnected, state: window.firebaseSyncState, error: window.firebaseSyncError }
+          }));
+      });
+  } catch(e) {
+      console.warn('Firebase info connected listener failed', e);
+  }
+
+  // Firebase Sync Logic (with Per-Key Debounce, Immediate Local Persistence, Atomic Push, and Tombstone Merge)
   const oldSetItem = localStorage.setItem.bind(localStorage);
   const oldGetItem = localStorage.getItem.bind(localStorage);
   const oldRemoveItem = localStorage.removeItem.bind(localStorage);
-  window.localUpdateInProgress = false;
-  window.localUpdateUntil = 0;
   window.firebaseInitialSyncDone = false;
   window._pendingFirebaseKeys = new Set();
   window._atomicSyncedValues = {};
@@ -211,7 +244,7 @@
           }
           window._atomicSyncedValues[key] = strVal;
           try { oldSetItem(key, strVal); } catch (e) { console.warn('LocalStorage limit reached', e); }
-          if (key.startsWith('jurnal_')) {
+          if (key.startsWith('jurnal_') || key === 'jadwal_kelas') {
               firebaseUpdates[key] = strVal;
               if (key === 'jurnal_students' || key === 'jurnal_student_details' || key === 'jurnal_mutasi' || key === 'jurnal_deleted_students') {
                   touchesStudentSync = true;
@@ -222,10 +255,7 @@
       const fKeys = Object.keys(firebaseUpdates);
       if (fKeys.length === 0) return Promise.resolve({ localOnly: true });
 
-      window.localUpdateInProgress = true;
-      window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 3000);
-
-      if (window.firebaseLoaded && window.db && window.firebaseInitialSyncDone) {
+      if (window.firebaseLoaded && window.db) {
           fKeys.forEach(k => window._pendingFirebaseKeys.add(k));
           try {
               return window.db.ref('simadu_data_v2').update(firebaseUpdates).then(() => {
@@ -233,16 +263,16 @@
                       try { oldRemoveItem('simadu_pending_student_sync'); } catch (e) {}
                   }
                   fKeys.forEach(k => window._pendingFirebaseKeys.delete(k));
-                  window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 1200);
-                  if (window._pendingFirebaseKeys.size === 0) window.localUpdateInProgress = false;
+                  window.firebaseSyncState = 'connected';
+                  window.dispatchEvent(new CustomEvent('firebaseSyncStatus', { detail: { synced: true, keys: fKeys } }));
                   return { synced: true };
               }).catch(err => {
                   if (touchesStudentSync) {
                       try { oldSetItem('simadu_pending_student_sync', '1'); } catch (e) {}
                   }
                   fKeys.forEach(k => window._pendingFirebaseKeys.delete(k));
-                  window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 800);
-                  if (window._pendingFirebaseKeys.size === 0) window.localUpdateInProgress = false;
+                  window.firebaseSyncError = err.message || 'Gagal menyimpan ke server';
+                  window.dispatchEvent(new CustomEvent('firebaseSyncStatus', { detail: { synced: false, error: err.message, keys: fKeys } }));
                   throw err;
               });
           } catch (e) {
@@ -250,65 +280,79 @@
                   try { oldSetItem('simadu_pending_student_sync', '1'); } catch (ex) {}
               }
               fKeys.forEach(k => window._pendingFirebaseKeys.delete(k));
-              if (window._pendingFirebaseKeys.size === 0) window.localUpdateInProgress = false;
               return Promise.reject(e);
           }
       } else {
           if (touchesStudentSync) {
               try { oldSetItem('simadu_pending_student_sync', '1'); } catch (e) {}
           }
-          window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 800);
-          if (window._pendingFirebaseKeys.size === 0) window.localUpdateInProgress = false;
           return Promise.resolve({ queuedLocal: true });
       }
   };
 
   localStorage.setItem = function(key, value) {
-      if (window._atomicSyncedValues && window._atomicSyncedValues[key] === value && oldGetItem(key) === value) {
+      const prevVal = oldGetItem(key);
+      if (prevVal === value) {
+          return;
+      }
+      if (window._atomicSyncedValues && window._atomicSyncedValues[key] === value) {
+          try { oldSetItem(key, value); } catch(e) {}
           return;
       }
       if (window._atomicSyncedValues) delete window._atomicSyncedValues[key];
       try { oldSetItem(key, value); } catch(e) { console.warn('LocalStorage limit reached', e); }
-      if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
-          if (key.startsWith('jurnal_')) {
-              window._pendingFirebaseKeys.add(key);
-              window.localUpdateInProgress = true;
-              window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 2500);
-              clearTimeout(syncTimeouts[key]);
-              syncTimeouts[key] = setTimeout(() => {
-                  try {
-                      const req = window.db.ref('simadu_data_v2/' + key).set(value);
-                      if (req && typeof req.finally === 'function') {
-                          req.finally(() => {
-                              window._pendingFirebaseKeys.delete(key);
-                              window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 1000);
-                              if (window._pendingFirebaseKeys.size === 0) {
-                                  window.localUpdateInProgress = false;
-                              }
-                          });
-                          return;
-                      }
-                  } catch(e) {}
-                  window._pendingFirebaseKeys.delete(key);
-                  window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 1000);
-                  if (window._pendingFirebaseKeys.size === 0) {
-                      window.localUpdateInProgress = false;
-                  }
-              }, 800);
+
+      const isManagedKey = key.startsWith('jurnal_') || key === 'jadwal_kelas';
+      if (isManagedKey && window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.hasReceivedCloudSnapshot) {
+          if ((value === '{}' || value === '[]' || value === '""') && !window.allowEmptyCloudOverwrite) {
+              const cloudVal = window.latestFirebaseSnapshot ? window.latestFirebaseSnapshot[key] : null;
+              if (cloudVal && typeof cloudVal === 'object' && Object.keys(cloudVal).length > 0) {
+                  console.warn('Prevented pushing empty local state over non-empty cloud data for:', key);
+                  return;
+              }
           }
+
+          window._pendingFirebaseKeys.add(key);
+          clearTimeout(syncTimeouts[key]);
+          syncTimeouts[key] = setTimeout(() => {
+              try {
+                  const req = window.db.ref('simadu_data_v2/' + key).set(value);
+                  if (req && typeof req.catch === 'function') {
+                      req.catch(err => {
+                          console.warn('Firebase set error for ' + key, err);
+                      });
+                  }
+                  if (req && typeof req.finally === 'function') {
+                      req.finally(() => {
+                          window._pendingFirebaseKeys.delete(key);
+                      });
+                      return;
+                  }
+              } catch(e) {
+                  console.warn('Firebase set error for ' + key, e);
+              }
+              window._pendingFirebaseKeys.delete(key);
+          }, 600);
       }
   };
 
   window.db.ref('simadu_data_v2').on('value', snap => {
       const wasInitialDone = window.firebaseInitialSyncDone;
       window.firebaseInitialSyncDone = true;
-      if (window.localUpdateInProgress || (window.localUpdateUntil && Date.now() < window.localUpdateUntil)) return;
+      window.hasReceivedCloudSnapshot = true;
       const data = snap.val();
       if (data) {
           const parsedData = {};
-          for(let k in data) {
+          for (let k in data) {
               try { parsedData[k] = JSON.parse(data[k]); } catch(e) { parsedData[k] = data[k]; }
+              
+              if (!window._pendingFirebaseKeys || !window._pendingFirebaseKeys.has(k)) {
+                  const strVal = typeof data[k] === 'string' ? data[k] : JSON.stringify(data[k]);
+                  try { oldSetItem(k, strVal); } catch(e) {}
+              }
           }
+          window.latestFirebaseSnapshot = parsedData;
+
           if (!wasInitialDone && oldGetItem('simadu_pending_student_sync') === '1') {
               try {
                   const localDeleted = JSON.parse(oldGetItem('jurnal_deleted_students') || '{}');
@@ -329,9 +373,10 @@
                   window.pushSimaduDataAtomic(flushPayload);
               } catch (e) {}
           }
+
           window.isSyncingFromFirebase = true;
           window.dispatchEvent(new CustomEvent('firebaseSync', { detail: parsedData }));
-          setTimeout(() => { window.isSyncingFromFirebase = false; }, 500);
+          setTimeout(() => { window.isSyncingFromFirebase = false; }, 400);
       } else if (!wasInitialDone && oldGetItem('simadu_pending_student_sync') === '1') {
           try {
               const flushPayload = {};
@@ -342,12 +387,19 @@
               if (Object.keys(flushPayload).length > 0) window.pushSimaduDataAtomic(flushPayload);
           } catch (e) {}
       }
+  }, error => {
+      console.warn('Firebase Realtime Database Error (Fallback Offline Aktif):', error);
+      window.firebaseSyncError = error.message || 'Izin akses Firebase ditolak (Aturan / Rules expired)';
+      window.firebaseSyncState = 'error';
+      window.dispatchEvent(new CustomEvent('firebaseConnectionChange', {
+          detail: { connected: false, state: 'error', error: window.firebaseSyncError }
+      }));
   });
 
   // Initial migration: If Firebase is empty, upload local data
   window.db.ref('simadu_data_v2').once('value').then(snap => {
       if (!snap.val()) {
-          const keys = ['jurnal_students', 'jurnal_student_details', 'jurnal_mutasi', 'jurnal_deleted_students', 'jurnal_nis_terakhir', 'jurnal_attendance', 'jurnal_attendance_mengajar', 'jurnal_classNotes', 'jurnal_savingsData', 'jurnal_agendaKelasData', 'jurnal_gradesData'];
+          const keys = ['jurnal_students', 'jurnal_student_details', 'jurnal_mutasi', 'jurnal_deleted_students', 'jurnal_nis_terakhir', 'jurnal_attendance', 'jurnal_attendance_mengajar', 'jurnal_classNotes', 'jurnal_savingsData', 'jurnal_agendaKelasData', 'jurnal_gradesData', 'jadwal_kelas'];
           const initUpdates = {};
           keys.forEach(k => {
               const val = oldGetItem(k);
@@ -357,7 +409,7 @@
               window.db.ref('simadu_data_v2').update(initUpdates).catch(() => {});
           }
       }
-  });
+  }).catch(() => {});
 </script>
 <script type="text/babel">
     try {
@@ -4266,15 +4318,37 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
               return excludedKeys ? filterDetailsMap(result, excludedKeys) : result;
           };
 
+          const loadInitialState = (key, defaultVal) => {
+              try {
+                  if (window.latestFirebaseSnapshot && window.latestFirebaseSnapshot[key] !== undefined && window.latestFirebaseSnapshot[key] !== null) {
+                      return window.latestFirebaseSnapshot[key];
+                  }
+                  const local = localStorage.getItem(key);
+                  if (local !== null && local !== undefined) {
+                      const parsed = JSON.parse(local);
+                      if (parsed !== null && parsed !== undefined) return parsed;
+                  }
+              } catch(e) {}
+              return defaultVal;
+          };
+
           const loadInitialMutasiAndDeleted = () => {
               let mutasiSaved = { masuk: [], keluar: [] };
               try {
-                  mutasiSaved = JSON.parse(localStorage.getItem('jurnal_mutasi')) || JSON.parse(localStorage.getItem('jurnal_mutasi_data')) || { masuk: [], keluar: [] };
+                  if (window.latestFirebaseSnapshot && window.latestFirebaseSnapshot.jurnal_mutasi) {
+                      mutasiSaved = window.latestFirebaseSnapshot.jurnal_mutasi;
+                  } else {
+                      mutasiSaved = JSON.parse(localStorage.getItem('jurnal_mutasi')) || JSON.parse(localStorage.getItem('jurnal_mutasi_data')) || { masuk: [], keluar: [] };
+                  }
               } catch (e) {}
               let deletedSaved = {};
               try {
-                  const dRaw = JSON.parse(localStorage.getItem('jurnal_deleted_students'));
-                  if (dRaw && typeof dRaw === 'object') deletedSaved = mergeDeletedMaps(dRaw, {});
+                  if (window.latestFirebaseSnapshot && window.latestFirebaseSnapshot.jurnal_deleted_students) {
+                      deletedSaved = mergeDeletedMaps(window.latestFirebaseSnapshot.jurnal_deleted_students, {});
+                  } else {
+                      const dRaw = JSON.parse(localStorage.getItem('jurnal_deleted_students'));
+                      if (dRaw && typeof dRaw === 'object') deletedSaved = mergeDeletedMaps(dRaw, {});
+                  }
               } catch (e) {}
               return { mutasiSaved, deletedSaved, excluded: getExcludedStudentKeys(mutasiSaved, deletedSaved) };
           };
@@ -4283,15 +4357,23 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
             const { excluded } = loadInitialMutasiAndDeleted();
             let savedStudents = null;
             try {
-                const rs = JSON.parse(localStorage.getItem('jurnal_students'));
-                if (rs && typeof rs === 'object' && !Array.isArray(rs)) savedStudents = rs;
+                if (window.latestFirebaseSnapshot && window.latestFirebaseSnapshot.jurnal_students) {
+                    savedStudents = window.latestFirebaseSnapshot.jurnal_students;
+                } else {
+                    const rs = JSON.parse(localStorage.getItem('jurnal_students'));
+                    if (rs && typeof rs === 'object' && !Array.isArray(rs)) savedStudents = rs;
+                }
             } catch (e) {}
 
             let currentData = {};
             try { 
-              const saved = JSON.parse(localStorage.getItem('jurnal_student_details')); 
-              if (saved && Object.keys(saved).length > 0) {
-                  currentData = saved;
+              if (window.latestFirebaseSnapshot && window.latestFirebaseSnapshot.jurnal_student_details) {
+                  currentData = window.latestFirebaseSnapshot.jurnal_student_details;
+              } else {
+                  const saved = JSON.parse(localStorage.getItem('jurnal_student_details')); 
+                  if (saved && Object.keys(saved).length > 0) {
+                      currentData = saved;
+                  }
               }
             } catch (e) { }
 
@@ -4317,22 +4399,23 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
           const [studentsData, setStudentsData] = useState(() => {
             const { excluded } = loadInitialMutasiAndDeleted();
             try {
-                const rawStr = localStorage.getItem('jurnal_students');
                 let data = {};
-                if (!rawStr) {
+                let parsed = null;
+                if (window.latestFirebaseSnapshot && window.latestFirebaseSnapshot.jurnal_students) {
+                    parsed = window.latestFirebaseSnapshot.jurnal_students;
+                } else {
+                    const rawStr = localStorage.getItem('jurnal_students');
+                    if (rawStr) parsed = JSON.parse(rawStr);
+                }
+                if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
                     Object.keys(INITIAL_STUDENTS).forEach(cls => { data[cls] = [...INITIAL_STUDENTS[cls]]; });
                 } else {
-                    const parsed = JSON.parse(rawStr);
-                    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-                        Object.keys(INITIAL_STUDENTS).forEach(cls => { data[cls] = [...INITIAL_STUDENTS[cls]]; });
-                    } else {
-                        data = { ...parsed };
-                        Object.keys(INITIAL_STUDENTS).forEach(cls => {
-                            if (!Object.prototype.hasOwnProperty.call(data, cls) || !Array.isArray(data[cls])) {
-                                data[cls] = [...INITIAL_STUDENTS[cls]];
-                            }
-                        });
-                    }
+                    data = { ...parsed };
+                    Object.keys(INITIAL_STUDENTS).forEach(cls => {
+                        if (!Object.prototype.hasOwnProperty.call(data, cls) || !Array.isArray(data[cls])) {
+                            data[cls] = [...INITIAL_STUDENTS[cls]];
+                        }
+                    });
                 }
                 return filterStudentsMap(data, excluded);
             } catch (e) {
@@ -4340,29 +4423,13 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
             }
           });
 
-          const [attendance, setAttendance] = useState(() => {
-            try { return JSON.parse(localStorage.getItem('jurnal_attendance')) || {}; } catch (e) { return {}; }
-          });
+          const [attendance, setAttendance] = useState(() => loadInitialState('jurnal_attendance', {}));
+          const [attendanceJurnal, setAttendanceJurnal] = useState(() => loadInitialState('jurnal_attendance_mengajar', {}));
+          const [classNotes, setClassNotes] = useState(() => loadInitialState('jurnal_classNotes', {}));
+          const [savingsData, setSavingsData] = useState(() => loadInitialState('jurnal_savingsData', {}));
           
-          const [attendanceJurnal, setAttendanceJurnal] = useState(() => {
-            try { return JSON.parse(localStorage.getItem('jurnal_attendance_mengajar')) || {}; } catch (e) { return {}; }
-          });
-
-          const [classNotes, setClassNotes] = useState(() => {
-            try { return JSON.parse(localStorage.getItem('jurnal_classNotes')) || {}; } catch (e) { return {}; }
-          });
-
-          const [savingsData, setSavingsData] = useState(() => {
-            try { return JSON.parse(localStorage.getItem('jurnal_savingsData')) || {}; } catch (e) { return {}; }
-          });
-          
-          const [agendaKelasData, setAgendaKelasData] = useState(() => {
-            try { return JSON.parse(localStorage.getItem('jurnal_agendaKelasData')) || {}; } catch (e) { return {}; }
-          });
-          
-          const [gradesData, setGradesData] = useState(() => {
-            try { return JSON.parse(localStorage.getItem('jurnal_gradesData')) || {}; } catch (e) { return {}; }
-          });
+          const [agendaKelasData, setAgendaKelasData] = useState(() => loadInitialState('jurnal_agendaKelasData', {}));
+          const [gradesData, setGradesData] = useState(() => loadInitialState('jurnal_gradesData', {}));
           
           const [syncStatus, setSyncStatus] = useState('');
           const [isSyncing, setIsSyncing] = useState(false);
@@ -4373,17 +4440,25 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
           const [filterBulanMateri, setFilterBulanMateri] = useState('Semua Bulan');
           const [searchMateriQuery, setSearchMateriQuery] = useState('');
           const [isPrintingJurnalMateri, setIsPrintingJurnalMateri] = useState(false);
-          const [nisTerakhirData, setNisTerakhirData] = useState(() => { try { const d = JSON.parse(localStorage.getItem('jurnal_nis_terakhir')); return Array.isArray(d) ? d : []; } catch(e) { return []; } }); 
+          const [nisTerakhirData, setNisTerakhirData] = useState(() => {
+              const d = loadInitialState('jurnal_nis_terakhir', []);
+              return Array.isArray(d) ? d : [];
+          }); 
           const [mutasiData, setMutasiData] = useState(() => {
-              try { return JSON.parse(localStorage.getItem('jurnal_mutasi')) || { masuk: [], keluar: [] }; } 
-              catch(e) { return { masuk: [], keluar: [] }; }
+              return loadInitialState('jurnal_mutasi', { masuk: [], keluar: [] });
           });
           const [deletedStudents, setDeletedStudents] = useState(() => {
-              try {
-                  const dRaw = JSON.parse(localStorage.getItem('jurnal_deleted_students'));
-                  return (dRaw && typeof dRaw === 'object') ? mergeDeletedMaps(dRaw, {}) : {};
-              } catch(e) { return {}; }
+              const dRaw = loadInitialState('jurnal_deleted_students', {});
+              return (dRaw && typeof dRaw === 'object') ? mergeDeletedMaps(dRaw, {}) : {};
           });
+
+          // Connection state monitor
+          const [fbConnectionState, setFbConnectionState] = useState(() => {
+              return window.firebaseConnected ? 'connected' : (window.firebaseSyncState || 'connecting');
+          });
+          const [isManualSyncing, setIsManualSyncing] = useState(false);
+
+          const isMountedRef = useRef(false);
 
           const studentsDataRef = useRef(studentsData);
           const studentDetailsRef = useRef(studentDetails);
@@ -5477,37 +5552,55 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
               };
           }, []);
 
-          useEffect(() => { localStorage.setItem('jurnal_student_details', JSON.stringify(studentDetails)); }, [studentDetails]);
-          useEffect(() => { localStorage.setItem('jurnal_students', JSON.stringify(studentsData)); }, [studentsData]);
-          useEffect(() => { localStorage.setItem('jurnal_attendance', JSON.stringify(attendance)); }, [attendance]);
-          useEffect(() => { localStorage.setItem('jurnal_attendance_mengajar', JSON.stringify(attendanceJurnal)); }, [attendanceJurnal]);
-          useEffect(() => { localStorage.setItem('jurnal_classNotes', JSON.stringify(classNotes)); }, [classNotes]);
-          useEffect(() => { localStorage.setItem('jurnal_savingsData', JSON.stringify(savingsData)); }, [savingsData]);
           useEffect(() => {
+              isMountedRef.current = true;
+              const handleConn = (e) => {
+                  const detail = e.detail || {};
+                  setFbConnectionState(detail.state || (detail.connected ? 'connected' : 'offline'));
+              };
+              window.addEventListener('firebaseConnectionChange', handleConn);
+              return () => window.removeEventListener('firebaseConnectionChange', handleConn);
+          }, []);
+
+          useEffect(() => {
+              if (!isMountedRef.current) return;
+              localStorage.setItem('jurnal_student_details', JSON.stringify(studentDetails));
+          }, [studentDetails]);
+
+          useEffect(() => {
+              if (!isMountedRef.current) return;
+              localStorage.setItem('jurnal_students', JSON.stringify(studentsData));
+          }, [studentsData]);
+
+          useEffect(() => {
+              if (!isMountedRef.current) return;
+              localStorage.setItem('jurnal_attendance', JSON.stringify(attendance));
+          }, [attendance]);
+
+          useEffect(() => {
+              if (!isMountedRef.current) return;
+              localStorage.setItem('jurnal_attendance_mengajar', JSON.stringify(attendanceJurnal));
+          }, [attendanceJurnal]);
+
+          useEffect(() => {
+              if (!isMountedRef.current) return;
+              localStorage.setItem('jurnal_classNotes', JSON.stringify(classNotes));
+          }, [classNotes]);
+
+          useEffect(() => {
+              if (!isMountedRef.current) return;
+              localStorage.setItem('jurnal_savingsData', JSON.stringify(savingsData));
+          }, [savingsData]);
+
+          useEffect(() => {
+              if (!isMountedRef.current) return;
               localStorage.setItem('jurnal_agendaKelasData', JSON.stringify(agendaKelasData));
-              if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
-                  clearTimeout(window.agendaSyncTimeout);
-                  window.agendaSyncTimeout = setTimeout(() => {
-                      try { window.db.ref('simadu_data_v2/jurnal_agendaKelasData').set(JSON.stringify(agendaKelasData)); } catch(e) {}
-                  }, 800);
-              }
           }, [agendaKelasData]);
-          useEffect(() => { 
-    localStorage.setItem('jurnal_gradesData', JSON.stringify(gradesData));
-    if (window.firebaseLoaded && window.db && !window.isSyncingFromFirebase && window.firebaseInitialSyncDone) {
-        window.localUpdateInProgress = true;
-        window.localUpdateUntil = Math.max(window.localUpdateUntil || 0, Date.now() + 2500);
-        clearTimeout(window.gradesSyncTimeout);
-        window.gradesSyncTimeout = setTimeout(() => {
-            try { window.db.ref('simadu_data_v2/jurnal_gradesData').set(JSON.stringify(gradesData)); } catch(e) {}
-            setTimeout(() => {
-                if (!window._pendingFirebaseKeys || window._pendingFirebaseKeys.size === 0) {
-                    window.localUpdateInProgress = false;
-                }
-            }, 500);
-        }, 800);
-    }
-}, [gradesData]);
+
+          useEffect(() => {
+              if (!isMountedRef.current) return;
+              localStorage.setItem('jurnal_gradesData', JSON.stringify(gradesData));
+          }, [gradesData]);
 
           useEffect(() => {
               const handleSync = (e) => {
@@ -5582,17 +5675,90 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                       }
                   }
 
-                  if (data.jurnal_attendance) updateStateIfChanged(setAttendance, data.jurnal_attendance);
-                  if (data.jurnal_attendance_mengajar) updateStateIfChanged(setAttendanceJurnal, data.jurnal_attendance_mengajar);
-                  if (data.jurnal_classNotes) updateStateIfChanged(setClassNotes, data.jurnal_classNotes);
-                  if (data.jurnal_savingsData) updateStateIfChanged(setSavingsData, data.jurnal_savingsData);
-                  if (data.jurnal_agendaKelasData) updateStateIfChanged(setAgendaKelasData, data.jurnal_agendaKelasData);
-                  if (data.jurnal_gradesData) updateStateIfChanged(setGradesData, data.jurnal_gradesData);
-                  if (data.jurnal_nis_terakhir) updateStateIfChanged(setNisTerakhirData, data.jurnal_nis_terakhir);
+                  const mergeRecordDict = (prev, incoming) => {
+                      if (!incoming || typeof incoming !== 'object') return prev;
+                      if (!prev || typeof prev !== 'object') return incoming;
+                      return { ...prev, ...incoming };
+                  };
+
+                  if (data.jurnal_attendance) {
+                      setAttendance(prev => mergeRecordDict(prev, data.jurnal_attendance));
+                  }
+                  if (data.jurnal_attendance_mengajar) {
+                      setAttendanceJurnal(prev => mergeRecordDict(prev, data.jurnal_attendance_mengajar));
+                  }
+                  if (data.jurnal_classNotes) {
+                      setClassNotes(prev => mergeRecordDict(prev, data.jurnal_classNotes));
+                  }
+                  if (data.jurnal_savingsData) {
+                      setSavingsData(prev => mergeRecordDict(prev, data.jurnal_savingsData));
+                  }
+                  if (data.jurnal_agendaKelasData) {
+                      setAgendaKelasData(prev => mergeRecordDict(prev, data.jurnal_agendaKelasData));
+                  }
+                  if (data.jurnal_gradesData) {
+                      setGradesData(prev => mergeRecordDict(prev, data.jurnal_gradesData));
+                  }
+                  if (data.jurnal_nis_terakhir) {
+                      updateStateIfChanged(setNisTerakhirData, data.jurnal_nis_terakhir);
+                  }
+                  if (data.jadwal_kelas) {
+                      try {
+                          if (typeof EDITABLE_CLASS_SCHEDULES !== 'undefined') {
+                              EDITABLE_CLASS_SCHEDULES = { ...RAW_CLASS_SCHEDULES, ...data.jadwal_kelas };
+                              setCurrentClassSchedule(getScheduleForClass(selectedJadwalClass));
+                          }
+                      } catch(e) {}
+                  }
               };
               window.addEventListener('firebaseSync', handleSync);
+
+              // Apply latest snapshot immediately if already arrived before component mount
+              if (window.latestFirebaseSnapshot && Object.keys(window.latestFirebaseSnapshot).length > 0) {
+                  handleSync({ detail: window.latestFirebaseSnapshot });
+              }
+
               return () => window.removeEventListener('firebaseSync', handleSync);
           }, []);
+
+          const handleManualSyncServer = async () => {
+              if (isManualSyncing) return;
+              setIsManualSyncing(true);
+              try {
+                  if (!window.firebaseLoaded || !window.db) {
+                      alert('Firebase SDK belum aktif. Pastikan perangkat terhubung ke internet.');
+                      return;
+                  }
+                  const snap = await window.db.ref('simadu_data_v2').once('value');
+                  const remoteData = snap.val() || {};
+                  const parsed = {};
+                  for (let k in remoteData) {
+                      try { parsed[k] = JSON.parse(remoteData[k]); } catch(e) { parsed[k] = remoteData[k]; }
+                  }
+                  window.dispatchEvent(new CustomEvent('firebaseSync', { detail: parsed }));
+                  
+                  const syncKeys = [
+                      'jurnal_students', 'jurnal_student_details', 'jurnal_mutasi', 'jurnal_deleted_students',
+                      'jurnal_nis_terakhir', 'jurnal_attendance', 'jurnal_attendance_mengajar', 'jurnal_classNotes',
+                      'jurnal_savingsData', 'jurnal_agendaKelasData', 'jurnal_gradesData', 'jadwal_kelas'
+                  ];
+                  const pushPayload = {};
+                  syncKeys.forEach(k => {
+                      const val = localStorage.getItem(k);
+                      if (val && !remoteData[k]) pushPayload[k] = val;
+                  });
+                  if (Object.keys(pushPayload).length > 0) {
+                      await window.pushSimaduDataAtomic(pushPayload);
+                  }
+                  setFbConnectionState('connected');
+                  const timeStr = new Date().toLocaleTimeString('id-ID');
+                  alert(`✅ Sinkronisasi Server Berhasil!\n\nSeluruh data SIMADU (Siswa, Mutasi/Alumni, Absensi, Jurnal, Nilai, Tabungan, Jadwal) telah tersinkron dengan server Firebase.\n\nStatus: Terhubung (${timeStr})`);
+              } catch(err) {
+                  alert('Gagal menyinkronkan data ke server: ' + (err.message || 'Periksa koneksi internet Anda.'));
+              } finally {
+                  setIsManualSyncing(false);
+              }
+          };
 
           const getDaysInMonth = (month) => {
             if (month === 'Juli') { return Array.from({ length: 19 }, (_, i) => i + 13); }
@@ -6887,20 +7053,34 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                         <h2 className="text-sm font-black text-emerald-700 tracking-wider uppercase">MTs MA'ARIF NU 1 WANGON</h2>
                     </div>
                     
-                    <div className="flex items-center justify-center gap-3">
-                        <div className="h-px w-12 bg-slate-200"></div>
-                  <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-200">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                      <span className="text-[10px] font-bold tracking-widest uppercase">Online (Tersinkronisasi)</span>
-                  </div>
-<div className="h-px w-12 bg-slate-200"></div>
-                        <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Portal Guru</p>
-                        <div className="h-px w-12 bg-slate-200"></div>
-                  <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-200">
-                      <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                      <span className="text-[10px] font-bold tracking-widest uppercase">Online (Tersinkronisasi)</span>
-                  </div>
-<div className="h-px w-12 bg-slate-200"></div>
+                    <div className="flex flex-col items-center justify-center gap-2 mb-2">
+                        <div className="flex items-center justify-center gap-2 flex-wrap">
+                            {fbConnectionState === 'connected' && (
+                                <div className="flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3.5 py-1.5 rounded-full border border-emerald-200 shadow-xs">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                                    <span className="text-[11px] font-bold tracking-wider uppercase">Cloud Server Terhubung</span>
+                                </div>
+                            )}
+                            {fbConnectionState === 'connecting' && (
+                                <div className="flex items-center gap-2 bg-amber-50 text-amber-700 px-3.5 py-1.5 rounded-full border border-amber-200 shadow-xs">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-ping"></div>
+                                    <span className="text-[11px] font-bold tracking-wider uppercase">Menghubungkan Server...</span>
+                                </div>
+                            )}
+                            {fbConnectionState === 'offline' && (
+                                <div className="flex items-center gap-2 bg-rose-50 text-rose-700 px-3.5 py-1.5 rounded-full border border-rose-200 shadow-xs">
+                                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                                    <span className="text-[11px] font-bold tracking-wider uppercase">Mode Offline (Tersimpan Lokal)</span>
+                                </div>
+                            )}
+                            {fbConnectionState === 'error' && (
+                                <div className="flex items-center gap-2 bg-rose-50 text-rose-700 px-3.5 py-1.5 rounded-full border border-rose-300 shadow-xs" title={window.firebaseSyncError || ''}>
+                                    <div className="w-2.5 h-2.5 rounded-full bg-rose-600"></div>
+                                    <span className="text-[11px] font-bold tracking-wider uppercase">Akses Server Terkendala</span>
+                                </div>
+                            )}
+                        </div>
+                        <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mt-0.5">Portal Guru &bull; MTs Ma'arif NU 1 Wangon</p>
                     </div>
                 </div>
                 
@@ -6990,11 +7170,23 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                   {/* Date & User Info */}
                   <div className="flex flex-col items-center md:items-end gap-3 w-full md:w-auto">
                       <div className="bg-slate-50 px-5 py-3 rounded-2xl border border-slate-200 flex flex-col items-center md:items-end w-full md:w-auto shadow-inner">
-                          <div className="flex items-center gap-2 mb-1">
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                              <span className="text-xs sm:text-sm font-black tracking-widest text-slate-700 uppercase">
-                                  {today.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
-                              </span>
+                          <div className="flex items-center justify-between w-full gap-3 mb-1">
+                              <div className="flex items-center gap-1.5">
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                                  <span className="text-xs sm:text-sm font-black tracking-widest text-slate-700 uppercase">
+                                      {today.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                  </span>
+                              </div>
+                              <div className={`flex items-center gap-1.5 text-[10px] font-black px-2.5 py-0.5 rounded-full border shadow-xs ${
+                                  fbConnectionState === 'connected' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                                  fbConnectionState === 'connecting' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-rose-50 text-rose-700 border-rose-200'
+                              }`} title={fbConnectionState === 'connected' ? 'Server Firebase Terhubung & Aktif' : 'Mode Offline / Belum Terhubung'}>
+                                  <span className={`w-2 h-2 rounded-full ${
+                                      fbConnectionState === 'connected' ? 'bg-emerald-500 animate-pulse' :
+                                      fbConnectionState === 'connecting' ? 'bg-amber-500 animate-ping' : 'bg-rose-500'
+                                  }`}></span>
+                                  <span>{fbConnectionState === 'connected' ? 'Cloud Terhubung' : fbConnectionState === 'connecting' ? 'Menghubungkan' : 'Offline'}</span>
+                              </div>
                           </div>
                           
                           <div className="w-full border-t border-slate-200 pt-2 mt-1 flex items-center justify-center md:justify-end gap-3">
@@ -7009,19 +7201,38 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                               </div>
                           </div>
                       </div>
-                      <button 
-                          onClick={() => {
-                              sessionStorage.removeItem('simadu_auth');
-                              sessionStorage.removeItem('simadu_user');
-                              setIsAuthenticated(false);
-                              setLoginPassword('');
-                              setLoginUsername('');
-                          }} 
-                          className="text-xs text-red-500 hover:text-white hover:bg-red-500 font-bold uppercase tracking-wider transition-all px-4 py-1.5 rounded-lg border border-red-200 hover:border-red-500 flex items-center gap-1.5 bg-red-50"
-                      >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
-                          Keluar
-                      </button>
+                      <div className="flex items-center gap-2 flex-wrap justify-end w-full">
+                          <button 
+                              type="button"
+                              onClick={handleManualSyncServer}
+                              disabled={isManualSyncing}
+                              className={`text-xs font-bold uppercase tracking-wider transition-all px-3 py-1.5 rounded-lg border flex items-center gap-1.5 shadow-xs ${
+                                  isManualSyncing 
+                                      ? 'bg-amber-100 text-amber-800 border-amber-300 cursor-wait'
+                                      : 'bg-emerald-50 text-emerald-700 border-emerald-300 hover:bg-emerald-600 hover:text-white'
+                              }`}
+                              title="Sinkronkan data dengan server Firebase (agar data di Komputer 1 dan Komputer 2 otomatis sama persis)"
+                          >
+                              <svg className={`h-3.5 w-3.5 ${isManualSyncing ? 'animate-spin' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                              </svg>
+                              {isManualSyncing ? 'Menyinkronkan...' : 'Sinkron Server'}
+                          </button>
+                          
+                          <button 
+                              onClick={() => {
+                                  sessionStorage.removeItem('simadu_auth');
+                                  sessionStorage.removeItem('simadu_user');
+                                  setIsAuthenticated(false);
+                                  setLoginPassword('');
+                                  setLoginUsername('');
+                              }} 
+                              className="text-xs text-red-500 hover:text-white hover:bg-red-500 font-bold uppercase tracking-wider transition-all px-3 py-1.5 rounded-lg border border-red-200 hover:border-red-500 flex items-center gap-1.5 bg-red-50 shadow-xs"
+                          >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                              Keluar
+                          </button>
+                      </div>
                   </div>
                 </div>
               </header>
@@ -12195,15 +12406,11 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                       }
                                                   };
                                                   setAgendaKelasData(updatedAgenda);
-                                                  localStorage.setItem('jurnal_agendaKelasData', JSON.stringify(updatedAgenda));
-                                                  if (window.firebaseLoaded && window.db) {
-                                                      try {
-                                                          window.db.ref('simadu_data_v2/jurnal_agendaKelasData').set(JSON.stringify(updatedAgenda));
-                                                      } catch(e) {}
+                                                  if (typeof window.pushSimaduDataAtomic === 'function') {
+                                                      window.pushSimaduDataAtomic({ jurnal_agendaKelasData: updatedAgenda });
+                                                  } else {
+                                                      localStorage.setItem('jurnal_agendaKelasData', JSON.stringify(updatedAgenda));
                                                   }
-                                                  window.dispatchEvent(new CustomEvent('firebaseSync', {
-                                                      detail: { jurnal_agendaKelasData: updatedAgenda }
-                                                  }));
                                                   alert('Berhasil! Data Jurnal Pelajaran Kelas ' + g.kelas + ' (Materi & Presensi) telah tersimpan dan otomatis sinkron ke Laporan Wali Kelas.');
                                               }}
                                               className={`px-5 py-2 font-bold rounded-lg text-xs shadow-xs transition-all flex items-center gap-2 ${

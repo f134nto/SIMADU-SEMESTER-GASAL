@@ -2250,7 +2250,7 @@
         ];
 
         const MONTHS_GANJIL = ['Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-        const MONTHS_GENAP = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni'];
+        const MONTHS_GENAP = ['Januari 2027', 'Pebruari 2027', 'Maret 2027', 'April 2027', 'Mei 2027', 'Juni 2027-Juli 2027'];
         const MONTHS = MONTHS_GANJIL;
         const REKAP_MONTHS = MONTHS_GANJIL;
 
@@ -4107,8 +4107,15 @@ function App() {
           const [activeClass, setActiveClass] = useState('7A');
           const [activeMonth, setActiveMonth] = useState(() => {
               const sem = localStorage.getItem('simadu_active_semester') || 'ganjil';
-              return sem === 'ganjil' ? 'Juli' : 'Januari';
+              return sem === 'ganjil' ? 'Juli' : 'Januari 2027';
           });
+
+          useEffect(() => {
+              const currentMonths = activeSemester === 'ganjil' ? MONTHS_GANJIL : MONTHS_GENAP;
+              if (!currentMonths.includes(activeMonth)) {
+                  setActiveMonth(activeSemester === 'ganjil' ? 'Juli' : 'Januari 2027');
+              }
+          }, [activeSemester]);
           const [selectedNilaiMapel, setSelectedNilaiMapel] = useState('');
           const [selectedReportNilaiMapelGuru, setSelectedReportNilaiMapelGuru] = useState('');
           const [selectedAgendaTanggal, setSelectedAgendaTanggal] = useState('Semua Tanggal');
@@ -5858,7 +5865,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
               setActiveSemester(newSem);
               localStorage.setItem('simadu_active_semester', newSem);
               if (newSem === 'genap') {
-                  setActiveMonth('Januari');
+                  setActiveMonth('Januari 2027');
                   const existingGenapStudents = localStorage.getItem('jurnal_students_genap');
                   if (!existingGenapStudents) {
                       const ganjilStudents = localStorage.getItem('jurnal_students') || JSON.stringify(INITIAL_STUDENTS);
@@ -5969,8 +5976,11 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
 
           const getDaysInMonth = (month) => {
             if (month === 'Juli') { return Array.from({ length: 19 }, (_, i) => i + 13); }
-            if (month === 'Februari') { return Array.from({ length: 28 }, (_, i) => i + 1); }
-            if (['April', 'Juni', 'September', 'November'].includes(month)) {
+            if (month.includes('Februari') || month.includes('Pebruari')) { return Array.from({ length: 28 }, (_, i) => i + 1); }
+            if (['April', 'September', 'November'].some(m => month.includes(m))) {
+                return Array.from({ length: 30 }, (_, i) => i + 1);
+            }
+            if (month === 'Juni' || month === 'Juni 2027') {
                 return Array.from({ length: 30 }, (_, i) => i + 1);
             }
             return Array.from({ length: 31 }, (_, i) => i + 1);
@@ -7080,7 +7090,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                   const parse = (str) => {
                       const p = str.split(' ');
                       if(p.length < 4) return 0;
-                      const months = { 'Januari':0, 'Februari':1, 'Maret':2, 'April':3, 'Mei':4, 'Juni':5, 'Juli':6, 'Agustus':7, 'September':8, 'Oktober':9, 'November':10, 'Desember':11 };
+                      const months = { 'Januari':0, 'Februari':1, 'Pebruari':1, 'Maret':2, 'April':3, 'Mei':4, 'Juni':5, 'Juli':6, 'Agustus':7, 'September':8, 'Oktober':9, 'November':10, 'Desember':11 };
                       return new Date(parseInt(p[3]), months[p[2]] || 0, parseInt(p[1])).getTime();
                   };
                   return parse(b) - parse(a);
@@ -7518,7 +7528,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                           <span className="text-xl">&#128198;</span>
                           <div>
                               <p className="font-bold text-blue-950">Mode Semester Genap Aktif</p>
-                              <p className="text-blue-700 text-[11px]">Daftar siswa &amp; jadwal diwarisi otomatis dari Semester Ganjil. Data absensi, jurnal, &amp; nilai tersimpan mandiri di Semester Genap.</p>
+                              <p className="text-blue-700 text-[11px]">Daftar siswa &amp; jadwal diwarisi otomatis dari Semester Ganjil. Data absensi, jurnal, &amp; nilai tersimpan mandiri di Semester Genap (Januari 2027 s/d Juni-Juli 2027).</p>
                           </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">

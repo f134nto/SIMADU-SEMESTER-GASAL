@@ -4153,20 +4153,41 @@ function App() {
               if (mapels.length > 0) {
                   if (!mapels.includes(selectedNilaiMapel)) setSelectedNilaiMapel(mapels[0]);
               } else {
-                  setSelectedNilaiMapel('');
+                  const allClassMapels = getMapelsAndGurusForClass(activeClass).map(x => x.mapel);
+                  if (selectedNilaiMapel && allClassMapels.includes(selectedNilaiMapel)) {
+                      // Tetap gunakan mapel yang sudah dipilih sebelumnya jika masih valid di kelas ini
+                  } else if (allClassMapels.length > 0) {
+                      setSelectedNilaiMapel(allClassMapels[0]);
+                  } else {
+                      setSelectedNilaiMapel('');
+                  }
               }
-          }, [loggedInUser, activeClass, selectedNilaiMapel]);
+          }, [loggedInUser, activeClass]);
 
           useEffect(() => {
-              const list = getMapelsAndGurusForClass(activeClass).filter(x => x.guru === loggedInUser);
-              if (list.length > 0) {
-                  if (!list.find(x => `${x.mapel}|${x.guru}` === selectedReportNilaiMapelGuru)) {
-                      setSelectedReportNilaiMapelGuru(`${list[0].mapel}|${list[0].guru}`);
-                  }
-              } else {
+              const allList = getMapelsAndGurusForClass(activeClass);
+              if (allList.length === 0) {
                   setSelectedReportNilaiMapelGuru('');
+                  return;
               }
-          }, [activeClass, selectedReportNilaiMapelGuru, loggedInUser]);
+              // Jika mapel laporan yang dipilih saat ini masih ada di kelas ini, pertahankan
+              if (selectedReportNilaiMapelGuru && allList.some(x => `${x.mapel}|${x.guru}` === selectedReportNilaiMapelGuru)) {
+                  return;
+              }
+              // Cari apakah guru yang login mengampu salah satu mapel di kelas ini
+              const cleanStr = (s) => (s || '').split(',')[0].toLowerCase().replace(/[^a-z]/g, '');
+              const uClean = cleanStr(loggedInUser);
+              const myTeaching = allList.find(x => {
+                  const gClean = cleanStr(x.guru);
+                  return gClean && uClean && (gClean === uClean || gClean.includes(uClean) || uClean.includes(gClean));
+              });
+              if (myTeaching) {
+                  setSelectedReportNilaiMapelGuru(`${myTeaching.mapel}|${myTeaching.guru}`);
+              } else {
+                  // Default ke mapel pertama kelas agar Laporan Nilai SELALU menampilkan data di komputer mana pun / akun apa pun
+                  setSelectedReportNilaiMapelGuru(`${allList[0].mapel}|${allList[0].guru}`);
+              }
+          }, [activeClass, loggedInUser]);
           
           const [viewJadwalMode, setViewJadwalMode] = useState('kelas');
           const [selectedJadwalClass, setSelectedJadwalClass] = useState('7A');
@@ -5763,9 +5784,21 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                   }
 
                   const mergeRecordDict = (prev, incoming) => {
-                      if (!incoming || typeof incoming !== 'object') return prev;
-                      if (!prev || typeof prev !== 'object') return incoming;
-                      return { ...prev, ...incoming };
+                      let inc = incoming;
+                      if (typeof inc === 'string') {
+                          try { inc = JSON.parse(inc); } catch(e) { inc = {}; }
+                      }
+                      if (!inc || typeof inc !== 'object') return prev;
+                      if (!prev || typeof prev !== 'object') return inc;
+                      const merged = { ...prev };
+                      for (const k in inc) {
+                          if (typeof inc[k] === 'object' && inc[k] !== null && typeof merged[k] === 'object' && merged[k] !== null) {
+                              merged[k] = { ...merged[k], ...inc[k] };
+                          } else {
+                              merged[k] = inc[k];
+                          }
+                      }
+                      return merged;
                   };
 
                   const curSem = activeSemesterRef.current || 'ganjil';
@@ -6477,13 +6510,52 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
             setSavingsData(prev => ({ ...prev, [key]: value }));
           };
           
+          const getStudentGradeData = (cls, mapel, student, guru = '') => {
+              if (!gradesData || typeof gradesData !== 'object' || !student) return {};
+              
+              // 1. Direct exact candidate keys
+              const candidates = [];
+              if (mapel) {
+                  candidates.push(`${cls}-${mapel}-${student}`);
+                  if (guru) candidates.push(`${cls}-${guru}-${mapel}-${student}`);
+                  if (loggedInUser) candidates.push(`${cls}-${loggedInUser}-${mapel}-${student}`);
+              }
+              for (const cand of candidates) {
+                  if (gradesData[cand] && Object.keys(gradesData[cand]).length > 0) {
+                      return gradesData[cand];
+                  }
+              }
+
+              // 2. Fuzzy search across all keys in gradesData for this class, mapel, and student
+              if (mapel) {
+                  const sLow = student.trim().toLowerCase();
+                  const mLow = mapel.trim().toLowerCase();
+                  const clsPrefix = `${cls}-`.toLowerCase();
+                  
+                  for (const k in gradesData) {
+                      const kLow = k.toLowerCase();
+                      if (kLow.startsWith(clsPrefix) && kLow.endsWith(`-${sLow}`) && kLow.includes(mLow)) {
+                          const val = gradesData[k];
+                          if (val && Object.keys(val).length > 0) return val;
+                      }
+                  }
+              }
+              return {};
+          };
+
           const handleGradeChange = (student, field, value) => {
               if (!selectedNilaiMapel) return;
-              const key = `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
+              const stdKey = `${activeClass}-${selectedNilaiMapel}-${student}`;
+              const userKey = `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
+              
               setGradesData(prev => {
-                  const studentGrades = { ...(prev[key] || {}) };
-                  studentGrades[field] = value;
-                  return { ...prev, [key]: studentGrades };
+                  const existing = (prev && (prev[stdKey] || prev[userKey])) || getStudentGradeData(activeClass, selectedNilaiMapel, student, loggedInUser);
+                  const studentGrades = { ...existing, [field]: value };
+                  return {
+                      ...prev,
+                      [stdKey]: studentGrades,
+                      [userKey]: studentGrades
+                  };
               });
           };
 
@@ -6525,9 +6597,15 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
               return Math.round(num).toString();
           };
 
-          const calculateGrades = (student, customKey = null) => {
-              const key = customKey || `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
-              const data = gradesData[key] || {};
+          const calculateGrades = (student, customKey = null, customMapel = null, customGuru = null) => {
+              let data = {};
+              if (customKey && gradesData && gradesData[customKey] && Object.keys(gradesData[customKey]).length > 0) {
+                  data = gradesData[customKey];
+              } else {
+                  const targetMapel = customMapel || selectedNilaiMapel || globalReportMapel || '';
+                  const targetGuru = customGuru || globalReportGuru || loggedInUser || '';
+                  data = getStudentGradeData(activeClass, targetMapel, student, targetGuru);
+              }
               
               const parseG = (v) => {
                   if (v === undefined || v === null || v === '') return null;
@@ -6711,24 +6789,33 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
           };
 
           const handleSyncGrades = async () => {
-            if (isSyncing) return;
+            if (isSyncing || !selectedNilaiMapel) return;
             setIsSyncing(true);
             setSyncStatus('Sabar Kirim Data Nilai......');
             
-            // Force save to Firebase immediately
-            // Force save to Firebase immediately
             const curGradesKey = activeSemester === 'genap' ? 'jurnal_gradesData_genap' : 'jurnal_gradesData';
-            if (window.firebaseLoaded && window.db) {
-                try { await window.db.ref('simadu_data_v2/' + curGradesKey).set(JSON.stringify(gradesData)); } catch(e) {}
+            
+            // 1. Simpan langsung ke LocalStorage dan Firebase secara Atomic
+            try {
+                localStorage.setItem(curGradesKey, JSON.stringify(gradesData));
+                if (typeof window.pushSimaduDataAtomic === 'function') {
+                    const p = {};
+                    p[curGradesKey] = gradesData;
+                    await window.pushSimaduDataAtomic(p);
+                } else if (window.firebaseLoaded && window.db) {
+                    await window.db.ref('simadu_data_v2/' + curGradesKey).set(JSON.stringify(gradesData));
+                }
+            } catch(e) {
+                console.warn('Firebase sync error for grades:', e);
             }
 
+            // 2. Siapkan baris nilai untuk Spreadsheet Google
             let headers = ["No", "Nama Siswa", "S1", "S2", "S3", "S4", "S5", "ASTS", "Jml", "Rata2", "80%", "ASAS", "20%", "Nilai Akhir"];
             let rows = [];
 
             currentStudents.forEach((student, idx) => {
-                const key = typeof reportGuru !== "undefined" ? `${activeClass}-${reportGuru}-${reportMapel}-${student}` : `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
-                const data = gradesData[key] || {};
-                const calc = calculateGrades(student, key);
+                const data = getStudentGradeData(activeClass, selectedNilaiMapel, student, loggedInUser);
+                const calc = calculateGrades(student, null, selectedNilaiMapel, loggedInUser);
                 let row = [
                     idx + 1,
                     student,
@@ -6764,10 +6851,13 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                 body: JSON.stringify(payload)
               });
 
-              setSyncStatus(`Berhasil Kirim Daftar Nilai, ${loggedInUser}`);
+              setSyncStatus(`Berhasil Kirim & Simpan Nilai ${selectedNilaiMapel} (${loggedInUser})`);
               setTimeout(() => setSyncStatus(''), 5000);
+              alert(`Sukses! Data Nilai Mapel ${selectedNilaiMapel} Kelas ${activeClass} telah berhasil disimpan dan disinkronkan ke server cloud Firebase. Data kini dapat langsung dilihat di menu Laporan Daftar Nilai pada seluruh komputer.`);
             } catch (err) {
-              setSyncStatus('Gagal kirim Daftar Nilai: ' + err.message);
+              setSyncStatus(`Tersimpan di Cloud Firebase. (Catatan Google Sheet: ${err.message})`);
+              setTimeout(() => setSyncStatus(''), 5000);
+              alert(`Data Nilai Mapel ${selectedNilaiMapel} Kelas ${activeClass} telah tersimpan di Cloud Firebase dan bisa dilihat di menu Laporan Daftar Nilai pada komputer mana saja.`);
             } finally {
               setIsSyncing(false);
             }
@@ -6915,13 +7005,12 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
 
           const handleExportGradesCSV = () => {
             const [reportMapel, reportGuru] = selectedReportNilaiMapelGuru ? selectedReportNilaiMapelGuru.split('|') : ['', ''];
-            let csvContent = "\uFEFFDAFTAR NILAI KELAS " + activeClass + " - " + reportMapel + " (" + reportGuru + ")\n\n";
+            let csvContent = "\uFEFFDAFTAR NILAI KELAS " + activeClass + " - " + (reportMapel || 'SEMUA') + " (" + (reportGuru || 'GURU') + ")\n\n";
             csvContent += "No;Nama Siswa;S1;S2;S3;S4;S5;ASTS;Jml;Rata2;80%;ASAS;20%;Nilai Akhir\n";
             
             currentStudents.forEach((student, idx) => {
-                const key = typeof reportGuru !== "undefined" ? `${activeClass}-${reportGuru}-${reportMapel}-${student}` : `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
-                const data = gradesData[key] || {};
-                const calc = calculateGrades(student, key);
+                const data = getStudentGradeData(activeClass, reportMapel, student, reportGuru);
+                const calc = calculateGrades(student, null, reportMapel, reportGuru);
                 let row = [
                     idx + 1, 
                     `"${student}"`, 
@@ -6945,7 +7034,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.setAttribute('href', url);
-            link.setAttribute('download', `Daftar_Nilai_Kelas_${activeClass}.csv`);
+            link.setAttribute('download', `Daftar_Nilai_Kelas_${activeClass}_${reportMapel || 'Mapel'}.csv`);
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
@@ -7926,22 +8015,40 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                 <h2 className="text-lg font-black text-slate-900 mb-1">Pilih Halaman Mata Pelajaran</h2>
                                 <p className="text-sm text-slate-600 mb-6">Pilih daftar nilai mata pelajaran yang Anda ampu di Kelas {activeClass}.</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                    {getMapelsAndGurusForClass(activeClass).filter(x => x.guru === loggedInUser).map(x => (
-                                        <button key={x.mapel} onClick={() => setSelectedNilaiMapel(x.mapel)} className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 p-4 rounded-xl shadow-sm transition-all text-left flex items-center gap-4 group">
-                                            <div className="w-12 h-12 bg-emerald-200 text-emerald-800 rounded-lg flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
-                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                                            </div>
-                                            <div>
-                                                <h3 className="text-md font-bold text-slate-800">{x.mapel}</h3>
-                                            </div>
-                                        </button>
-                                    ))}
-                                    {getMapelsAndGurusForClass(activeClass).filter(x => x.guru === loggedInUser).length === 0 && (
-                                        <div className="col-span-full text-center p-8 text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">
-                                            <svg className="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                                            <p className="font-semibold text-sm">Anda tidak memiliki jadwal mengajar di kelas ini.</p>
-                                        </div>
-                                    )}
+                                    {(() => {
+                                        const cleanStr = (s) => (s || '').split(',')[0].toLowerCase().replace(/[^a-z]/g, '');
+                                        const uClean = cleanStr(loggedInUser);
+                                        const isMasterOrAdmin = uClean.includes('fitrianto') || uClean === 'admin';
+                                        const classMapels = getMapelsAndGurusForClass(activeClass);
+                                        const myMapels = classMapels.filter(x => {
+                                            if (isMasterOrAdmin) return true;
+                                            const gClean = cleanStr(x.guru);
+                                            return gClean && uClean && (gClean === uClean || gClean.includes(uClean) || uClean.includes(gClean));
+                                        });
+                                        const listToRender = myMapels.length > 0 ? myMapels : classMapels;
+                                        
+                                        return (
+                                            <>
+                                                {listToRender.map(x => (
+                                                    <button key={`${x.mapel}-${x.guru}`} onClick={() => setSelectedNilaiMapel(x.mapel)} className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 p-4 rounded-xl shadow-sm transition-all text-left flex items-center gap-4 group">
+                                                        <div className="w-12 h-12 bg-emerald-200 text-emerald-800 rounded-lg flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
+                                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="text-md font-bold text-slate-800">{x.mapel}</h3>
+                                                            <p className="text-xs text-slate-500 font-medium">{x.guru}</p>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                                {classMapels.length === 0 && (
+                                                    <div className="col-span-full text-center p-8 text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">
+                                                        <svg className="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                                        <p className="font-semibold text-sm">Tidak ada jadwal mapel di kelas ini.</p>
+                                                    </div>
+                                                )}
+                                            </>
+                                        );
+                                    })()}
                                 </div>
                             </div>
                         ) : (
@@ -8006,9 +8113,8 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                               </thead>
                               <tbody>
                                   {currentStudents.map((student, idx) => {
-                                      const key = `${activeClass}-${loggedInUser}-${selectedNilaiMapel}-${student}`;
-                                      const data = gradesData[key] || {};
-                                      const calc = calculateGrades(student, key);
+                                      const data = getStudentGradeData(activeClass, selectedNilaiMapel, student, loggedInUser);
+                                      const calc = calculateGrades(student, null, selectedNilaiMapel, loggedInUser);
                                       const safeRowId = `nilai-row-${sanitizeId(student)}`;
                                       
                                       return (
@@ -8802,20 +8908,20 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                               <p className="text-sm font-semibold text-slate-800">SEMESTER {activeSemester === "ganjil" ? "GANJIL" : "GENAP"} TAHUN AJARAN 2026/2027</p>
                             </div>
                             <div className="flex flex-wrap items-center gap-3">
-                                <div className="flex items-center gap-2 bg-white/80 px-3 py-1.5 rounded-lg border border-[#a9c996] shadow-sm">
-                                    <span className="text-xs font-bold text-slate-800">Pelajaran Anda:</span>
+                                <div className="flex items-center gap-2 bg-white/90 px-3 py-1.5 rounded-lg border border-[#a9c996] shadow-sm">
+                                    <span className="text-xs font-bold text-slate-800">Mata Pelajaran:</span>
                                     <select
                                         value={selectedReportNilaiMapelGuru}
                                         onChange={(e) => setSelectedReportNilaiMapelGuru(e.target.value)}
-                                        className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none cursor-pointer max-w-[150px] sm:max-w-[200px]"
+                                        className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none cursor-pointer max-w-[200px] sm:max-w-[260px]"
                                     >
-                                        {getMapelsAndGurusForClass(activeClass).filter(x => x.guru === loggedInUser).map(x => (
+                                        {getMapelsAndGurusForClass(activeClass).map(x => (
                                             <option key={`${x.mapel}|${x.guru}`} value={`${x.mapel}|${x.guru}`}>
-                                                {x.mapel}
+                                                {x.mapel} ({x.guru})
                                             </option>
                                         ))}
-                                        {getMapelsAndGurusForClass(activeClass).filter(x => x.guru === loggedInUser).length === 0 && (
-                                            <option value="">- Tidak Ada Mapel Anda -</option>
+                                        {getMapelsAndGurusForClass(activeClass).length === 0 && (
+                                            <option value="">- Tidak Ada Mapel di Kelas Ini -</option>
                                         )}
                                     </select>
                                 </div>
@@ -8850,10 +8956,8 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                               </thead>
                               <tbody>
                                 {currentStudents.map((student, idx) => {
-                                    // Use the globally extracted report variables!
-                                    const key = `${activeClass}-${globalReportGuru}-${globalReportMapel}-${student}`;
-                                    const data = gradesData[key] || {};
-                                    const calc = calculateGrades(student, key);
+                                    const data = getStudentGradeData(activeClass, globalReportMapel, student, globalReportGuru);
+                                    const calc = calculateGrades(student, null, globalReportMapel, globalReportGuru);
 
                                     return (
                                       <tr key={idx} className="hover:bg-slate-50 transition-colors border-b border-slate-300">

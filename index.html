@@ -4093,8 +4093,25 @@ function App() {
           const [loginPassword, setLoginPassword] = useState('');
           const [loginError, setLoginError] = useState('');
 
+          const isSemesterGenapAvailable = () => {
+              const now = new Date();
+              const year = now.getFullYear();
+              const month = now.getMonth(); // 0 = Jan, 10 = Nov, 11 = Des
+              // Semester Genap dibuka pada waktunya: Desember 2026 atau tahun 2027 (Januari-Juli 2027)
+              if (year > 2026) return true;
+              if (year === 2026 && month >= 11) return true;
+              if (localStorage.getItem('simadu_unlock_semester_genap') === 'true') return true;
+              return false;
+          };
+
           const [activeSemester, setActiveSemester] = useState(() => {
-              return localStorage.getItem('simadu_active_semester') || 'ganjil';
+              const saved = localStorage.getItem('simadu_active_semester') || 'ganjil';
+              // Jika belum waktunya semester genap, paksa tetap ganjil (OFF)
+              if (saved === 'genap' && !isSemesterGenapAvailable()) {
+                  localStorage.setItem('simadu_active_semester', 'ganjil');
+                  return 'ganjil';
+              }
+              return saved;
           });
           const activeSemesterRef = useRef(activeSemester);
           activeSemesterRef.current = activeSemester;
@@ -4149,18 +4166,27 @@ function App() {
           };
 
           useEffect(() => {
+              const cleanStr = (s) => (s || '').split(',')[0].toLowerCase().replace(/[^a-z]/g, '');
+              const uClean = cleanStr(loggedInUser);
+              const isMasterOrAdmin = uClean.includes('fitrianto') || uClean === 'admin';
               const mapels = getTeacherMapelsForClass(loggedInUser, activeClass);
-              if (mapels.length > 0) {
-                  if (!mapels.includes(selectedNilaiMapel)) setSelectedNilaiMapel(mapels[0]);
-              } else {
+
+              if (isMasterOrAdmin) {
                   const allClassMapels = getMapelsAndGurusForClass(activeClass).map(x => x.mapel);
-                  if (selectedNilaiMapel && allClassMapels.includes(selectedNilaiMapel)) {
-                      // Tetap gunakan mapel yang sudah dipilih sebelumnya jika masih valid di kelas ini
-                  } else if (allClassMapels.length > 0) {
-                      setSelectedNilaiMapel(allClassMapels[0]);
+                  if (allClassMapels.length > 0) {
+                      if (!allClassMapels.includes(selectedNilaiMapel)) {
+                          setSelectedNilaiMapel(allClassMapels[0]);
+                      }
                   } else {
                       setSelectedNilaiMapel('');
                   }
+              } else if (mapels.length > 0) {
+                  if (!mapels.includes(selectedNilaiMapel)) {
+                      setSelectedNilaiMapel(mapels[0]);
+                  }
+              } else {
+                  // Guru tidak mengampu mapel apa pun di kelas ini: kosongkan
+                  setSelectedNilaiMapel('');
               }
           }, [loggedInUser, activeClass]);
 
@@ -4170,22 +4196,28 @@ function App() {
                   setSelectedReportNilaiMapelGuru('');
                   return;
               }
-              // Jika mapel laporan yang dipilih saat ini masih ada di kelas ini, pertahankan
-              if (selectedReportNilaiMapelGuru && allList.some(x => `${x.mapel}|${x.guru}` === selectedReportNilaiMapelGuru)) {
-                  return;
-              }
-              // Cari apakah guru yang login mengampu salah satu mapel di kelas ini
               const cleanStr = (s) => (s || '').split(',')[0].toLowerCase().replace(/[^a-z]/g, '');
               const uClean = cleanStr(loggedInUser);
-              const myTeaching = allList.find(x => {
-                  const gClean = cleanStr(x.guru);
-                  return gClean && uClean && (gClean === uClean || gClean.includes(uClean) || uClean.includes(gClean));
-              });
-              if (myTeaching) {
-                  setSelectedReportNilaiMapelGuru(`${myTeaching.mapel}|${myTeaching.guru}`);
-              } else {
-                  // Default ke mapel pertama kelas agar Laporan Nilai SELALU menampilkan data di komputer mana pun / akun apa pun
+              const isMasterOrAdmin = uClean.includes('fitrianto') || uClean === 'admin';
+
+              if (isMasterOrAdmin) {
+                  if (selectedReportNilaiMapelGuru && allList.some(x => `${x.mapel}|${x.guru}` === selectedReportNilaiMapelGuru)) {
+                      return;
+                  }
                   setSelectedReportNilaiMapelGuru(`${allList[0].mapel}|${allList[0].guru}`);
+              } else {
+                  // Filter hanya mapel yang diampu oleh guru yang login di kelas ini
+                  const myTeachings = allList.filter(x => {
+                      const gClean = cleanStr(x.guru);
+                      return gClean && uClean && (gClean === uClean || gClean.includes(uClean) || uClean.includes(gClean));
+                  });
+                  if (myTeachings.length > 0) {
+                      if (!myTeachings.some(x => `${x.mapel}|${x.guru}` === selectedReportNilaiMapelGuru)) {
+                          setSelectedReportNilaiMapelGuru(`${myTeachings[0].mapel}|${myTeachings[0].guru}`);
+                      }
+                  } else {
+                      setSelectedReportNilaiMapelGuru('');
+                  }
               }
           }, [activeClass, loggedInUser]);
           
@@ -5895,6 +5927,10 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
 
           const handleSwitchSemester = (newSem) => {
               if (newSem === activeSemester) return;
+              if (newSem === 'genap' && !isSemesterGenapAvailable()) {
+                  alert('Pemberitahuan Semester Genap:\n\nSemester Genap belum waktunya dibuka.\nSemester Genap akan dibuka pada waktunya (Desember 2026 s/d Januari-Juli 2027).\n\nSaat ini sistem fokus menjalankan Semester Ganjil TA 2026/2027.');
+                  return;
+              }
               setActiveSemester(newSem);
               localStorage.setItem('simadu_active_semester', newSem);
               if (newSem === 'genap') {
@@ -6863,6 +6899,412 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
             }
           };
 
+          const handleDownloadNilaiTemplate = () => {
+              if (typeof XLSX === 'undefined') {
+                  alert('Library Excel (SheetJS) belum siap. Silakan refresh halaman dan coba lagi.');
+                  return;
+              }
+              if (!selectedNilaiMapel) {
+                  alert('Pilih Mata Pelajaran terlebih dahulu sebelum mengunduh format template nilai!');
+                  return;
+              }
+
+              // Sheet 1: Format Kolom Vertikal (No, Nama, Kelas, Jenis Asesmen, Nilai) sesuai format permintaan
+              const headers1 = ['No', 'Nama', 'Kelas', 'Jenis Asesmen', 'Nilai'];
+              const rows1 = [headers1];
+
+              const asesmenTypes = ['S1', 'S2', 'S3', 'S4', 'S5', 'ASTS', 'ASAS'];
+              
+              currentStudents.forEach((student, idx) => {
+                  const data = getStudentGradeData(activeClass, selectedNilaiMapel, student, loggedInUser);
+                  asesmenTypes.forEach(tipe => {
+                      const field = tipe.toLowerCase();
+                      const currentVal = (data && data[field] !== undefined && data[field] !== null) ? data[field] : '';
+                      rows1.push([idx + 1, student, activeClass, tipe, currentVal]);
+                  });
+              });
+
+              // Sheet 2: Format Tabel Matriks Horizontal (No, Nama Siswa, Kelas, S1, S2, S3, S4, S5, ASTS, ASAS)
+              const headers2 = ['No', 'Nama Siswa', 'Kelas', 'S1', 'S2', 'S3', 'S4', 'S5', 'ASTS', 'ASAS'];
+              const rows2 = [headers2];
+
+              currentStudents.forEach((student, idx) => {
+                  const data = getStudentGradeData(activeClass, selectedNilaiMapel, student, loggedInUser);
+                  rows2.push([
+                      idx + 1,
+                      student,
+                      activeClass,
+                      (data && data.s1 !== undefined && data.s1 !== null) ? data.s1 : '',
+                      (data && data.s2 !== undefined && data.s2 !== null) ? data.s2 : '',
+                      (data && data.s3 !== undefined && data.s3 !== null) ? data.s3 : '',
+                      (data && data.s4 !== undefined && data.s4 !== null) ? data.s4 : '',
+                      (data && data.s5 !== undefined && data.s5 !== null) ? data.s5 : '',
+                      (data && data.asts !== undefined && data.asts !== null) ? data.asts : '',
+                      (data && data.asas !== undefined && data.asas !== null) ? data.asas : ''
+                  ]);
+              });
+
+              const ws1 = XLSX.utils.aoa_to_sheet(rows1);
+              const ws2 = XLSX.utils.aoa_to_sheet(rows2);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws1, 'Format_Asesmen');
+              XLSX.utils.book_append_sheet(wb, ws2, 'Format_Tabel');
+              
+              const safeMapel = selectedNilaiMapel.replace(/[^a-zA-Z0-9_-]/g, '_');
+              XLSX.writeFile(wb, `Template_Nilai_${safeMapel}_Kelas_${activeClass}.xlsx`);
+          };
+
+          const handleUploadExcelNilai = (e) => {
+              const file = e.target.files && e.target.files[0];
+              if (!file) return;
+              if (typeof XLSX === 'undefined') {
+                  alert('Library Excel (SheetJS) belum siap. Silakan refresh halaman dan coba kembali.');
+                  return;
+              }
+              if (!selectedNilaiMapel) {
+                  alert('Pilih Mata Pelajaran terlebih dahulu sebelum mengunggah file nilai!');
+                  return;
+              }
+
+              const reader = new FileReader();
+              reader.onload = (evt) => {
+                  try {
+                      const data = new Uint8Array(evt.target.result);
+                      const workbook = XLSX.read(data, { type: 'array' });
+                      
+                      const firstSheetName = workbook.SheetNames[0];
+                      const worksheet = workbook.Sheets[firstSheetName];
+                      const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                      
+                      if (!json || json.length < 2) {
+                          alert('File Excel kosong atau tidak memiliki baris data!');
+                          return;
+                      }
+
+                      // Cari baris header
+                      let headerRowIdx = -1;
+                      for (let i = 0; i < Math.min(10, json.length); i++) {
+                          const rowStr = JSON.stringify(json[i] || []).toLowerCase();
+                          if (rowStr.includes('nama') || rowStr.includes('asesmen') || rowStr.includes('nilai') || rowStr.includes('s1')) {
+                              headerRowIdx = i;
+                              break;
+                          }
+                      }
+                      if (headerRowIdx === -1) headerRowIdx = 0;
+
+                      const headerRow = (json[headerRowIdx] || []).map(h => String(h || '').trim().toLowerCase());
+                      const findCol = (terms) => headerRow.findIndex(h => terms.some(t => h === t || h.includes(t)));
+
+                      const colNama = findCol(['nama', 'name', 'siswa']);
+                      const colAsesmen = findCol(['jenis asesmen', 'asesmen', 'jenis', 'penilaian', 'kategori']);
+                      const colNilai = findCol(['nilai', 'score', 'angka', 'grade']);
+
+                      // Kolom format horizontal / matriks
+                      const colS1 = findCol(['s1', 'sumatif 1', 'sumatif-1', 'ph1', 'uh1']);
+                      const colS2 = findCol(['s2', 'sumatif 2', 'sumatif-2', 'ph2', 'uh2']);
+                      const colS3 = findCol(['s3', 'sumatif 3', 'sumatif-3', 'ph3', 'uh3']);
+                      const colS4 = findCol(['s4', 'sumatif 4', 'sumatif-4', 'ph4', 'uh4']);
+                      const colS5 = findCol(['s5', 'sumatif 5', 'sumatif-5', 'ph5', 'uh5']);
+                      const colAsts = findCol(['asts', 'pts', 'uts', 'tengah']);
+                      const colAsas = findCol(['asas', 'pas', 'uas', 'akhir']);
+
+                      if (colNama === -1) {
+                          alert('Kolom "Nama" tidak ditemukan dalam file Excel. Pastikan terdapat kolom "Nama" atau "Nama Siswa".');
+                          return;
+                      }
+
+                      const cleanStr = (s) => (s || '').toString().trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+                      const studentLookup = {};
+                      currentStudents.forEach(st => {
+                          studentLookup[cleanStr(st)] = st;
+                      });
+
+                      const mapAsesmenToField = (str) => {
+                          if (!str) return null;
+                          const s = String(str).trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+                          if (s === 's1' || s.includes('sumatif1') || s === 'ph1' || s === 'uh1') return 's1';
+                          if (s === 's2' || s.includes('sumatif2') || s === 'ph2' || s === 'uh2') return 's2';
+                          if (s === 's3' || s.includes('sumatif3') || s === 'ph3' || s === 'uh3') return 's3';
+                          if (s === 's4' || s.includes('sumatif4') || s === 'ph4' || s === 'uh4') return 's4';
+                          if (s === 's5' || s.includes('sumatif5') || s === 'ph5' || s === 'uh5') return 's5';
+                          if (s === 'asts' || s === 'pts' || s === 'uts' || s.includes('tengah')) return 'asts';
+                          if (s === 'asas' || s === 'pas' || s === 'uas' || s.includes('akhir')) return 'asas';
+                          return null;
+                      };
+
+                      const parseGradeVal = (val) => {
+                          if (val === null || val === undefined || val === '') return null;
+                          const cleaned = String(val).trim().replace(',', '.');
+                          const num = parseFloat(cleaned);
+                          if (isNaN(num)) return null;
+                          return num;
+                      };
+
+                      const targetMapel = selectedNilaiMapel;
+                      let updatedCount = 0;
+                      const updatedGrades = { ...(gradesData || {}) };
+
+                      const applyStudentGrade = (matchedStudent, field, numVal) => {
+                          if (!matchedStudent || !field || numVal === null) return;
+                          const stdKey = `${activeClass}-${targetMapel}-${matchedStudent}`;
+                          const userKey = `${activeClass}-${loggedInUser}-${targetMapel}-${matchedStudent}`;
+                          
+                          const existing = updatedGrades[stdKey] || updatedGrades[userKey] || getStudentGradeData(activeClass, targetMapel, matchedStudent, loggedInUser);
+                          const newRec = { ...existing, [field]: numVal };
+                          updatedGrades[stdKey] = newRec;
+                          updatedGrades[userKey] = newRec;
+                          updatedCount++;
+                      };
+
+                      for (let i = headerRowIdx + 1; i < json.length; i++) {
+                          const row = json[i];
+                          if (!row || row.length === 0) continue;
+
+                          const rawNama = row[colNama];
+                          if (!rawNama) continue;
+
+                          const cNama = cleanStr(rawNama);
+                          let matchedStudent = studentLookup[cNama];
+                          if (!matchedStudent) {
+                              matchedStudent = currentStudents.find(st => {
+                                  const c = cleanStr(st);
+                                  return c && cNama && (c.includes(cNama) || cNama.includes(c));
+                              });
+                          }
+                          if (!matchedStudent) continue;
+
+                          // Format A: No, Nama, Kelas, Jenis Asesmen, Nilai
+                          if (colAsesmen !== -1 && colNilai !== -1) {
+                              const rawAsesmen = row[colAsesmen];
+                              const rawNilai = row[colNilai];
+                              const field = mapAsesmenToField(rawAsesmen);
+                              const numVal = parseGradeVal(rawNilai);
+                              if (field && numVal !== null) {
+                                  applyStudentGrade(matchedStudent, field, numVal);
+                              }
+                          }
+
+                          // Format B: Kolom matriks S1..S5, ASTS, ASAS
+                          const matrixMap = [
+                              { col: colS1, field: 's1' },
+                              { col: colS2, field: 's2' },
+                              { col: colS3, field: 's3' },
+                              { col: colS4, field: 's4' },
+                              { col: colS5, field: 's5' },
+                              { col: colAsts, field: 'asts' },
+                              { col: colAsas, field: 'asas' }
+                          ];
+                          matrixMap.forEach(({ col, field }) => {
+                              if (col !== -1 && row[col] !== undefined && row[col] !== null && String(row[col]).trim() !== '') {
+                                  const numVal = parseGradeVal(row[col]);
+                                  if (numVal !== null) {
+                                      applyStudentGrade(matchedStudent, field, numVal);
+                                  }
+                              }
+                          });
+                      }
+
+                      if (updatedCount === 0) {
+                          alert('Tidak ada data nilai yang cocok untuk diimpor. Pastikan nama siswa dan format kolom sesuai template.');
+                          return;
+                      }
+
+                      setGradesData(updatedGrades);
+                      const curGradesKey = activeSemester === 'genap' ? 'jurnal_gradesData_genap' : 'jurnal_gradesData';
+                      try {
+                          localStorage.setItem(curGradesKey, JSON.stringify(updatedGrades));
+                          if (typeof window.pushSimaduDataAtomic === 'function') {
+                              const p = {};
+                              p[curGradesKey] = updatedGrades;
+                              window.pushSimaduDataAtomic(p);
+                          } else if (window.firebaseLoaded && window.db) {
+                              window.db.ref('simadu_data_v2/' + curGradesKey).set(JSON.stringify(updatedGrades));
+                          }
+                      } catch (err) {
+                          console.warn('Sync error on excel import:', err);
+                      }
+
+                      alert(`Alhamdulillah! Berhasil mengimpor ${updatedCount} entri nilai mata pelajaran ${targetMapel} Kelas ${activeClass} dari file Excel.\n\nData telah otomatis tersimpan di sistem dan disinkronkan ke Cloud Firebase sehingga langsung tampil di Laporan Nilai pada semua komputer.`);
+                  } catch (err) {
+                      console.error('Error importing excel grades:', err);
+                      alert('Gagal memproses file Excel: ' + err.message);
+                  }
+              };
+              reader.readAsArrayBuffer(file);
+          };
+
+          const handleDownloadAbsensiTemplate = () => {
+              if (typeof XLSX === 'undefined') {
+                  alert('Library Excel (SheetJS) belum siap. Silakan refresh halaman dan coba kembali.');
+                  return;
+              }
+              const maxDays = daysInMonth.length;
+              const header = ['No', 'Nama Siswa', 'Kelas', 'Bulan'];
+              for (let d = 1; d <= maxDays; d++) {
+                  header.push(String(d));
+              }
+              header.push('Hadir (H)', 'Izin (I)', 'Sakit (S)', 'Alpha (A)');
+
+              const rows = [header];
+              currentStudents.forEach((student, idx) => {
+                  const row = [idx + 1, student, activeClass, activeMonth];
+                  let hCount = 0, iCount = 0, sCount = 0, aCount = 0;
+                  for (let d = 1; d <= maxDays; d++) {
+                      const key = `${activeClass}-${activeMonth}-${student}-${d}`;
+                      const val = attendance[key] || '';
+                      row.push(val);
+                      if (val === 'H') hCount++;
+                      else if (val === 'I') iCount++;
+                      else if (val === 'S') sCount++;
+                      else if (val === 'A') aCount++;
+                  }
+                  row.push(hCount, iCount, sCount, aCount);
+                  rows.push(row);
+              });
+
+              const ws = XLSX.utils.aoa_to_sheet(rows);
+              const wb = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(wb, ws, `Absensi_${activeClass}`);
+              const safeMonth = activeMonth.replace(/[^a-zA-Z0-9_-]/g, '_');
+              XLSX.writeFile(wb, `Template_Absensi_Kelas_${activeClass}_${safeMonth}.xlsx`);
+          };
+
+          const handleUploadExcelAbsensi = (e) => {
+              const file = e.target.files && e.target.files[0];
+              if (!file) return;
+
+              const cleanStr = (s) => (s || '').split(',')[0].toLowerCase().replace(/[^a-z]/g, '');
+              const uClean = cleanStr(loggedInUser);
+              const isMasterOrAdmin = uClean.includes('fitrianto') || uClean === 'admin';
+
+              if (!isWaliKelasOfActiveClass && !isMasterOrAdmin) {
+                  alert(`Akses Ditolak! Hanya Wali Kelas ${activeClass} atau Master Admin yang berhak mengunggah absensi kelas ini.`);
+                  return;
+              }
+
+              if (typeof XLSX === 'undefined') {
+                  alert('Library Excel (SheetJS) belum siap. Silakan refresh halaman dan coba kembali.');
+                  return;
+              }
+
+              const reader = new FileReader();
+              reader.onload = (evt) => {
+                  try {
+                      const data = new Uint8Array(evt.target.result);
+                      const workbook = XLSX.read(data, { type: 'array' });
+                      const firstSheetName = workbook.SheetNames[0];
+                      const worksheet = workbook.Sheets[firstSheetName];
+                      const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                      if (!json || json.length < 2) {
+                          alert('File Excel kosong atau tidak memiliki baris data!');
+                          return;
+                      }
+
+                      // Cari baris header yang berisi "Nama" atau "Nama Siswa"
+                      let headerRowIdx = -1;
+                      let namaColIdx = -1;
+                      for (let i = 0; i < Math.min(10, json.length); i++) {
+                          const row = json[i] || [];
+                          for (let c = 0; c < row.length; c++) {
+                              const colVal = String(row[c] || '').trim().toLowerCase();
+                              if (colVal === 'nama' || colVal === 'nama siswa' || colVal === 'siswa') {
+                                  headerRowIdx = i;
+                                  namaColIdx = c;
+                                  break;
+                              }
+                          }
+                          if (headerRowIdx !== -1) break;
+                      }
+
+                      if (headerRowIdx === -1 || namaColIdx === -1) {
+                          alert('Format Excel tidak sesuai! Kolom "Nama" atau "Nama Siswa" tidak ditemukan.');
+                          return;
+                      }
+
+                      // Identifikasi kolom tanggal (1, 2, ..., 31)
+                      const headerRow = json[headerRowIdx] || [];
+                      const dayColMap = {};
+                      for (let c = 0; c < headerRow.length; c++) {
+                          const colVal = String(headerRow[c] || '').trim();
+                          const dayNum = parseInt(colVal, 10);
+                          if (!isNaN(dayNum) && dayNum >= 1 && dayNum <= 31 && String(dayNum) === colVal) {
+                              dayColMap[dayNum] = c;
+                          }
+                      }
+
+                      if (Object.keys(dayColMap).length === 0) {
+                          alert('Format Excel tidak valid! Kolom tanggal (1, 2, ..., 31) tidak ditemukan pada baris judul kolom.');
+                          return;
+                      }
+
+                      const updatedAttendance = { ...attendance };
+                      let updatedCount = 0;
+                      const cleanStName = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+
+                      for (let i = headerRowIdx + 1; i < json.length; i++) {
+                          const row = json[i];
+                          if (!row || row.length === 0) continue;
+
+                          const rawName = String(row[namaColIdx] || '').trim();
+                          if (!rawName) continue;
+
+                          const cName = cleanStName(rawName);
+                          const matchedStudent = currentStudents.find(st => {
+                              const cSt = cleanStName(st);
+                              return cSt === cName || cSt.includes(cName) || cName.includes(cSt);
+                          });
+
+                          if (matchedStudent) {
+                              Object.keys(dayColMap).forEach(dStr => {
+                                  const d = parseInt(dStr, 10);
+                                  const cIdx = dayColMap[d];
+                                  const cellVal = String(row[cIdx] || '').trim().toUpperCase();
+                                  let statusVal = '';
+                                  if (cellVal === 'H' || cellVal === 'HADIR' || cellVal === '1') statusVal = 'H';
+                                  else if (cellVal === 'I' || cellVal === 'IZIN') statusVal = 'I';
+                                  else if (cellVal === 'S' || cellVal === 'SAKIT') statusVal = 'S';
+                                  else if (cellVal === 'A' || cellVal === 'ALPHA' || cellVal === 'ALPA') statusVal = 'A';
+
+                                  if (statusVal) {
+                                      const key = `${activeClass}-${activeMonth}-${matchedStudent}-${d}`;
+                                      updatedAttendance[key] = statusVal;
+                                      updatedCount++;
+                                  }
+                              });
+                          }
+                      }
+
+                      if (updatedCount === 0) {
+                          alert(`Tidak ada data kehadiran yang cocok dengan daftar siswa Kelas ${activeClass}. Pastikan nama siswa sesuai dengan daftar kelas.`);
+                          return;
+                      }
+
+                      setAttendance(updatedAttendance);
+                      const curAttKey = getSemesterKey('jurnal_attendance', activeSemester);
+                      try {
+                          localStorage.setItem(curAttKey, JSON.stringify(updatedAttendance));
+                          if (typeof window.pushSimaduDataAtomic === 'function') {
+                              const p = {};
+                              p[curAttKey] = updatedAttendance;
+                              window.pushSimaduDataAtomic(p);
+                          } else if (window.firebaseLoaded && window.db) {
+                              window.db.ref('simadu_data_v2/' + curAttKey).set(JSON.stringify(updatedAttendance));
+                          }
+                      } catch (err) {
+                          console.warn('Sync error on excel attendance upload:', err);
+                      }
+
+                      alert(`Alhamdulillah! Berhasil mengunggah absensi siswa.\nKelas: ${activeClass}\nBulan: ${activeMonth}\nTotal entri kehadiran: ${updatedCount}\n\nData kehadiran telah disimpan dan disinkronkan ke server cloud sehingga langsung dapat diakses di komputer mana saja.`);
+                  } catch (err) {
+                      console.error('Error importing excel attendance:', err);
+                      alert('Gagal memproses file Excel absensi: ' + err.message);
+                  }
+              };
+              reader.readAsArrayBuffer(file);
+          };
+
           const handleExportCSV = () => {
             let csvContent = "\uFEFF";
             const title = activeTab === 'jurnal' ? 'JURNAL MENGAJAR INFORMATIKA' : 'ABSENSI SISWA';
@@ -7420,10 +7862,13 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                         type="button"
                         onClick={() => handleSwitchSemester('genap')}
                         className={`flex-1 py-2 px-3 rounded-lg text-xs font-black transition-all flex items-center justify-center gap-1.5 ${
-                            activeSemester === 'genap'
-                                ? 'bg-blue-600 text-white shadow-sm'
-                                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                            !isSemesterGenapAvailable()
+                                ? 'bg-slate-200/80 text-slate-400 border border-slate-300/60'
+                                : activeSemester === 'genap'
+                                    ? 'bg-blue-600 text-white shadow-sm'
+                                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
                         }`}
+                        title={!isSemesterGenapAvailable() ? "Semester Genap belum waktunya dibuka (dibuka Desember 2026 / Januari-Juli 2027)" : "Beralih ke Semester Genap"}
                     >
                         <span>&#128198;</span> Semester Genap
                     </button>
@@ -7565,11 +8010,13 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                   type="button"
                                   onClick={() => handleSwitchSemester('genap')}
                                   className={`text-xs font-black px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                                      activeSemester === 'genap'
-                                          ? 'bg-blue-600 text-white shadow-sm'
-                                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
+                                      !isSemesterGenapAvailable()
+                                          ? 'bg-slate-200 text-slate-400 hover:bg-slate-300 border border-slate-300'
+                                          : activeSemester === 'genap'
+                                              ? 'bg-blue-600 text-white shadow-sm'
+                                              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200'
                                   }`}
-                                  title="Beralih ke Semester Genap"
+                                  title={!isSemesterGenapAvailable() ? "Semester Genap belum waktunya dibuka (dibuka Desember 2026 / Januari-Juli 2027)" : "Beralih ke Semester Genap"}
                               >
                                   <span>&#128198;</span> SMT GENAP
                               </button>
@@ -7778,11 +8225,40 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                           Reset
                         </button>
                      </div>
-                     <div className="flex items-center gap-2 w-full sm:w-auto">
+                     <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                         {activeTab === 'absensi' && !isWaliKelasOfActiveClass && (
                             <span className="text-[10px] text-red-600 font-bold bg-red-100 px-2 py-1.5 rounded-md shadow-xs border border-red-200 hidden sm:inline-block">
                                 Akses: Khusus Wali Kelas {activeClass}
                             </span>
+                        )}
+                        {activeTab === 'absensi' && (
+                          <>
+                            <button 
+                              type="button" 
+                              onClick={handleDownloadAbsensiTemplate} 
+                              className="flex-1 sm:flex-none px-3 py-1.5 bg-white border border-emerald-400 text-emerald-800 hover:bg-slate-50 font-bold rounded-md text-xs shadow-xs transition-colors flex items-center justify-center gap-1 active:scale-95"
+                              title={`Unduh Template Excel Absensi Kelas ${activeClass} Bulan ${activeMonth}`}
+                            >
+                              <svg className="w-3.5 h-3.5 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                              <span>Unduh Template Excel</span>
+                            </button>
+                            <label className={`flex-1 sm:flex-none px-3 py-1.5 font-bold rounded-md text-xs shadow-xs transition-colors flex items-center justify-center gap-1 whitespace-nowrap active:scale-95 cursor-pointer ${
+                              !isWaliKelasOfActiveClass
+                                ? 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                                : 'bg-amber-500 hover:bg-amber-600 text-white'
+                            }`}>
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                              <span>Unggah Excel Kehadiran</span>
+                              <input
+                                type="file"
+                                accept=".xlsx, .xls"
+                                className="hidden"
+                                disabled={!isWaliKelasOfActiveClass}
+                                onChange={handleUploadExcelAbsensi}
+                                onClick={(e) => { e.target.value = null; }}
+                              />
+                            </label>
+                          </>
                         )}
                         <button type="button" onClick={handleExportCSV} className="flex-1 sm:flex-none px-4 py-1.5 bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 font-bold rounded-md text-xs shadow-xs transition-colors">
                           Unduh CSV
@@ -8008,176 +8484,210 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                 )}
 
                 {/* 1. TAB: DAFTAR NILAI (INPUT) */}
-                {activeTab === 'nilai' && (
-                    <div className="flex flex-col gap-4">
-                        {!selectedNilaiMapel ? (
+                {activeTab === 'nilai' && (() => {
+                    const cleanStr = (s) => (s || '').split(',')[0].toLowerCase().replace(/[^a-z]/g, '');
+                    const uClean = cleanStr(loggedInUser);
+                    const isMasterOrAdmin = uClean.includes('fitrianto') || uClean === 'admin';
+                    const classMapels = getMapelsAndGurusForClass(activeClass);
+                    const myMapels = isMasterOrAdmin ? classMapels : classMapels.filter(x => {
+                        const gClean = cleanStr(x.guru);
+                        return gClean && uClean && (gClean === uClean || gClean.includes(uClean) || uClean.includes(gClean));
+                    });
+
+                    // JIKA BUKAN GURU MAPEL DI KELAS INI (DAN BUKAN ADMIN)
+                    if (!isMasterOrAdmin && myMapels.length === 0) {
+                        return (
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center my-4">
+                                <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                </div>
+                                <h2 className="text-lg font-black text-slate-800 uppercase mb-2">Akses Dibatasi - Khusus Guru Mapel</h2>
+                                <p className="text-sm text-slate-600 max-w-lg mx-auto mb-2">
+                                    Akun Anda (<b>{loggedInUser}</b>) tidak terdaftar sebagai Guru Pengampu Mata Pelajaran di <b>Kelas {activeClass}</b>.
+                                </p>
+                                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                                    Sesuai kebijakan madrasah, hanya Guru Mapel bersangkutan yang dapat melihat dan menginput nilai siswa di kelas ini. Silakan pilih kelas lain yang Anda ampu pada tombol pilihan kelas di atas.
+                                </p>
+                            </div>
+                        );
+                    }
+
+                    const isAuthorized = isMasterOrAdmin || myMapels.some(x => x.mapel === selectedNilaiMapel);
+
+                    if (!selectedNilaiMapel || !isAuthorized) {
+                        return (
                             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col p-4 sm:p-6">
                                 <h2 className="text-lg font-black text-slate-900 mb-1">Pilih Halaman Mata Pelajaran</h2>
                                 <p className="text-sm text-slate-600 mb-6">Pilih daftar nilai mata pelajaran yang Anda ampu di Kelas {activeClass}.</p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                                    {(() => {
-                                        const cleanStr = (s) => (s || '').split(',')[0].toLowerCase().replace(/[^a-z]/g, '');
-                                        const uClean = cleanStr(loggedInUser);
-                                        const isMasterOrAdmin = uClean.includes('fitrianto') || uClean === 'admin';
-                                        const classMapels = getMapelsAndGurusForClass(activeClass);
-                                        const myMapels = classMapels.filter(x => {
-                                            if (isMasterOrAdmin) return true;
-                                            const gClean = cleanStr(x.guru);
-                                            return gClean && uClean && (gClean === uClean || gClean.includes(uClean) || uClean.includes(gClean));
-                                        });
-                                        const listToRender = myMapels.length > 0 ? myMapels : classMapels;
-                                        
-                                        return (
-                                            <>
-                                                {listToRender.map(x => (
-                                                    <button key={`${x.mapel}-${x.guru}`} onClick={() => setSelectedNilaiMapel(x.mapel)} className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 p-4 rounded-xl shadow-sm transition-all text-left flex items-center gap-4 group">
-                                                        <div className="w-12 h-12 bg-emerald-200 text-emerald-800 rounded-lg flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
-                                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
-                                                        </div>
-                                                        <div>
-                                                            <h3 className="text-md font-bold text-slate-800">{x.mapel}</h3>
-                                                            <p className="text-xs text-slate-500 font-medium">{x.guru}</p>
-                                                        </div>
-                                                    </button>
-                                                ))}
-                                                {classMapels.length === 0 && (
-                                                    <div className="col-span-full text-center p-8 text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">
-                                                        <svg className="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
-                                                        <p className="font-semibold text-sm">Tidak ada jadwal mapel di kelas ini.</p>
-                                                    </div>
-                                                )}
-                                            </>
-                                        );
-                                    })()}
+                                    {myMapels.map(x => (
+                                        <button key={`${x.mapel}-${x.guru}`} onClick={() => setSelectedNilaiMapel(x.mapel)} className="bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 p-4 rounded-xl shadow-sm transition-all text-left flex items-center gap-4 group">
+                                            <div className="w-12 h-12 bg-emerald-200 text-emerald-800 rounded-lg flex items-center justify-center font-bold group-hover:scale-110 transition-transform">
+                                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                                            </div>
+                                            <div>
+                                                <h3 className="text-md font-bold text-slate-800">{x.mapel}</h3>
+                                                <p className="text-xs text-slate-500 font-medium">{x.guru}</p>
+                                            </div>
+                                        </button>
+                                    ))}
+                                    {myMapels.length === 0 && (
+                                        <div className="col-span-full text-center p-8 text-slate-500 border-2 border-dashed border-slate-200 rounded-xl">
+                                            <svg className="w-12 h-12 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"></path></svg>
+                                            <p className="font-semibold text-sm">Tidak ada jadwal mapel di kelas ini.</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
-                        ) : (
-                   <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
-                      <div className="bg-[#C5E0B4] border-b border-[#a9c996] p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                          <div className="flex items-center gap-3">
-                              <button onClick={() => setSelectedNilaiMapel('')} className="px-3 py-2 bg-white hover:bg-slate-50 rounded-lg shadow-sm border border-emerald-300 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all">
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                                  Pilih Mapel Lain
-                              </button>
-                              <div className="flex flex-col ml-2">
-                                  <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-0.5">Mata Pelajaran Anda:</span>
-                                  <select 
-                                      value={selectedNilaiMapel} 
-                                      onChange={(e) => setSelectedNilaiMapel(e.target.value)}
-                                      className="bg-white border border-emerald-400 text-emerald-900 text-sm font-black rounded focus:outline-none focus:ring-2 focus:ring-emerald-500 py-1.5 px-2 cursor-pointer shadow-sm w-[150px] sm:w-[200px]"
-                                  >
-                                      {getMapelsAndGurusForClass(activeClass).filter(x => {
-                                          const clean = (s) => s ? s.split(',')[0].toLowerCase().replace(/[^a-z]/g, '') : '';
-                                          const uClean = clean(loggedInUser);
-                                          const gClean = clean(x.guru);
-                                          return gClean === uClean || gClean.includes(uClean) || uClean.includes(gClean);
-                                      }).map(x => (
-                                          <option key={x.mapel} value={x.mapel}>{x.mapel}</option>
-                                      ))}
-                                  </select>
-                              </div>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto relative z-10">
-                              <button
-                                  type="button"
-                                  disabled={isSyncing || !selectedNilaiMapel}
-                                  onClick={handleSyncGrades}
-                                  className={`px-4 py-2 font-bold rounded-lg text-xs shadow-sm transition-all touch-manipulation whitespace-nowrap flex-1 sm:flex-none ${isSyncing || !selectedNilaiMapel ? 'bg-emerald-400 text-white cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white'}`}
-                              >
-                                  {isSyncing ? 'Mengirim...' : 'Kirim Data Nilai'}
-                              </button>
-                          </div>
-                      </div>
-                      <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '60vh' }}>
-                          <table className="w-full text-sm text-center relative z-0 border-collapse">
-                              <thead className="sticky top-0 z-20 shadow-sm">
-                                  <tr>
-                                      <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-300 bg-white text-slate-700 w-10">No.</th>
-                                      <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-300 min-w-[180px] md:min-w-[220px] bg-white text-slate-700 text-left">Nama Siswa</th>
-                                      <th colSpan="5" className="py-1 px-1 font-bold border border-slate-300 bg-[#92D050] text-slate-900">Sumatif</th>
-                                      <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-[#92D050] text-slate-900 min-w-[55px]">ASTS</th>
-                                      <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[50px]">Jml</th>
-                                      <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[50px]">Rata2</th>
-                                      <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[50px]">80%</th>
-                                      <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-[#92D050] text-slate-900 min-w-[55px]">ASAS</th>
-                                      <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[50px]">20%</th>
-                                      <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-emerald-100 text-emerald-900 min-w-[65px]">Nilai Akhir</th>
-                                  </tr>
-                                  <tr>
-                                      <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-14">1</th>
-                                      <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-14">2</th>
-                                      <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-14">3</th>
-                                      <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-14">4</th>
-                                      <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-14">5</th>
-                                  </tr>
-                              </thead>
-                              <tbody>
-                                  {currentStudents.map((student, idx) => {
-                                      const data = getStudentGradeData(activeClass, selectedNilaiMapel, student, loggedInUser);
-                                      const calc = calculateGrades(student, null, selectedNilaiMapel, loggedInUser);
-                                      const safeRowId = `nilai-row-${sanitizeId(student)}`;
-                                      
-                                      return (
-                                          <tr id={safeRowId} key={`${selectedNilaiMapel}-${idx}`} className="border-b border-slate-300 hover:bg-slate-50 transition-colors duration-300">
-                                              <td className="py-2 px-3 text-center font-semibold text-slate-800 bg-white">{idx + 1}</td>
-                                              <td className="py-2 px-3 font-bold text-slate-900 bg-white text-left">{student}</td>
-                                              
-                                              {['s1', 's2', 's3', 's4', 's5'].map((field, fieldIdx) => (
-                                                  <td key={field} className="py-1 px-1 border border-slate-300">
-                                                      <input 
-                                                          type="number"
-                                                          step="any"
-                                                          value={data[field] || ''} 
-                                                          onChange={(e) => handleGradeChange(student, field, e.target.value)}
-                                                          onKeyDown={(e) => handleGradeKeyDown(e, idx, fieldIdx)}
-                                                          data-grade-row={idx}
-                                                          data-grade-col={fieldIdx}
-                                                          className="w-full px-1 py-1.5 border border-slate-200 rounded text-center text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs font-semibold"
-                                                      />
-                                                  </td>
-                                              ))}
-                                              <td className="py-1 px-1 border border-slate-300 bg-[#f1f8eb]">
-                                                  <input 
-                                                      type="number"
-                                                      step="any"
-                                                      value={data.asts || ''} 
-                                                      onChange={(e) => handleGradeChange(student, 'asts', e.target.value)}
-                                                      onKeyDown={(e) => handleGradeKeyDown(e, idx, 5)}
-                                                      data-grade-row={idx}
-                                                      data-grade-col={5}
-                                                      className="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-slate-800 font-bold focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 text-xs bg-white"
-                                                  />
-                                              </td>
-                                              <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-bold text-slate-600 text-xs">{calc.jml || '-'}</td>
-                                              <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-bold text-emerald-700 text-xs">{calc.rata2 || '-'}</td>
-                                              <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-medium text-slate-600 text-xs">{calc.p80 || '-'}</td>
-                                              <td className="py-1 px-1 border border-slate-300 bg-[#f1f8eb]">
-                                                  <input 
-                                                      type="number"
-                                                      step="any"
-                                                      value={data.asas || ''} 
-                                                      onChange={(e) => handleGradeChange(student, 'asas', e.target.value)}
-                                                      onKeyDown={(e) => handleGradeKeyDown(e, idx, 6)}
-                                                      data-grade-row={idx}
-                                                      data-grade-col={6}
-                                                      className="w-full px-1 py-1.5 border border-emerald-300 rounded text-center text-slate-800 font-bold focus:outline-none focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 text-xs bg-white"
-                                                  />
-                                              </td>
-                                              <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-medium text-slate-600 text-xs">{calc.p20 || '-'}</td>
-                                              <td className="py-1.5 px-2 border border-slate-300 bg-emerald-50 text-emerald-800 font-black text-xs">{calc.na || '-'}</td>
-                                          </tr>
-                                      );
-                                  })}
-                                  {currentStudents.length === 0 && (
-                                      <tr><td colSpan="15" className="py-8 text-center text-slate-400">Pilih kelas terlebih dahulu</td></tr>
-                                  )}
-                              </tbody>
-                          </table>
-                      </div>
-                  </div>
-                  )}
-              </div>
-              )}
+                        );
+                    }
+
+                    return (
+                        <div className="flex flex-col gap-4">
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
+                                <div className="bg-[#C5E0B4] border-b border-[#a9c996] p-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <button onClick={() => setSelectedNilaiMapel('')} className="px-3 py-2 bg-white hover:bg-slate-50 rounded-lg shadow-sm border border-emerald-300 text-slate-700 font-bold text-xs flex items-center gap-1.5 transition-all">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                                            Pilih Mapel Lain
+                                        </button>
+                                        <div className="flex flex-col ml-2">
+                                            <span className="text-[10px] font-bold text-slate-700 uppercase tracking-wider mb-0.5">Mata Pelajaran Anda:</span>
+                                            <select 
+                                                value={selectedNilaiMapel} 
+                                                onChange={(e) => setSelectedNilaiMapel(e.target.value)}
+                                                className="bg-white border border-emerald-400 text-emerald-900 text-sm font-black rounded focus:outline-none focus:ring-2 focus:ring-emerald-500 py-1.5 px-2 cursor-pointer shadow-sm w-[150px] sm:w-[200px]"
+                                            >
+                                                {myMapels.map(x => (
+                                                    <option key={x.mapel} value={x.mapel}>{x.mapel}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto relative z-10">
+                                        <button
+                                            type="button"
+                                            onClick={handleDownloadNilaiTemplate}
+                                            className="px-3 py-2 bg-white hover:bg-slate-50 text-emerald-800 border border-emerald-400 font-bold rounded-lg text-xs shadow-xs transition-all flex items-center gap-1.5 whitespace-nowrap active:scale-95"
+                                            title="Unduh Format Template Excel Nilai (No, Nama, Kelas, Jenis Asesmen, Nilai)"
+                                        >
+                                            <svg className="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                            <span>Unduh Format Excel</span>
+                                        </button>
+                                        <label className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-xs shadow-xs transition-all flex items-center gap-1.5 cursor-pointer whitespace-nowrap active:scale-95 shadow-sm">
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                            <span>Unggah Excel Nilai</span>
+                                            <input
+                                                type="file"
+                                                accept=".xlsx, .xls"
+                                                className="hidden"
+                                                onChange={handleUploadExcelNilai}
+                                                onClick={(e) => { e.target.value = null; }}
+                                            />
+                                        </label>
+                                        <button
+                                            type="button"
+                                            disabled={isSyncing || !selectedNilaiMapel}
+                                            onClick={handleSyncGrades}
+                                            className={`px-4 py-2 font-bold rounded-lg text-xs shadow-sm transition-all touch-manipulation whitespace-nowrap flex-1 sm:flex-none ${isSyncing || !selectedNilaiMapel ? 'bg-emerald-400 text-white cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95'}`}
+                                        >
+                                            {isSyncing ? 'Mengirim...' : 'Kirim Data Nilai'}
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '60vh' }}>
+                                    <table className="w-full text-sm text-center relative z-0 border-collapse">
+                                        <thead className="sticky top-0 z-20 shadow-sm">
+                                            <tr>
+                                                <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-300 bg-white text-slate-700 w-10">No.</th>
+                                                <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-300 min-w-[180px] md:min-w-[220px] bg-white text-slate-700 text-left">Nama Siswa</th>
+                                                <th colSpan="5" className="py-1 px-1 font-bold border border-slate-300 bg-[#92D050] text-slate-900">Sumatif</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-[#92D050] text-slate-900 min-w-[55px]">ASTS</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[50px]">Jml</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[50px]">Rata2</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[50px]">80%</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-[#92D050] text-slate-900 min-w-[55px]">ASAS</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[50px]">20%</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-emerald-100 text-emerald-900 min-w-[65px]">Nilai Akhir</th>
+                                            </tr>
+                                            <tr>
+                                                <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-14">1</th>
+                                                <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-14">2</th>
+                                                <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-14">3</th>
+                                                <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-14">4</th>
+                                                <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-14">5</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {currentStudents.map((student, idx) => {
+                                                const data = getStudentGradeData(activeClass, selectedNilaiMapel, student, loggedInUser);
+                                                const calc = calculateGrades(student, null, selectedNilaiMapel, loggedInUser);
+                                                const safeRowId = `nilai-row-${sanitizeId(student)}`;
+                                                
+                                                return (
+                                                    <tr id={safeRowId} key={`${selectedNilaiMapel}-${idx}`} className="border-b border-slate-300 hover:bg-slate-50 transition-colors duration-300">
+                                                        <td className="py-2 px-3 text-center font-semibold text-slate-800 bg-white">{idx + 1}</td>
+                                                        <td className="py-2 px-3 font-bold text-slate-900 bg-white text-left">{student}</td>
+                                                        
+                                                        {['s1', 's2', 's3', 's4', 's5'].map((field, fieldIdx) => (
+                                                            <td key={field} className="py-1 px-1 border border-slate-300">
+                                                                <input 
+                                                                    type="number"
+                                                                    step="any"
+                                                                    value={data[field] || ''} 
+                                                                    onChange={(e) => handleGradeChange(student, field, e.target.value)}
+                                                                    onKeyDown={(e) => handleGradeKeyDown(e, idx, fieldIdx)}
+                                                                    data-grade-row={idx}
+                                                                    data-grade-col={fieldIdx}
+                                                                    className="w-full px-1 py-1.5 border border-slate-200 rounded text-center text-slate-700 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 text-xs font-semibold"
+                                                                />
+                                                            </td>
+                                                        ))}
+                                                        <td className="py-1 px-1 border border-slate-300 bg-[#f1f8eb]">
+                                                            <input 
+                                                                type="number"
+                                                                step="any"
+                                                                value={data.asts || ''} 
+                                                                onChange={(e) => handleGradeChange(student, 'asts', e.target.value)}
+                                                                onKeyDown={(e) => handleGradeKeyDown(e, idx, 5)}
+                                                                data-grade-row={idx}
+                                                                data-grade-col={5}
+                                                                className="w-full px-1 py-1.5 border border-emerald-300 rounded text-center font-bold text-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs bg-white"
+                                                            />
+                                                        </td>
+                                                        
+                                                        <td className="py-2 px-2 border border-slate-300 bg-slate-50 font-bold text-slate-600 text-xs">{calc.jml || '-'}</td>
+                                                        <td className="py-2 px-2 border border-slate-300 bg-slate-50 font-bold text-emerald-700 text-xs">{calc.rata2 || '-'}</td>
+                                                        <td className="py-2 px-2 border border-slate-300 bg-slate-50 font-medium text-slate-600 text-xs">{calc.p80 || '-'}</td>
+                                                        
+                                                        <td className="py-1 px-1 border border-slate-300 bg-[#f1f8eb]">
+                                                            <input 
+                                                                type="number"
+                                                                step="any"
+                                                                value={data.asas || ''} 
+                                                                onChange={(e) => handleGradeChange(student, 'asas', e.target.value)}
+                                                                onKeyDown={(e) => handleGradeKeyDown(e, idx, 6)}
+                                                                data-grade-row={idx}
+                                                                data-grade-col={6}
+                                                                className="w-full px-1 py-1.5 border border-emerald-300 rounded text-center font-bold text-emerald-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 text-xs bg-white"
+                                                            />
+                                                        </td>
+                                                        <td className="py-2 px-2 border border-slate-300 bg-slate-50 font-medium text-slate-600 text-xs">{calc.p20 || '-'}</td>
+                                                        
+                                                        <td className="py-2 px-2 border border-slate-300 bg-emerald-50 text-emerald-800 font-black text-sm">{calc.na || '-'}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                            {currentStudents.length === 0 && (
+                                                <tr><td colSpan="15" className="py-8 text-center text-slate-400">Pilih kelas terlebih dahulu</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    );
+                })()}
 {/* TAB: LAPORAN */}
                 {activeTab === 'laporan' && (
                   <div className="space-y-6">
@@ -8900,97 +9410,126 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                     )}
 
                     {/* 5. Rekap Daftar Nilai Card */}
-                    {activeReportTab === 'nilai' && (
-                        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
-                          <div className="bg-[#C5E0B4] border-b border-[#a9c996] p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
-                            <div className="text-center sm:text-left">
-                              <h2 className="text-lg font-black text-slate-900 tracking-wide uppercase">REKAPITULASI DAFTAR NILAI KELAS {activeClass}</h2>
-                              <p className="text-sm font-semibold text-slate-800">SEMESTER {activeSemester === "ganjil" ? "GANJIL" : "GENAP"} TAHUN AJARAN 2026/2027</p>
-                            </div>
-                            <div className="flex flex-wrap items-center gap-3">
-                                <div className="flex items-center gap-2 bg-white/90 px-3 py-1.5 rounded-lg border border-[#a9c996] shadow-sm">
-                                    <span className="text-xs font-bold text-slate-800">Mata Pelajaran:</span>
-                                    <select
-                                        value={selectedReportNilaiMapelGuru}
-                                        onChange={(e) => setSelectedReportNilaiMapelGuru(e.target.value)}
-                                        className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none cursor-pointer max-w-[200px] sm:max-w-[260px]"
-                                    >
-                                        {getMapelsAndGurusForClass(activeClass).map(x => (
-                                            <option key={`${x.mapel}|${x.guru}`} value={`${x.mapel}|${x.guru}`}>
-                                                {x.mapel} ({x.guru})
-                                            </option>
-                                        ))}
-                                        {getMapelsAndGurusForClass(activeClass).length === 0 && (
-                                            <option value="">- Tidak Ada Mapel di Kelas Ini -</option>
-                                        )}
-                                    </select>
-                                </div>
-                                <button type="button" onClick={handleExportGradesCSV} className="px-4 py-2 bg-white/90 hover:bg-white text-slate-800 font-bold rounded-lg text-xs shadow-sm transition-all border border-[#a9c996]">
-                                    Unduh CSV
-                                </button>
-                            </div>
-                          </div>
-                          
-                          <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '65vh' }}>
-                            <table className="w-full text-xs text-center border-collapse min-w-max border border-slate-300">
-                              <thead className="sticky top-0 z-20 shadow-sm">
-                                <tr>
-                                  <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-300 bg-white text-slate-700 w-10">No</th>
-                                  <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-300 bg-white text-slate-700 min-w-[200px] md:min-w-[250px] text-left">Nama Siswa</th>
-                                  <th colSpan="5" className="py-1 px-1 font-bold border border-slate-300 bg-[#92D050] text-slate-900">Sumatif</th>
-                                  <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-[#92D050] text-slate-900 min-w-[40px]">ASTS</th>
-                                  <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[40px]">Jml</th>
-                                  <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[40px]">Rata2</th>
-                                  <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[40px]">80%</th>
-                                  <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-[#92D050] text-slate-900 min-w-[40px]">ASAS</th>
-                                  <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[40px]">20%</th>
-                                  <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[50px]">Nilai Akhir<br/>Rapor</th>
-                                </tr>
-                                <tr>
-                                  <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-10">1</th>
-                                  <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-10">2</th>
-                                  <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-10">3</th>
-                                  <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-10">4</th>
-                                  <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-10">5</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {currentStudents.map((student, idx) => {
-                                    const data = getStudentGradeData(activeClass, globalReportMapel, student, globalReportGuru);
-                                    const calc = calculateGrades(student, null, globalReportMapel, globalReportGuru);
+                    {activeReportTab === 'nilai' && (() => {
+                        const cleanStr = (s) => (s || '').split(',')[0].toLowerCase().replace(/[^a-z]/g, '');
+                        const uClean = cleanStr(loggedInUser);
+                        const isMasterOrAdmin = uClean.includes('fitrianto') || uClean === 'admin';
+                        const allClassMapels = getMapelsAndGurusForClass(activeClass);
+                        const availableReportMapels = isMasterOrAdmin
+                            ? allClassMapels
+                            : allClassMapels.filter(x => {
+                                const gClean = cleanStr(x.guru);
+                                return gClean && uClean && (gClean === uClean || gClean.includes(uClean) || uClean.includes(gClean));
+                            });
 
-                                    return (
-                                      <tr key={idx} className="hover:bg-slate-50 transition-colors border-b border-slate-300">
-                                          <td className="py-1.5 px-3 border border-slate-300 font-semibold bg-white">{idx + 1}</td>
-                                          <td className="py-1.5 px-3 border border-slate-300 text-left font-bold text-slate-800 bg-white">{student}</td>
-                                          
-                                          <td className="py-1.5 px-1 border border-slate-300 font-medium text-slate-700">{data.s1 ? formatGradeNumber(data.s1) : '-'}</td>
-                                          <td className="py-1.5 px-1 border border-slate-300 font-medium text-slate-700">{data.s2 ? formatGradeNumber(data.s2) : '-'}</td>
-                                          <td className="py-1.5 px-1 border border-slate-300 font-medium text-slate-700">{data.s3 ? formatGradeNumber(data.s3) : '-'}</td>
-                                          <td className="py-1.5 px-1 border border-slate-300 font-medium text-slate-700">{data.s4 ? formatGradeNumber(data.s4) : '-'}</td>
-                                          <td className="py-1.5 px-1 border border-slate-300 font-medium text-slate-700">{data.s5 ? formatGradeNumber(data.s5) : '-'}</td>
-                                          
-                                          <td className="py-1.5 px-1 border border-slate-300 bg-[#f8fbf5] font-semibold text-slate-800">{data.asts ? formatGradeNumber(data.asts) : '-'}</td>
-                                          
-                                          <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-bold text-slate-600">{calc.jml || '-'}</td>
-                                          <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-bold text-emerald-700">{calc.rata2 || '-'}</td>
-                                          <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-medium text-slate-600">{calc.p80 || '-'}</td>
-                                          
-                                          <td className="py-1.5 px-1 border border-slate-300 bg-[#f8fbf5] font-semibold text-slate-800">{data.asas ? formatGradeNumber(data.asas) : '-'}</td>
-                                          <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-medium text-slate-600">{calc.p20 || '-'}</td>
-                                          
-                                          <td className="py-1.5 px-2 border border-slate-300 bg-emerald-50 text-emerald-800 font-black">{calc.na || '-'}</td>
-                                      </tr>
-                                    );
-                                })}
-                                {currentStudents.length === 0 && (
-                                    <tr><td colSpan="14" className="py-8 text-center text-slate-400">Pilih kelas terlebih dahulu</td></tr>
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                    )}
+                        if (!isMasterOrAdmin && availableReportMapels.length === 0) {
+                            return (
+                                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 text-center my-4">
+                                    <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                                    </div>
+                                    <h2 className="text-lg font-black text-slate-800 uppercase mb-2">Akses Dibatasi - Khusus Guru Mapel</h2>
+                                    <p className="text-sm text-slate-600 max-w-lg mx-auto mb-2">
+                                        Akun Anda (<b>{loggedInUser}</b>) tidak terdaftar sebagai Guru Pengampu Mata Pelajaran di <b>Kelas {activeClass}</b>.
+                                    </p>
+                                    <p className="text-xs text-slate-500 max-w-md mx-auto">
+                                        Sesuai kebijakan madrasah, hanya Guru Mapel bersangkutan yang dapat melihat rekap nilai mata pelajarannya. Silakan pilih kelas lain pada pilihan kelas di atas.
+                                    </p>
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
+                                <div className="bg-[#C5E0B4] border-b border-[#a9c996] p-4 flex flex-col sm:flex-row justify-between items-center gap-3">
+                                    <div className="text-center sm:text-left">
+                                        <h2 className="text-lg font-black text-slate-900 tracking-wide uppercase">REKAPITULASI DAFTAR NILAI KELAS {activeClass}</h2>
+                                        <p className="text-sm font-semibold text-slate-800">SEMESTER {activeSemester === "ganjil" ? "GANJIL" : "GENAP"} TAHUN AJARAN 2026/2027</p>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-3">
+                                        <div className="flex items-center gap-2 bg-white/90 px-3 py-1.5 rounded-lg border border-[#a9c996] shadow-sm">
+                                            <span className="text-xs font-bold text-slate-800">Mata Pelajaran:</span>
+                                            <select
+                                                value={selectedReportNilaiMapelGuru}
+                                                onChange={(e) => setSelectedReportNilaiMapelGuru(e.target.value)}
+                                                className="bg-transparent text-xs font-bold text-slate-900 focus:outline-none cursor-pointer max-w-[200px] sm:max-w-[260px]"
+                                            >
+                                                {availableReportMapels.map(x => (
+                                                    <option key={`${x.mapel}|${x.guru}`} value={`${x.mapel}|${x.guru}`}>
+                                                        {x.mapel} ({x.guru})
+                                                    </option>
+                                                ))}
+                                                {availableReportMapels.length === 0 && (
+                                                    <option value="">- Tidak Ada Mapel di Kelas Ini -</option>
+                                                )}
+                                            </select>
+                                        </div>
+                                        <button type="button" onClick={handleExportGradesCSV} className="px-4 py-2 bg-white/90 hover:bg-white text-slate-800 font-bold rounded-lg text-xs shadow-sm transition-all border border-[#a9c996]">
+                                            Unduh CSV
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div className="overflow-x-auto custom-scrollbar" style={{ maxHeight: '65vh' }}>
+                                    <table className="w-full text-xs text-center border-collapse min-w-max border border-slate-300">
+                                        <thead className="sticky top-0 z-20 shadow-sm">
+                                            <tr>
+                                                <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-300 bg-white text-slate-700 w-10">No</th>
+                                                <th rowSpan="2" className="py-2 px-3 font-bold border border-slate-300 bg-white text-slate-700 min-w-[200px] md:min-w-[250px] text-left">Nama Siswa</th>
+                                                <th colSpan="5" className="py-1 px-1 font-bold border border-slate-300 bg-[#92D050] text-slate-900">Sumatif</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-[#92D050] text-slate-900 min-w-[40px]">ASTS</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[40px]">Jml</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[40px]">Rata2</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[40px]">80%</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-[#92D050] text-slate-900 min-w-[40px]">ASAS</th>
+                                                <th rowSpan="2" className="py-2 px-2 font-bold border border-slate-300 bg-white text-slate-700 min-w-[40px]">20%</th>
+                                                <th rowSpan="2" className="py-2 px-2 border border-slate-300 bg-white text-slate-700 min-w-[50px]">Nilai Akhir<br/>Rapor</th>
+                                            </tr>
+                                            <tr>
+                                                <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-10">1</th>
+                                                <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-10">2</th>
+                                                <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-10">3</th>
+                                                <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-10">4</th>
+                                                <th className="py-1 px-2 border border-slate-300 bg-[#92D050] text-slate-900 w-10">5</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {currentStudents.map((student, idx) => {
+                                                const data = getStudentGradeData(activeClass, globalReportMapel, student, globalReportGuru);
+                                                const calc = calculateGrades(student, null, globalReportMapel, globalReportGuru);
+                                                
+                                                return (
+                                                    <tr key={`${globalReportMapel}-${student}`} className="border-b border-slate-300 hover:bg-slate-50 transition-colors">
+                                                        <td className="py-1.5 px-3 border border-slate-300 font-semibold text-slate-800 bg-white">{idx + 1}</td>
+                                                        <td className="py-1.5 px-3 border border-slate-300 font-bold text-slate-900 text-left bg-white">{student}</td>
+                                                        
+                                                        {['s1', 's2', 's3', 's4', 's5'].map((field) => (
+                                                            <td key={field} className="py-1.5 px-1 border border-slate-300 font-semibold text-slate-800">
+                                                                {data[field] ? formatGradeNumber(data[field]) : '-'}
+                                                            </td>
+                                                        ))}
+                                                        
+                                                        <td className="py-1.5 px-1 border border-slate-300 bg-[#f8fbf5] font-semibold text-slate-800">{data.asts ? formatGradeNumber(data.asts) : '-'}</td>
+                                                        <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-bold text-slate-600">{calc.jml || '-'}</td>
+                                                        <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-bold text-emerald-700">{calc.rata2 || '-'}</td>
+                                                        <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-medium text-slate-600">{calc.p80 || '-'}</td>
+                                                        
+                                                        <td className="py-1.5 px-1 border border-slate-300 bg-[#f8fbf5] font-semibold text-slate-800">{data.asas ? formatGradeNumber(data.asas) : '-'}</td>
+                                                        <td className="py-1.5 px-1 border border-slate-300 bg-slate-50 font-medium text-slate-600">{calc.p20 || '-'}</td>
+                                                        
+                                                        <td className="py-1.5 px-2 border border-slate-300 bg-emerald-50 text-emerald-800 font-black">{calc.na || '-'}</td>
+                                                    </tr>
+                                                );
+                                            })}
+                                            {currentStudents.length === 0 && (
+                                                <tr><td colSpan="14" className="py-8 text-center text-slate-400">Pilih kelas terlebih dahulu</td></tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        );
+                    })()}
 {/* 6. Rekap Jurnal Pelajaran Kelas */}
                     {activeReportTab === 'jurnal_pelajaran_kelas' && (
                         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col relative z-0">
@@ -9169,7 +9708,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                 title="Unduh data guru lengkap ke format Excel (.xlsx)"
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                <span>Export Excel</span>
+                                <span>Ekspor Excel</span>
                             </button>
                             <div className="relative w-full sm:w-64">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -10664,11 +11203,11 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                 <option value={100}>100</option>
                                                 <option value={-1}>Semua</option>
                                             </select>
-                                            <span>entries</span>
+                                            <span>data</span>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-2 w-full md:w-auto">
-                                        <label className="text-xs font-semibold text-slate-600">Search:</label>
+                                        <label className="text-xs font-semibold text-slate-600">Cari:</label>
                                         <input 
                                             type="text" 
                                             value={detailSearchQuery} 
@@ -10757,7 +11296,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                                 <button 
                                                                     onClick={() => setPrintingBiodataStudent(st)} 
                                                                     className="px-2.5 py-1 bg-[#00897b] hover:bg-[#00796b] text-white rounded text-[11px] font-bold flex items-center gap-1 shadow-xs transition-colors"
-                                                                    title="Print Identitas Siswa (Gambar 2)"
+                                                                    title="Cetak Identitas Siswa (Gambar 2)"
                                                                 >
                                                                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                                                     Print
@@ -10782,7 +11321,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                 {/* Pagination Footer */}
                                 <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-2 text-xs text-slate-500 print:hidden">
                                     <div>
-                                        Showing {filteredStudents.length === 0 ? 0 : (detailEntriesPerPage === -1 ? 1 : (detailCurrentPage - 1) * detailEntriesPerPage + 1)} to {detailEntriesPerPage === -1 ? filteredStudents.length : Math.min(detailCurrentPage * detailEntriesPerPage, filteredStudents.length)} of {filteredStudents.length} entries
+                                        Menampilkan {filteredStudents.length === 0 ? 0 : (detailEntriesPerPage === -1 ? 1 : (detailCurrentPage - 1) * detailEntriesPerPage + 1)} sampai {detailEntriesPerPage === -1 ? filteredStudents.length : Math.min(detailCurrentPage * detailEntriesPerPage, filteredStudents.length)} dari {filteredStudents.length} data
                                     </div>
                                     {detailEntriesPerPage !== -1 && totalPages > 1 && (
                                         <div className="flex items-center gap-1">
@@ -10790,7 +11329,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                 disabled={detailCurrentPage <= 1} 
                                                 onClick={() => setDetailCurrentPage(prev => Math.max(1, prev - 1))}
                                                 className="px-2.5 py-1 border border-slate-300 rounded bg-white hover:bg-slate-50 disabled:opacity-40 text-slate-700"
-                                            >Previous</button>
+                                            >Sebelumnya</button>
                                             {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
                                                 <button 
                                                     key={p} 
@@ -10802,7 +11341,7 @@ const [editingTeacherScheduleData, setEditingTeacherScheduleData] = useState({})
                                                 disabled={detailCurrentPage >= totalPages} 
                                                 onClick={() => setDetailCurrentPage(prev => Math.min(totalPages, prev + 1))}
                                                 className="px-2.5 py-1 border border-slate-300 rounded bg-white hover:bg-slate-50 disabled:opacity-40 text-slate-700"
-                                            >Next</button>
+                                            >Selanjutnya</button>
                                         </div>
                                     )}
                                 </div>
